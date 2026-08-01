@@ -80,3 +80,16 @@ export function copyForResult(result: RouteResult): string | null {
   if (result.data.outcome === "Action") return null;
   return OUTCOME_COPY[result.data.outcome] ?? OUTCOME_COPY.network_error;
 }
+
+/**
+ * Resolves a `confirm` action's `target` to the absolute URL the browser must
+ * POST to. A confirm target is a state-changing BACKEND route (e.g.
+ * `/accounts/logout/`), not an Astro route, so a frontend-relative request
+ * would hit the SSR server and 404 locally (issue #74). An already-absolute
+ * target is returned untouched, and a blank `backendUrl` degrades to the
+ * same-origin path — correct behind the single-origin ALB ([[INFRASTRUCTURE]]).
+ */
+export function resolveConfirmUrl(backendUrl: string, target: string): string {
+  if (/^https?:\/\//i.test(target)) return target;
+  return `${backendUrl.replace(/\/$/, "")}${target}`;
+}

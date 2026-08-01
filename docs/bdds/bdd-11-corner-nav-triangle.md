@@ -1,12 +1,15 @@
 ---
 title: bdd-11-corner-nav-triangle
 type: bdd
-status: building
+status: retired
 created: 2026-07-18
 tags: [bdd, frontend, nav, custom]
 ---
 
 # bdd-11 — corner nav triangle (home / chat / showcase cycling)
+
+> [!warning] Retired
+> **RETIRED** — superseded by the navigation shell ([[bdd-12-navigation-shell]]): `CornerNavTriangle` is removed with the old navigation, and site navigation is now the `NavDrawer` over the single `NAV_ITEMS` registry ([[GLOSSARY]] — the name stays forbidden there). The body below is kept as the historical record of the agreement; nothing in it binds the current build.
 
 ## Use case
 

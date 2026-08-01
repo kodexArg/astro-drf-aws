@@ -3,4 +3,33 @@
  * Docs: [[FRONTEND]]
  * LIVE-DOC:END */
 
-export { default as Check } from "./Check.svelte";
+export {
+  Check,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Mail,
+  Send,
+  Home,
+  Landmark,
+  Banknote,
+  TrendingUp,
+  Building2,
+  CalendarDays,
+  Receipt,
+  Repeat,
+  Handshake,
+  CircleCheckBig,
+  FileText,
+  ClipboardList,
+  MessageCircle,
+  LayoutGrid,
+  User,
+  Moon,
+  Sun,
+  Brain,
+  DollarSign,
+  TriangleAlert,
+  Info,
+} from "@lucide/svelte";

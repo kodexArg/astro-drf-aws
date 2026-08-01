@@ -26,6 +26,11 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 
 ## [[adr-03-api-and-backend]]
 
+- `backend/apps/assistant/models.py`
+- `backend/apps/assistant/permissions.py`
+- `backend/apps/assistant/serializers.py`
+- `backend/apps/assistant/urls.py`
+- `backend/apps/assistant/views.py`
 - `backend/apps/health/urls.py`
 - `backend/apps/health/views.py`
 - `backend/apps/m365/models.py`
@@ -51,6 +56,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/i18n/messages/es.ts`
 - `frontend/src/i18n/messages/index.ts`
 - `frontend/src/layouts/Base.astro`
+- `frontend/src/lib/assistant-client.ts`
 - `frontend/src/lib/auth.ts`
 - `frontend/src/lib/authGate.ts`
 - `frontend/src/lib/components/auth/AuthPanel.svelte`
@@ -91,7 +97,9 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/form/TagsInput.svelte`
 - `frontend/src/lib/components/form/ToggleGroup.svelte`
 - `frontend/src/lib/components/form/index.ts`
-- `frontend/src/lib/components/icons/Check.svelte`
+- `frontend/src/lib/components/header/LayoutHeader.svelte`
+- `frontend/src/lib/components/header/NavBar.svelte`
+- `frontend/src/lib/components/header/index.ts`
 - `frontend/src/lib/components/icons/index.ts`
 - `frontend/src/lib/components/nav/ContextMenu.svelte`
 - `frontend/src/lib/components/nav/DropdownMenu.svelte`
@@ -108,16 +116,24 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/overlay/ScrollArea.svelte`
 - `frontend/src/lib/components/overlay/Tooltip.svelte`
 - `frontend/src/lib/components/overlay/index.ts`
-- `frontend/src/lib/components/primitives/HomeTriangle.svelte`
+- `frontend/src/lib/components/primitives/PageCanvas.svelte`
+- `frontend/src/lib/components/primitives/Surface.svelte`
+- `frontend/src/lib/components/primitives/titles/PageHeading.svelte`
 - `frontend/src/lib/components/primitives/titles/PageTitle.svelte`
 - `frontend/src/lib/components/primitives/titles/SectionTitle.svelte`
 - `frontend/src/lib/components/primitives/titles/index.ts`
+- `frontend/src/lib/components/shell/ChatDrawer.svelte`
+- `frontend/src/lib/components/shell/NavBadge.svelte`
+- `frontend/src/lib/components/shell/NavDrawer.svelte`
+- `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavbarIcon.svelte`
+- `frontend/src/lib/components/shell/index.ts`
+- `frontend/src/lib/components/shell/nav.ts`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`
 - `frontend/src/lib/components/showcase/ContextMenuDemo.svelte`
 - `frontend/src/lib/components/showcase/DrawerDemo.svelte`
 - `frontend/src/lib/components/showcase/DropdownMenuDemo.svelte`
-- `frontend/src/lib/components/showcase/HomeTriangleDemo.svelte`
 - `frontend/src/lib/components/showcase/HoverCardDemo.svelte`
 - `frontend/src/lib/components/showcase/MenubarDemo.svelte`
 - `frontend/src/lib/components/showcase/PaginationDemo.svelte`
@@ -126,6 +142,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/showcase/RangeCalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/ScrollAreaDemo.svelte`
 - `frontend/src/lib/components/showcase/SliderDemo.svelte`
+- `frontend/src/lib/components/showcase/SurfaceDemo.svelte`
 - `frontend/src/lib/components/showcase/TableOfContentsDemo.svelte`
 - `frontend/src/lib/components/showcase/TabsDemo.svelte`
 - `frontend/src/lib/components/showcase/TagsInputDemo.svelte`
@@ -133,6 +150,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/showcase/ToggleGroupDemo.svelte`
 - `frontend/src/lib/components/showcase/TooltipDemo.svelte`
 - `frontend/src/lib/components/showcase/TreeDemo.svelte`
+- `frontend/src/lib/components/showcase/galleryRegistry.ts`
 - `frontend/src/lib/components/showcase/index.ts`
 - `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
 - `frontend/src/lib/components/theme/ThemeCard.svelte`
@@ -183,14 +201,13 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/ui/table/table-row.svelte`
 - `frontend/src/lib/components/ui/table/table.svelte`
 - `frontend/src/lib/components/views/ChatView.svelte`
-- `frontend/src/lib/components/views/LobbyView.svelte`
+- `frontend/src/lib/components/views/HomeCard.svelte`
+- `frontend/src/lib/components/views/HomeCardsView.svelte`
 - `frontend/src/lib/components/views/ProfileView.svelte`
 - `frontend/src/lib/components/views/ShowcaseGalleryView.svelte`
-- `frontend/src/lib/components/views/ShowcaseView.svelte`
 - `frontend/src/lib/components/views/index.ts`
 - `frontend/src/lib/csrf.ts`
 - `frontend/src/lib/display-name.ts`
-- `frontend/src/lib/home-triangle.ts`
 - `frontend/src/lib/optimistic-toggle.ts`
 - `frontend/src/lib/router-client.ts`
 - `frontend/src/lib/theme.ts`
@@ -220,6 +237,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 
 ## [[adr-10-auth]]
 
+- `backend/apps/assistant/permissions.py`
 - `backend/apps/router/permissions.py`
 - `backend/apps/users/admin.py`
 - `backend/apps/users/api_urls.py`
@@ -282,6 +300,19 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 
 ## [[adr-16-async-mandatory]]
 
+- `backend/apps/assistant/admin.py`
+- `backend/apps/assistant/apps.py`
+- `backend/apps/assistant/context.py`
+- `backend/apps/assistant/inference.py`
+- `backend/apps/assistant/links.py`
+- `backend/apps/assistant/management/commands/purge_assistant_audit.py`
+- `backend/apps/assistant/models.py`
+- `backend/apps/assistant/serializers.py`
+- `backend/apps/assistant/test_ask_view.py`
+- `backend/apps/assistant/test_links.py`
+- `backend/apps/assistant/test_purge_assistant_audit.py`
+- `backend/apps/assistant/urls.py`
+- `backend/apps/assistant/views.py`
 - `backend/apps/router/admin.py`
 - `backend/apps/router/apps.py`
 - `backend/apps/router/inference.py`
@@ -307,8 +338,56 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `backend/config/asgi.py`
 - `backend/config/settings.py`
 
+## [[adr-22-showcase-ready-components]]
+
+- `frontend/src/lib/components/auth/SessionBadge.svelte`
+- `frontend/src/lib/components/chat/ChatComposer.svelte`
+- `frontend/src/lib/components/chat/ChatMessageList.svelte`
+- `frontend/src/lib/components/chat/ChatUI.svelte`
+- `frontend/src/lib/components/header/LayoutHeader.svelte`
+- `frontend/src/lib/components/header/NavBar.svelte`
+- `frontend/src/lib/components/overlay/Drawer.svelte`
+- `frontend/src/lib/components/primitives/PageCanvas.svelte`
+- `frontend/src/lib/components/primitives/Surface.svelte`
+- `frontend/src/lib/components/primitives/titles/PageHeading.svelte`
+- `frontend/src/lib/components/shell/ChatDrawer.svelte`
+- `frontend/src/lib/components/shell/NavBadge.svelte`
+- `frontend/src/lib/components/shell/NavDrawer.svelte`
+- `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavbarIcon.svelte`
+- `frontend/src/lib/components/showcase/SurfaceDemo.svelte`
+- `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
+- `frontend/src/lib/components/theme/ThemeModeToggle.svelte`
+- `frontend/src/lib/components/views/ChatView.svelte`
+- `frontend/src/lib/components/views/HomeCard.svelte`
+- `frontend/src/lib/components/views/HomeCardsView.svelte`
+- `frontend/src/lib/components/views/ProfileView.svelte`
+- `frontend/src/lib/components/views/ShowcaseGalleryView.svelte`
+
+## [[adr-24-page-context-assistant]]
+
+- `backend/apps/assistant/admin.py`
+- `backend/apps/assistant/apps.py`
+- `backend/apps/assistant/context.py`
+- `backend/apps/assistant/inference.py`
+- `backend/apps/assistant/links.py`
+- `backend/apps/assistant/management/commands/purge_assistant_audit.py`
+- `backend/apps/assistant/models.py`
+- `backend/apps/assistant/permissions.py`
+- `backend/apps/assistant/serializers.py`
+- `backend/apps/assistant/test_ask_view.py`
+- `backend/apps/assistant/test_links.py`
+- `backend/apps/assistant/test_purge_assistant_audit.py`
+- `backend/apps/assistant/urls.py`
+- `backend/apps/assistant/views.py`
+
 ## [[API]]
 
+- `backend/apps/assistant/models.py`
+- `backend/apps/assistant/permissions.py`
+- `backend/apps/assistant/serializers.py`
+- `backend/apps/assistant/urls.py`
+- `backend/apps/assistant/views.py`
 - `backend/apps/health/urls.py`
 - `backend/apps/health/views.py`
 - `backend/apps/m365/graph.py`
@@ -358,6 +437,20 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 
 ## [[BACKEND]]
 
+- `backend/apps/assistant/admin.py`
+- `backend/apps/assistant/apps.py`
+- `backend/apps/assistant/context.py`
+- `backend/apps/assistant/inference.py`
+- `backend/apps/assistant/links.py`
+- `backend/apps/assistant/management/commands/purge_assistant_audit.py`
+- `backend/apps/assistant/models.py`
+- `backend/apps/assistant/permissions.py`
+- `backend/apps/assistant/serializers.py`
+- `backend/apps/assistant/test_ask_view.py`
+- `backend/apps/assistant/test_links.py`
+- `backend/apps/assistant/test_purge_assistant_audit.py`
+- `backend/apps/assistant/urls.py`
+- `backend/apps/assistant/views.py`
 - `backend/apps/health/apps.py`
 - `backend/apps/health/test_cache.py`
 - `backend/apps/health/tests.py`
@@ -430,6 +523,20 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 
 ## [[CHATBOT]]
 
+- `backend/apps/assistant/admin.py`
+- `backend/apps/assistant/apps.py`
+- `backend/apps/assistant/context.py`
+- `backend/apps/assistant/inference.py`
+- `backend/apps/assistant/links.py`
+- `backend/apps/assistant/management/commands/purge_assistant_audit.py`
+- `backend/apps/assistant/models.py`
+- `backend/apps/assistant/permissions.py`
+- `backend/apps/assistant/serializers.py`
+- `backend/apps/assistant/test_ask_view.py`
+- `backend/apps/assistant/test_links.py`
+- `backend/apps/assistant/test_purge_assistant_audit.py`
+- `backend/apps/assistant/urls.py`
+- `backend/apps/assistant/views.py`
 - `backend/apps/router/admin.py`
 - `backend/apps/router/apps.py`
 - `backend/apps/router/inference.py`
@@ -456,6 +563,32 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/chat/ChatMessageList.svelte`
 - `frontend/src/lib/components/chat/ChatUI.svelte`
 - `frontend/src/pages/chatui.astro`
+
+## [[COMPONENTIZATION]]
+
+- `frontend/src/lib/components/auth/SessionBadge.svelte`
+- `frontend/src/lib/components/chat/ChatComposer.svelte`
+- `frontend/src/lib/components/chat/ChatMessageList.svelte`
+- `frontend/src/lib/components/chat/ChatUI.svelte`
+- `frontend/src/lib/components/header/LayoutHeader.svelte`
+- `frontend/src/lib/components/header/NavBar.svelte`
+- `frontend/src/lib/components/overlay/Drawer.svelte`
+- `frontend/src/lib/components/primitives/PageCanvas.svelte`
+- `frontend/src/lib/components/primitives/Surface.svelte`
+- `frontend/src/lib/components/primitives/titles/PageHeading.svelte`
+- `frontend/src/lib/components/shell/ChatDrawer.svelte`
+- `frontend/src/lib/components/shell/NavBadge.svelte`
+- `frontend/src/lib/components/shell/NavDrawer.svelte`
+- `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavbarIcon.svelte`
+- `frontend/src/lib/components/showcase/SurfaceDemo.svelte`
+- `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
+- `frontend/src/lib/components/theme/ThemeModeToggle.svelte`
+- `frontend/src/lib/components/views/ChatView.svelte`
+- `frontend/src/lib/components/views/HomeCard.svelte`
+- `frontend/src/lib/components/views/HomeCardsView.svelte`
+- `frontend/src/lib/components/views/ProfileView.svelte`
+- `frontend/src/lib/components/views/ShowcaseGalleryView.svelte`
 
 ## [[DESIGN-SYSTEM]]
 
@@ -491,7 +624,8 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/form/Switch.svelte`
 - `frontend/src/lib/components/form/TagsInput.svelte`
 - `frontend/src/lib/components/form/ToggleGroup.svelte`
-- `frontend/src/lib/components/icons/Check.svelte`
+- `frontend/src/lib/components/header/LayoutHeader.svelte`
+- `frontend/src/lib/components/header/NavBar.svelte`
 - `frontend/src/lib/components/nav/ContextMenu.svelte`
 - `frontend/src/lib/components/nav/DropdownMenu.svelte`
 - `frontend/src/lib/components/nav/Menubar.svelte`
@@ -505,15 +639,21 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/overlay/Popover.svelte`
 - `frontend/src/lib/components/overlay/ScrollArea.svelte`
 - `frontend/src/lib/components/overlay/Tooltip.svelte`
-- `frontend/src/lib/components/primitives/HomeTriangle.svelte`
+- `frontend/src/lib/components/primitives/PageCanvas.svelte`
+- `frontend/src/lib/components/primitives/Surface.svelte`
+- `frontend/src/lib/components/primitives/titles/PageHeading.svelte`
 - `frontend/src/lib/components/primitives/titles/PageTitle.svelte`
 - `frontend/src/lib/components/primitives/titles/SectionTitle.svelte`
+- `frontend/src/lib/components/shell/ChatDrawer.svelte`
+- `frontend/src/lib/components/shell/NavBadge.svelte`
+- `frontend/src/lib/components/shell/NavDrawer.svelte`
+- `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavbarIcon.svelte`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`
 - `frontend/src/lib/components/showcase/ContextMenuDemo.svelte`
 - `frontend/src/lib/components/showcase/DrawerDemo.svelte`
 - `frontend/src/lib/components/showcase/DropdownMenuDemo.svelte`
-- `frontend/src/lib/components/showcase/HomeTriangleDemo.svelte`
 - `frontend/src/lib/components/showcase/HoverCardDemo.svelte`
 - `frontend/src/lib/components/showcase/MenubarDemo.svelte`
 - `frontend/src/lib/components/showcase/PaginationDemo.svelte`
@@ -522,6 +662,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/showcase/RangeCalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/ScrollAreaDemo.svelte`
 - `frontend/src/lib/components/showcase/SliderDemo.svelte`
+- `frontend/src/lib/components/showcase/SurfaceDemo.svelte`
 - `frontend/src/lib/components/showcase/TableOfContentsDemo.svelte`
 - `frontend/src/lib/components/showcase/TabsDemo.svelte`
 - `frontend/src/lib/components/showcase/TagsInputDemo.svelte`
@@ -577,10 +718,10 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/ui/table/table-row.svelte`
 - `frontend/src/lib/components/ui/table/table.svelte`
 - `frontend/src/lib/components/views/ChatView.svelte`
-- `frontend/src/lib/components/views/LobbyView.svelte`
+- `frontend/src/lib/components/views/HomeCard.svelte`
+- `frontend/src/lib/components/views/HomeCardsView.svelte`
 - `frontend/src/lib/components/views/ProfileView.svelte`
 - `frontend/src/lib/components/views/ShowcaseGalleryView.svelte`
-- `frontend/src/lib/components/views/ShowcaseView.svelte`
 - `frontend/src/lib/theme.ts`
 
 ## [[DOCKER]]
@@ -594,6 +735,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/i18n/messages/es.ts`
 - `frontend/src/i18n/messages/index.ts`
 - `frontend/src/layouts/Base.astro`
+- `frontend/src/lib/assistant-client.ts`
 - `frontend/src/lib/auth.ts`
 - `frontend/src/lib/authGate.ts`
 - `frontend/src/lib/components/auth/AuthPanel.svelte`
@@ -634,7 +776,9 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/form/TagsInput.svelte`
 - `frontend/src/lib/components/form/ToggleGroup.svelte`
 - `frontend/src/lib/components/form/index.ts`
-- `frontend/src/lib/components/icons/Check.svelte`
+- `frontend/src/lib/components/header/LayoutHeader.svelte`
+- `frontend/src/lib/components/header/NavBar.svelte`
+- `frontend/src/lib/components/header/index.ts`
 - `frontend/src/lib/components/icons/index.ts`
 - `frontend/src/lib/components/nav/ContextMenu.svelte`
 - `frontend/src/lib/components/nav/DropdownMenu.svelte`
@@ -651,16 +795,24 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/overlay/ScrollArea.svelte`
 - `frontend/src/lib/components/overlay/Tooltip.svelte`
 - `frontend/src/lib/components/overlay/index.ts`
-- `frontend/src/lib/components/primitives/HomeTriangle.svelte`
+- `frontend/src/lib/components/primitives/PageCanvas.svelte`
+- `frontend/src/lib/components/primitives/Surface.svelte`
+- `frontend/src/lib/components/primitives/titles/PageHeading.svelte`
 - `frontend/src/lib/components/primitives/titles/PageTitle.svelte`
 - `frontend/src/lib/components/primitives/titles/SectionTitle.svelte`
 - `frontend/src/lib/components/primitives/titles/index.ts`
+- `frontend/src/lib/components/shell/ChatDrawer.svelte`
+- `frontend/src/lib/components/shell/NavBadge.svelte`
+- `frontend/src/lib/components/shell/NavDrawer.svelte`
+- `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavbarIcon.svelte`
+- `frontend/src/lib/components/shell/index.ts`
+- `frontend/src/lib/components/shell/nav.ts`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`
 - `frontend/src/lib/components/showcase/ContextMenuDemo.svelte`
 - `frontend/src/lib/components/showcase/DrawerDemo.svelte`
 - `frontend/src/lib/components/showcase/DropdownMenuDemo.svelte`
-- `frontend/src/lib/components/showcase/HomeTriangleDemo.svelte`
 - `frontend/src/lib/components/showcase/HoverCardDemo.svelte`
 - `frontend/src/lib/components/showcase/MenubarDemo.svelte`
 - `frontend/src/lib/components/showcase/PaginationDemo.svelte`
@@ -669,6 +821,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/showcase/RangeCalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/ScrollAreaDemo.svelte`
 - `frontend/src/lib/components/showcase/SliderDemo.svelte`
+- `frontend/src/lib/components/showcase/SurfaceDemo.svelte`
 - `frontend/src/lib/components/showcase/TableOfContentsDemo.svelte`
 - `frontend/src/lib/components/showcase/TabsDemo.svelte`
 - `frontend/src/lib/components/showcase/TagsInputDemo.svelte`
@@ -676,6 +829,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/showcase/ToggleGroupDemo.svelte`
 - `frontend/src/lib/components/showcase/TooltipDemo.svelte`
 - `frontend/src/lib/components/showcase/TreeDemo.svelte`
+- `frontend/src/lib/components/showcase/galleryRegistry.ts`
 - `frontend/src/lib/components/showcase/index.ts`
 - `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
 - `frontend/src/lib/components/theme/ThemeCard.svelte`
@@ -726,14 +880,13 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/ui/table/table-row.svelte`
 - `frontend/src/lib/components/ui/table/table.svelte`
 - `frontend/src/lib/components/views/ChatView.svelte`
-- `frontend/src/lib/components/views/LobbyView.svelte`
+- `frontend/src/lib/components/views/HomeCard.svelte`
+- `frontend/src/lib/components/views/HomeCardsView.svelte`
 - `frontend/src/lib/components/views/ProfileView.svelte`
 - `frontend/src/lib/components/views/ShowcaseGalleryView.svelte`
-- `frontend/src/lib/components/views/ShowcaseView.svelte`
 - `frontend/src/lib/components/views/index.ts`
 - `frontend/src/lib/csrf.ts`
 - `frontend/src/lib/display-name.ts`
-- `frontend/src/lib/home-triangle.ts`
 - `frontend/src/lib/optimistic-toggle.ts`
 - `frontend/src/lib/router-client.ts`
 - `frontend/src/lib/theme.ts`

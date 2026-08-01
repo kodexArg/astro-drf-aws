@@ -54,8 +54,7 @@ import {
   MenubarDemo,
   TableOfContentsDemo,
   DrawerDemo,
-  HomeTriangleDemo,
-  CornerNavTriangleDemo,
+  SurfaceDemo,
 } from "$lib/components/showcase";
 import type {
   TabItem,
@@ -64,23 +63,14 @@ import type {
   MenubarMenu,
   TableOfContentsItem,
 } from "$lib/components/nav";
-import { requireRole } from "$lib/authGate";
+import { NavDrawer, NavItem, NavBadge, NavbarIcon } from "$lib/components/shell";
+import { Brain } from "$lib/components/icons";
+import { loadSession, requireRole } from "$lib/authGate";
 import { t } from "../../i18n";
-import type { Me } from "$lib/types/user";
 
-const backendApiUrl = process.env.BACKEND_API_URL ?? "http://localhost:8000";
 const publicBackendUrl = process.env.PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
-let me: Me | null = null;
-const cookie = Astro.request.headers.get("cookie");
-if (cookie) {
-  try {
-    const res = await fetch(`${backendApiUrl}/api/me/`, { headers: { cookie } });
-    if (res.ok) me = (await res.json()) as Me;
-  } catch (err) {
-    console.error("SSR /api/me/ failed:", err);
-  }
-}
+const me = await loadSession(Astro.request);
 
 const redirect = requireRole(me);
 if (redirect) return Astro.redirect(redirect);
@@ -219,7 +209,7 @@ const tocItems: TableOfContentsItem[] = [
 ];
 ---
 
-<Base title={t("gallery_title")}>
+<Base title={t("gallery_title")} {me}>
   {/* @ts-expect-error Astro↔Svelte-5 named-slot typing limitation (@astrojs/svelte 9 / Svelte 5 legacy <slot name>): the generated TSX types the component's children as `undefined`, but the many slotted children render correctly at runtime — see the issue that gated this on a green `bun run check` */}
   <ShowcaseGalleryView
     entities={entities}
@@ -275,13 +265,18 @@ const tocItems: TableOfContentsItem[] = [
       hoverCard: t("gallery_hover_card"),
       scrollArea: t("gallery_scroll_area"),
       drawer: t("gallery_drawer"),
-      homeTriangle: t("gallery_home_triangle"),
-      cornerNavTriangle: t("gallery_corner_nav_triangle"),
       feedback: t("gallery_feedback"),
       progress: t("gallery_progress"),
       toast: t("gallery_toast"),
       auth: t("gallery_auth"),
       theme: t("gallery_theme"),
+      shell: t("gallery_shell"),
+      shellNote: t("gallery_shell_note"),
+      shellNavDrawer: t("gallery_shell_nav_drawer"),
+      shellNavItem: t("gallery_shell_nav_item"),
+      shellNavBadge: t("gallery_shell_nav_badge"),
+      shellNavbarIcon: t("gallery_shell_navbar_icon"),
+      shellSurface: t("gallery_shell_surface"),
     }}
   >
     <DataTable columns={invoiceColumns} rows={invoiceRows} client:load slot="data-table">
@@ -356,28 +351,49 @@ const tocItems: TableOfContentsItem[] = [
       client:visible
       slot="table-of-contents"
     />
-    <ChatUI
-      client:visible
-      slot="chat"
-      publicBackendUrl={publicBackendUrl}
-      copy={{
-        title: t("chatui_router_title"),
-        emptyState: t("chatui_router_empty"),
-        composerPlaceholder: t("chatui_composer_placeholder"),
-        composerAriaLabel: t("chatui_composer_aria_label"),
-        composerSend: t("chatui_composer_send"),
-        messageGo: t("chatui_message_go"),
-        messageConfirm: t("chatui_message_confirm"),
-        outcomeCopy: {
-          router_outcome_escalate: t("router_outcome_escalate"),
-          router_outcome_no_match: t("router_outcome_no_match"),
-          router_outcome_disabled: t("router_outcome_disabled"),
-          router_outcome_hard_reject: t("router_outcome_hard_reject"),
-          router_outcome_throttled: t("router_outcome_throttled"),
-          router_outcome_network_error: t("router_outcome_network_error"),
-        },
-      }}
-    />
+    <div slot="chat" class="flex flex-col gap-6">
+      <ChatUI
+        client:visible
+        publicBackendUrl={publicBackendUrl}
+        copy={{
+          title: t("chatui_router_title"),
+          composerPlaceholder: t("chatui_composer_placeholder"),
+          composerAriaLabel: t("chatui_composer_aria_label"),
+          composerSend: t("chatui_composer_send"),
+          messageGo: t("chatui_message_go"),
+          messageConfirm: t("chatui_message_confirm"),
+          outcomeCopy: {
+            router_outcome_escalate: t("router_outcome_escalate"),
+            router_outcome_no_match: t("router_outcome_no_match"),
+            router_outcome_disabled: t("router_outcome_disabled"),
+            router_outcome_hard_reject: t("router_outcome_hard_reject"),
+            router_outcome_throttled: t("router_outcome_throttled"),
+            router_outcome_network_error: t("router_outcome_network_error"),
+          },
+        }}
+      />
+      <ChatUI
+        client:visible
+        mode="assistant"
+        page="/showcase/components/"
+        publicBackendUrl={publicBackendUrl}
+        copy={{
+          title: t("chatui_assistant_title"),
+          composerPlaceholder: t("chatui_assistant_composer_placeholder"),
+          composerAriaLabel: t("chatui_composer_aria_label"),
+          composerSend: t("chatui_composer_send"),
+          messageGo: t("chatui_message_go"),
+          messageConfirm: t("chatui_message_confirm"),
+          outcomeCopy: {
+            assistant_outcome_disabled: t("assistant_outcome_disabled"),
+            assistant_outcome_throttled: t("assistant_outcome_throttled"),
+            assistant_outcome_unavailable: t("assistant_outcome_unavailable"),
+            assistant_outcome_network_error: t("assistant_outcome_network_error"),
+            assistant_outcome_validation_error: t("assistant_outcome_validation_error"),
+          },
+        }}
+      />
+    </div>
     <Fragment slot="overlay-triggers">
       <Dialog triggerLabel={t("demo_dialog_trigger")} title={t("demo_dialog_title")} description={t("demo_dialog_desc")} client:visible>
         <p>{t("demo_dialog_body")}</p>
@@ -417,8 +433,6 @@ const tocItems: TableOfContentsItem[] = [
       slot="scroll-area"
     />
     <DrawerDemo client:visible slot="drawer" />
-    <HomeTriangleDemo slot="home-triangle" />
-    <CornerNavTriangleDemo slot="corner-nav-triangle" />
     <Progress
       value={62}
       max={100}
@@ -448,6 +462,30 @@ const tocItems: TableOfContentsItem[] = [
       slot="auth"
     />
     <ThemeModeToggle client:visible slot="theme-toggle" />
+    <NavDrawer
+      client:visible
+      pathname="/showcase/components/"
+      slot="shell-nav-drawer"
+    />
+    <Fragment slot="shell-nav-item">
+      {/* Idle beside active, so both NavItem states are visible; the hrefs
+          stay inert (adr-22 rule 2). */}
+      <NavItem href="#" label={t("gallery_shell_nav_item_idle")} icon={Brain} />
+      <NavItem href="#" label={t("gallery_shell_nav_item_active")} icon={Brain} active />
+    </Fragment>
+    {/* A non-zero count so the badge actually renders (zero renders nothing
+        by design — see NavBadge.svelte). */}
+    <NavBadge count={3} slot="shell-nav-badge" />
+    <Fragment slot="shell-navbar-icon">
+      {/* Idle beside active, so the --accent-active pair is visible in both
+          themes; no handler is supplied, so all three are inert (adr-22 rule 2). */}
+      <div class="flex items-center gap-2">
+        <NavbarIcon icon={Brain} label={t("gallery_shell_navbar_icon_idle")} />
+        <NavbarIcon icon={Brain} label={t("gallery_shell_navbar_icon_active")} active />
+        <NavbarIcon label={t("gallery_shell_navbar_icon_bare")} />
+      </div>
+    </Fragment>
+    <SurfaceDemo slot="shell-surface" />
   </ShowcaseGalleryView>
   <Toast client:idle />
 </Base>

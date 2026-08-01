@@ -1,20 +1,24 @@
 <!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-15-chatbot-two-tier]]
-     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[CHATBOT]]
+     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-22-showcase-ready-components]] · [[adr-15-chatbot-two-tier]]
+     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]] · [[CHATBOT]]
      LIVE-DOC:END -->
 
 <!--
-  Renders ONLY the closed set of router outcomes ([[CHATBOT]], adr-15): the
-  user's own utterance, a `navigate` link, a `confirm` action, or a fixed
-  status line. There is no assistant-prose branch — the router emits an enum
-  member, never free text, so this list has nowhere to render generated text.
+  Transcript for both chat modes. Router outcomes stay enum-only; assistant
+  answers render as text nodes (never {@html}) plus structured links only.
 -->
 <script lang="ts" module>
   export type ChatMessage =
     | { id: string; role: "user"; text: string }
     | { id: string; role: "navigate"; label: string; target: string }
     | { id: string; role: "confirm"; label: string; target: string }
-    | { id: string; role: "status"; text: string };
+    | { id: string; role: "status"; text: string }
+    | {
+        id: string;
+        role: "assistant";
+        text: string;
+        links?: { target: string; label: string }[];
+      };
 </script>
 
 <script lang="ts">
@@ -29,20 +33,25 @@
     copy,
   }: {
     messages: ChatMessage[];
-    /** Fired when the user confirms a `confirm` outcome in its dialog. */
     onconfirm?: (message: Extract<ChatMessage, { role: "confirm" }>) => void;
-    /** Rendered copy arrives resolved from the page's frontmatter (LOCALIZATION) */
     copy: { go: string; confirm: string };
   } = $props();
+
+  // Money-like tokens get monospace; everything else is plain text (never HTML).
+  const MONEY_TOKEN = /^\$?\d{1,3}(?:[.\s]\d{3})*(?:,\d+)?(?:\s?[kKmM])?$/;
+  const MONEY_SPLIT = /(\$?\d{1,3}(?:[.\s]\d{3})*(?:,\d+)?(?:\s?[kKmM])?)/g;
+
+  function answerSegments(text: string): { kind: "text" | "money"; value: string }[] {
+    return text
+      .split(MONEY_SPLIT)
+      .filter((p) => p.length > 0)
+      .map((value) => ({
+        kind: MONEY_TOKEN.test(value) ? ("money" as const) : ("text" as const),
+        value,
+      }));
+  }
 </script>
 
-<!--
-  Array/DOM order stays natural append order (oldest -> newest, unchanged
-  from ChatUI's push()) — no reversal here. Bottom anchoring is owned by
-  ChatUI's wrapping container (justify-end + a scrollTop-to-bottom effect),
-  not by this component, so reading/tab/DOM order is correct by
-  construction (issue #250).
--->
 <div class="flex flex-col gap-3">
   {#each messages as message (message.id)}
     {#if message.role === "user"}
@@ -70,6 +79,25 @@
           />
         </Card.Content>
       </Card.Root>
+    {:else if message.role === "assistant"}
+      <div class="flex max-w-[85%] flex-col gap-2 self-start">
+        <div class="rounded-2xl rounded-bl-sm bg-muted px-4 py-2 text-sm text-foreground">
+          {#each answerSegments(message.text) as seg}
+            {#if seg.kind === "money"}
+              <span class="font-mono tabular-nums">{seg.value}</span>
+            {:else}
+              {seg.value}
+            {/if}
+          {/each}
+        </div>
+        {#if message.links && message.links.length > 0}
+          <div class="flex flex-wrap gap-2">
+            {#each message.links as link}
+              <Button href={link.target} size="sm" variant="outline">{link.label}</Button>
+            {/each}
+          </div>
+        {/if}
+      </div>
     {:else}
       <Alert class="max-w-[85%] self-start">
         <AlertDescription>{message.text}</AlertDescription>

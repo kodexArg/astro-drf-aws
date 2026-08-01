@@ -13,6 +13,7 @@
 
 export type ThemeMode = "light" | "dark";
 export type ThemeBgPreset = "default" | "melt";
+export type SidebarSide = "left" | "right";
 
 export interface ThemeColors {
   background?: string;
@@ -24,14 +25,18 @@ export interface ThemeColors {
 export interface ThemeConfig {
   mode?: ThemeMode;
   bgPreset?: ThemeBgPreset;
+  sidebarSide?: SidebarSide;
   colors?: ThemeColors;
   radius?: string;
 }
 
-export const DEFAULTS: { mode: ThemeMode; bgPreset: ThemeBgPreset } = {
+export const DEFAULTS: { mode: ThemeMode; bgPreset: ThemeBgPreset; sidebarSide: SidebarSide } = {
   mode: "dark",
   bgPreset: "melt",
+  sidebarSide: "left",
 };
+
+export const SIDEBAR_SIDES: readonly SidebarSide[] = ["left", "right"];
 
 export const COLOR_KEYS: readonly (keyof ThemeColors)[] = [
   "background",
@@ -81,6 +86,10 @@ function isBgPreset(value: unknown): value is ThemeBgPreset {
   return value === "default" || value === "melt";
 }
 
+function isSidebarSide(value: unknown): value is SidebarSide {
+  return value === "left" || value === "right";
+}
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -94,6 +103,7 @@ export function sanitizeThemeConfig(value: unknown): ThemeConfig {
   const blob: ThemeConfig = {};
   if (isMode(value.mode)) blob.mode = value.mode;
   if (isBgPreset(value.bgPreset)) blob.bgPreset = value.bgPreset;
+  if (isSidebarSide(value.sidebarSide)) blob.sidebarSide = value.sidebarSide;
 
   if (isPlainObject(value.colors)) {
     const colors: ThemeColors = {};

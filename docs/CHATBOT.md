@@ -3,12 +3,12 @@ title: CHATBOT
 type: reference
 status: active
 created: 2026-07-14
-tags: [harness, chatbot, router, ai, security]
+tags: [harness, chatbot, router, assistant, ai, security]
 ---
 
 # CHATBOT
 
-The template's conversational surface and the architecture behind it. Ruled by [[adr-15-chatbot-two-tier]]. This file **owns the content**; the ADR states only the rules and links here.
+The template's conversational surface and the architecture behind it. Ruled by [[adr-15-chatbot-two-tier]] and, for the assistant surface, [[adr-24-page-context-assistant]]. This file **owns the content**; the ADRs state only the rules and link here.
 
 > [!note] Naming — settled
 > `chatui`, `router`, the endpoint segment `route` (`/api/router/route/`), the models `Intent` and `IntentQuery`, the reserved outcomes `NO_MATCH`/`ESCALATE`, the action field `kind`, and the env stem `ROUTER_*` are all registered in [[GLOSSARY]] ([[adr-01-glossary-and-localization]]).
@@ -19,7 +19,7 @@ The template's conversational surface and the architecture behind it. Ruled by [
 > **The tier that chooses never generates. The tier that generates never chooses.**
 > Choosing carries actuator rights and emits nothing but a member of a closed enum. Generating emits free text and is read-only, forever. The two capabilities are disjoint, permanently — this is the architecture, not a phase.
 
-## What ships in this template (stage 1)
+## What ships in this template — the router (the choosing tier)
 
 A chat-like UI — `chatui` — where the user types free text into a box and gets a result. **It feels like a chatbot. It is not one.** There is no conversation, no memory, no prose coming back from a model. What sits behind the box is a **router**.
 
@@ -31,20 +31,20 @@ The router:
 4. Gets back exactly one member of that enum. Nothing else is a valid response.
 5. Maps that member to a preconfigured link, site action, or `GET` view and executes it.
 
-**Zero free-text generation happens anywhere in stage 1.** No model in this template ever writes a sentence a user reads.
+**Zero free-text generation happens anywhere in the choosing tier.** The router never writes a sentence a user reads.
 
 The shipped menu is a **closed, permission-filtered menu** built from a growable registry the owner authors — it is not a fixed, hardcoded list, and no specific option count is part of the design. Two reserved members are always present regardless of registry size: `NO_MATCH` (understood, but nothing on the menu answers it) and `ESCALATE` (below); every other member maps 1:1 to a link/action or an already-declared `GET` endpoint ([[API]]). Menus stay small on purpose, because a small closed menu is what makes the security argument below hold cheaply.
 
 **A response outside the enum is a hard reject** — logged as a fault, never repaired, never defaulted to a nearest match, never retried into one. Silent repair would reintroduce exactly the ambiguity the enum exists to delete. Every decision, including rejects and escalations, persists an audit row (see Retention below).
 
-**The template stops here.** Stage 2 below is *made possible* by this design; it is not built, not designed in detail, and not scheduled here.
+**The router's build stops here.** The router-mediated generating path below is *made possible* by this design; it is not built, not designed in detail, and not scheduled. A **direct** user → generating-tier channel is a separate, recorded decision — the page-context assistant, further down ([[adr-24-page-context-assistant]]) — and it changes no line of the router's contract.
 
 ### Local development calls Bedrock directly
 
 A developer runs the router **from their own machine against Bedrock**, with their own IAM credentials, region us-east-1. That is the local path: no emulator, no local model server, no offline stand-in required to exercise the real pipeline.
 
 > [!note] The VPC interface endpoint is a *cloud* requirement, not a local blocker
-> The `com.amazonaws.us-east-1.bedrock-runtime` interface endpoint exists because **Fargate runs in a private subnet with no NAT gateway** ([[INFRASTRUCTURE]]) and therefore cannot otherwise reach Bedrock. That is a deployment concern and belongs to the cloud phase alone. A laptop reaches Bedrock over the public internet like any other AWS API call. Any document or plan that presents the interface endpoint as a prerequisite for building or testing stage 1 is wrong.
+> The `com.amazonaws.us-east-1.bedrock-runtime` interface endpoint exists because **Fargate runs in a private subnet with no NAT gateway** ([[INFRASTRUCTURE]]) and therefore cannot otherwise reach Bedrock. That is a deployment concern and belongs to the cloud phase alone. A laptop reaches Bedrock over the public internet like any other AWS API call. Any document or plan that presents the interface endpoint as a prerequisite for building or testing the router is wrong.
 
 ### AccessDenied from Bedrock has TWO root causes — triage before touching IAM
 
@@ -55,11 +55,11 @@ An `AccessDeniedException` on the router's Bedrock call reads identically for tw
 
 Distinguish in one command: `aws bedrock get-foundation-model-availability --model-id amazon.nova-micro-v1:0` — `authorizationStatus: AUTHORIZED` + `entitlementAvailability: AVAILABLE` means model access is fine and the problem is IAM; anything else means enable model access first (Bedrock console → Model access). Also remember the model id is the **inference profile** form `us.amazon.nova-micro-v1:0` ([[VARIABLES]] `ROUTER_BEDROCK_MODEL_ID`) — the bare `amazon.nova-micro-v1:0` id is not on-demand invokable and fails with a `ValidationException`, a third error that is neither of the above.
 
-## Stage 2 — the router becomes a security filter (not built here)
+## The generating tier reached *through* the router — a security filter (not built)
 
-The template only **makes this possible**. Nothing in stage 2 is designed, planned, or shipped by this repo.
+This design only **makes it possible**. Nothing of this router-mediated path is designed, planned, or shipped by this repo. The one generating-tier surface this template has decided on is the **direct** channel recorded below, which does not travel through the router at all — and therefore inherits none of the containment this section describes.
 
-In stage 2 a **second, smarter model — deliberately unnamed, TBD** — is added behind the router to do the generating the router refuses to do. The router does not step aside for it. The router becomes the **filter it must pass through**.
+When it arrives, a **second, smarter model — deliberately unnamed, TBD** — is added behind the router to do the generating the router refuses to do. The router does not step aside for it. The router becomes the **filter it must pass through**.
 
 **The router never forwards the user's raw text.** It forwards a **reinterpreted prompt**: its own restatement of what the user meant. The smart model never sees attacker-controlled bytes verbatim. This is the whole point of the arrangement, and it only works because of the next section.
 
@@ -97,7 +97,7 @@ This is the spine of [[adr-15-chatbot-two-tier]] and the reason the enum-constra
 | Tier | Emits | Rights |
 |---|---|---|
 | **Choosing** (the router) | Exactly one member of a closed, permission-filtered enum. Never text. | **Actuator rights** — its output can flip a switch, navigate, trigger an action. |
-| **Generating** (stage 2, TBD) | Free-form natural language. | **Read-only, forever.** Never flips a switch. |
+| **Generating** (the assistant today; any router-mediated path TBD) | Free-form natural language. | **Read-only, forever.** Never flips a switch. |
 
 If the generating tier wants an action, it does not take one. It **re-enters through the router** with a closed menu and is subject to the same filtering, the same enum, the same hard reject, and the same audit row as a human utterance. There is no privileged back door for the model that talks.
 
@@ -114,12 +114,39 @@ Every routed utterance resolves to exactly one of four outcome kinds — **`NO_M
 
 ### The escalation seam
 
-`ESCALATE` is the **single, stable handoff point** between the tiers, and it ships in stage 1 — not later. `NO_MATCH` is a sibling reserved member with a different meaning (above) and is never used as a stand-in for it.
+`ESCALATE` is the **single, stable handoff point** between the tiers, and it ships with the router — not later. `NO_MATCH` is a sibling reserved member with a different meaning (above) and is never used as a stand-in for it.
 
-- **Stage 1 behavior:** selecting `ESCALATE` returns a fixed "not supported yet" response. Nothing generative runs behind it.
-- **Stage 2 behavior:** the generating tier plugs in **exactly here**, receiving the structured reinterpretation described above. The choosing tier's contract does not change to accommodate it.
+- **Today:** selecting `ESCALATE` returns a fixed "not supported yet" response. Nothing generative runs behind it.
+- **When the router-mediated generating tier arrives:** it plugs in **exactly here**, receiving the structured reinterpretation described above. The choosing tier's contract does not change to accommodate it.
 
-Shipping the seam dead, from day one, is what keeps stage 2 from becoming a rewrite.
+Shipping the seam dead, from day one, is what keeps the generating tier from ever becoming a rewrite.
+
+## The page-context assistant — the direct channel
+
+> [!important] The decision
+> A **direct user → generating-tier channel** is authorized: the page-context assistant. It bypasses the router entirely. Its force is [[adr-24-page-context-assistant]], which lifts [[adr-15-chatbot-two-tier]]'s rule-9 stop for exactly this surface, adds to that ADR, and supersedes none of its rules.
+
+Until this decision, this document described the generating tier as reachable **only** through the router's structured reinterpretation. It is now reachable two ways, and they are different objects: the router-mediated path above is still unbuilt and undesigned, while this one is decided, bounded, and entered through [[API]] as `POST /api/assistant/ask/`.
+
+**This is a second free-text channel, and it is stated as one.** The bottleneck argument above — an enum plus typed slots too narrow to carry an instruction — does **not** apply here: the user's utterance reaches the generating model as text. What bounds this surface is not channel capacity; it is that the tier receiving the text can do nothing but write words back, under an authorization decided in Django before it runs (`CanUseAssistant`, [[API]]). Anyone reading this section as "the assistant is contained the way the router is contained" has read it wrong, and the honest limit below is the whole of the claim.
+
+### The v1 bounds
+
+- **Read-only, forever.** No actuator rights, no `confirm`, no write, no mutating endpoint — [[adr-15-chatbot-two-tier]] rule 1 unchanged. An action the assistant wants re-enters through the router (rule 4); v1 emits no action at all.
+- **Server-assembled, group-filtered context.** The request carries a **page identity** — a member of the closed nav registry — plus the params the page itself used; never page text, never DOM scrape, never client-shipped content. The backend recomputes that page's data through the same layer the page's declared `GET` endpoints use, under the caller's Django Groups. A page whose backing endpoint the caller may not read yields **no context**, not an error, and never a figure the caller could not have fetched by hand ([[adr-10-auth]], [[adr-24-page-context-assistant]] rule 3).
+- **Structured, registry-validated links.** Link suggestions travel in their own constrained field and each `target` is validated server-side against the nav registry; anything outside it is dropped. The prose may name a view; only the validated array renders as an anchor. The frontend renders the answer as text nodes — no HTML, no Markdown interpretation, no link minted from prose ([[adr-24-page-context-assistant]] rule 4).
+- **Kill switch.** `ASSISTANT_ENABLED=false` short-circuits to a fixed `disabled` outcome with zero inference calls, exactly as `ROUTER_ENABLED` does for the router ([[VARIABLES]]).
+- **Abuse guard, reused.** The router's per-user cooldown and its silent rate block are reused rather than reimplemented; both return `429`, indistinguishable to the caller.
+- **Bounded audit retention, mirroring the router's.** Every ask persists an `AssistantQuery` audit row under a bounded-window policy of the same shape as `IntentQuery`'s (Retention, below): `ASSISTANT_AUDIT_RETENTION_DAYS` bounds the window, `purge_assistant_audit` deletes past it ([[VARIABLES]]). No conversation memory exists beyond those rows.
+- **Rendered copy, localizable.** The answer reaches the screen, so it is rendered output localizable through the i18n layer like any user-facing string; prompt scaffolding identifiers, keys, and every other non-rendered string stay English ([[LOCALIZATION]], [[adr-24-page-context-assistant]] rule 5).
+
+### View-first context — the agnostic principle
+
+**The content of the user's current view is the first context any AI answer draws on**, and the first tier of any retrieval layered on later. That is a *priority ordering* and deliberately nothing else: it names no store, no embedding strategy, no chunking, no vendor, and no retrieval contract ([[adr-24-page-context-assistant]] rule 2). It sits beside the RAG paragraph below rather than replacing it — the page's already-computed variables are hot context precisely because they were computed once, server-side, for the screen, so chat and screen can never disagree.
+
+### The escalation seam is unchanged
+
+`ESCALATE` still means what it meant, still ships dead, and is still the single stable handoff point *from the choosing tier*. The assistant is a **sibling direct surface**, not a replacement for it and not an implementation of it: nothing about the router's contract, its four outcomes, or its reserved members moves. When the router-mediated generating path is eventually built, it plugs into the seam exactly as described above.
 
 ## Retention — the audit row is bounded, not forever (closes #65)
 
@@ -129,6 +156,7 @@ The raw utterance persists in `IntentQuery`, but under a bounded retention polic
 - **Purge** — the `purge_router_audit` management command deletes rows past the window; idempotent, `--dry-run` reports without deleting.
 - **On-delete** — `IntentQuery.chosen_intent` is `SET_NULL`, not `PROTECT`: deleting an `Intent` registry row never cascade-deletes, and is never blocked by, its audit history (resolves the #105 collision).
 - **Admin visibility** — `utterance` / `raw_model_output` are visible in Django admin only to the "Router Auditors" group; every other admin user's views exclude both fields.
+- **Assistant mirror** — `AssistantQuery` audit rows live under the same policy shape: `ASSISTANT_AUDIT_RETENTION_DAYS` ([[VARIABLES]], default `30`) bounds the window, `purge_assistant_audit` deletes rows past it (idempotent, `--dry-run`), and raw text carries the same admin-visibility restriction.
 
 ## The action descriptor — the backend chooses, the frontend acts
 
@@ -154,3 +182,4 @@ The chatbot is the intended **future entry point for a RAG**. The template only 
 
 - [[API]] — every endpoint this feature needs enters there first, in its own guarded act, before any code ([[adr-03-api-and-backend]]).
 - [[AUTH]] / [[adr-10-auth]] — unchanged. Cognito authenticates; Django authorizes. The router authorizes nothing; it narrows a menu Django already authorized.
+- [[adr-24-page-context-assistant]] — the rules of the direct channel; this file owns the content those rules point to.

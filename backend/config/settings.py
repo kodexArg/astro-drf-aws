@@ -106,6 +106,7 @@ INSTALLED_APPS = [
     "apps.users",
     "apps.m365",
     "apps.router",
+    "apps.assistant",
 ]
 
 MIDDLEWARE = [
@@ -227,6 +228,13 @@ ROUTER_ENABLED = _env_bool("ROUTER_ENABLED", True)
 # (us.amazon.nova-micro-v1:0) — the bare ID is not on-demand invokable.
 BEDROCK_REGION = _env("BEDROCK_REGION", "us-east-1")
 ROUTER_BEDROCK_MODEL_ID = _env("ROUTER_BEDROCK_MODEL_ID", "us.amazon.nova-micro-v1:0")
+
+# Page-context assistant generating tier ([[VARIABLES]], [[CHATBOT]],
+# [[adr-24-page-context-assistant]]).
+ASSISTANT_ENABLED = _env_bool("ASSISTANT_ENABLED", True)
+ASSISTANT_BEDROCK_MODEL_ID = _env("ASSISTANT_BEDROCK_MODEL_ID", "us.amazon.nova-micro-v1:0")
+ASSISTANT_USE_MOCK_INFERENCE = _env_bool("ASSISTANT_USE_MOCK_INFERENCE", True)
+ASSISTANT_AUDIT_RETENTION_DAYS = int(_env("ASSISTANT_AUDIT_RETENTION_DAYS", "30"))
 
 MSGRAPH_TENANT_ID = _env("MSGRAPH_TENANT_ID", "")
 MSGRAPH_CLIENT_ID = _env("MSGRAPH_CLIENT_ID", "")

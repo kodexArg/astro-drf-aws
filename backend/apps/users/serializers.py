@@ -12,10 +12,11 @@ from apps.users.models import User
 
 READ_ONLY_FIELDS = ["sub", "email", "given_name", "family_name", "picture", "groups"]
 
-THEME_TOP_LEVEL_KEYS = {"mode", "bgPreset", "colors", "radius"}
+THEME_TOP_LEVEL_KEYS = {"mode", "bgPreset", "sidebarSide", "colors", "radius"}
 THEME_COLOR_KEYS = {"background", "primary", "secondary", "accent"}
 THEME_MODE_CHOICES = {"light", "dark"}
 THEME_BG_PRESET_CHOICES = {"default", "melt"}
+THEME_SIDEBAR_SIDE_CHOICES = {"left", "right"}
 
 _COLOR_RE = re.compile(r"^(#[0-9a-fA-F]{3,8}|rgb(a)?\(.*\)|hsl\(.*\)|oklch\(.*\))$")
 _COLOR_FORBIDDEN_CHARS = frozenset(";{}<>\"'")
@@ -24,6 +25,17 @@ _COLOR_FORBIDDEN_SUBSTRINGS = ("url", "expression")
 # Mirrors frontend/src/lib/theme.ts's RADIUS_PATTERN exactly — the server is
 # the boundary, not the frontend's re-sanitization ([[GLOSSARY]]: theme_config).
 _RADIUS_RE = re.compile(r"^[0-9]*\.?[0-9]+(px|rem|em|%|vh|vw|ch)$")
+
+# Mirrors the frontend shell's NAV_ITEMS hrefs (the closed nav registry,
+# [[API]] — POST /api/assistant/ask/), plus the empty default — the server is
+# the boundary, not the frontend's own routing ([[adr-24-page-context-assistant]]).
+DEFAULT_PAGE_CHOICES = {
+    "",
+    "/",
+    "/chatui/",
+    "/showcase/components/",
+    "/profile/",
+}
 
 
 def _is_valid_color(value):
@@ -53,6 +65,8 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("mode must be one of: light, dark.")
         if "bgPreset" in value and value["bgPreset"] not in THEME_BG_PRESET_CHOICES:
             raise serializers.ValidationError("bgPreset must be one of: default, melt.")
+        if "sidebarSide" in value and value["sidebarSide"] not in THEME_SIDEBAR_SIDE_CHOICES:
+            raise serializers.ValidationError("sidebarSide must be one of: left, right.")
         if "colors" in value:
             colors = value["colors"]
             if not isinstance(colors, dict):

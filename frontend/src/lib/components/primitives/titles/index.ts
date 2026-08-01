@@ -5,3 +5,4 @@
 
 export { default as PageTitle } from "./PageTitle.svelte";
 export { default as SectionTitle } from "./SectionTitle.svelte";
+export { default as PageHeading } from "./PageHeading.svelte";

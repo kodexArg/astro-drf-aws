@@ -25,3 +25,19 @@ export const DENIED_REDIRECT = `/?${DENIED_QUERY}=1`;
 export function requireRole(me: Me | null): string | null {
   return hasRole(me) ? null : DENIED_REDIRECT;
 }
+
+/** The SSR identity read every gated route runs before `requireRole`. */
+export async function loadSession(request: Request): Promise<Me | null> {
+  const cookie = request.headers.get("cookie");
+  if (!cookie) return null;
+
+  const backendApiUrl = process.env.BACKEND_API_URL ?? "http://localhost:8000";
+
+  try {
+    const res = await fetch(`${backendApiUrl}/api/me/`, { headers: { cookie } });
+    return res.ok ? ((await res.json()) as Me) : null;
+  } catch (err) {
+    console.error("SSR /api/me/ failed:", err);
+    return null;
+  }
+}

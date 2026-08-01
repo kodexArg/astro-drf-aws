@@ -1,17 +1,19 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { t } from "../src/i18n";
-import { DENIED_REDIRECT } from "../src/lib/authGate";
+import { DENIED_QUERY, DENIED_REDIRECT } from "../src/lib/authGate";
 
-// Smoke tests for the SSR routes ([[FRONTEND]] T5): / renders a Showcase
-// button and a Card carrying the two backend words (bdd-01); /showcase/components/
-// and /healthz respond 200; each carries an explicit Cache-Control. Runs
-// against the built standalone server (`bun run build` first). No backend is
-// required — no cookie is sent, so /showcase/components/ renders the
-// anonymous auth section without a live /api/me/ call; / tolerates either a
-// live backend or its per-word error-code fallback.
+// Smoke tests for the SSR routes ([[FRONTEND]] T5): / renders the new shell —
+// Base.astro's LayoutHeader/NavBar chrome (`data-nav-header` pill, sentinel)
+// around HomeCardsView — with the NAV_ITEMS cards shown only to a
+// role-holding session and the pending/denied surfaces otherwise
+// (adr-20-authorization-lobby); /showcase/components/, /chatui/ and /profile/
+// are role-gated; /healthz responds 200; each route carries an explicit
+// Cache-Control. Runs against the built standalone server (`bun run build`
+// first). No backend is required — no cookie is sent, so the anonymous
+// assertions never attempt a live /api/me/ call.
 //
 // bdd-02: the / session badge (avatar + display name / "Log in") is covered
-// by a second describe block below, each with its own SSR server instance
+// by the second describe block below, with its own SSR server instance
 // pointed at a stub /api/me/ backend (Bun.serve) — BACKEND_API_URL is read
 // once per server process, so the authenticated and anonymous branches need
 // separate processes to exercise both without a live Cognito dependency.
@@ -22,12 +24,17 @@ import { DENIED_REDIRECT } from "../src/lib/authGate";
 //
 // bdd-08 / adr-20: the authorization lobby. Every route but `/` requires
 // a Group-holding session — a role-less (`groups: []`) session is confined
-// to `/`, where it sees the `lobby_pending` legend instead of the nav/M365
-// content. An anonymous visitor is likewise redirected to `/` from every
-// other route (no cookie is sent, so no backend call is even attempted —
-// the guard short-circuits deterministically without a live backend). The
-// role-holding (`groups: ["admins"]`) 200 variants live in the stub-backed
-// describe block below, alongside the pending-redirect variants.
+// to `/`, where it sees the pending surface instead of the NAV_ITEMS cards,
+// and a `?denied=1` bounce surfaces the denied alert. An anonymous visitor
+// is likewise redirected to `/` from every other route (no cookie is sent,
+// so no backend call is even attempted — the guard short-circuits
+// deterministically without a live backend). The role-holding
+// (`groups: ["admins"]`) 200 variants live in the stub-backed describe block
+// below, alongside the pending-redirect variants.
+//
+// Unlike the gateway this suite descends from, the template's harness runs
+// it in the default `bun run test` (no RUN_SMOKE gate, no test:smoke script
+// in package.json) — it is SSR-fetch smoke, not browser smoke.
 
 const PORT = 43217;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -64,17 +71,23 @@ afterAll(() => {
   server?.kill();
 });
 
-test("/ renders a Showcase button, with an explicit Cache-Control, and hides the M365 status card from an anonymous visitor (issue #246)", async () => {
+test("/ renders the new shell for an anonymous visitor — LayoutHeader/NavBar chrome and PageCanvas landmark, no cards, no drawers", async () => {
   const res = await fetch(`${BASE}/`, { redirect: "manual" });
   expect(res.status).toBe(200);
   expect(res.headers.get("cache-control")).toBeTruthy();
   const body = await res.text();
-  expect(body).toContain('href="/showcase/components/"');
-  // The M365 status card (two <span class="text-sm"> word slots) is gated
-  // behind an authenticated session on the frontend, even though
-  // adr-13-m365-graph rule 3 leaves its backend routes AllowAny. The exact
-  // class excludes SessionBadge's differently-classed username span.
-  expect((body.match(/<span class="text-sm">/g) ?? []).length).toBe(0);
+  // Base.astro composes LayoutHeader (sentinel + sticky pill) before
+  // PageCanvas's <main>; NavBar paints the title into the pill.
+  expect(body).toContain("data-nav-sentinel");
+  expect(body).toContain("data-nav-header");
+  expect(body).toContain("<main");
+  expect(body).toContain(t("home_cards_title"));
+  // No NAV_ITEMS cards and no role-gated drawers for an anonymous visitor.
+  expect(body).not.toContain('href="/chatui/"');
+  expect(body).not.toContain('href="/showcase/components/"');
+  expect(body).not.toContain('href="/profile/"');
+  expect(body).not.toContain(t("shell_nav_label"));
+  expect(body).not.toContain(t("shell_chat_drawer_label"));
 });
 
 test("/ with no theme cookie renders the flipped defaults on <html> — dark mode + melt background (docs/bdds/bdd-07-melt-theme-sitewide.md)", async () => {
@@ -203,36 +216,61 @@ describe("/ session badge, authenticated branch (bdd-02); lobby gating (bdd-08, 
     // (issue #276); the popover still anchors on the full address.
     expect(body).toContain("Stub User");
     expect(body).toContain("stub@example.com");
-    // The login label rides serialized island props even on the
-    // authenticated branch — probe the rendered login LINK instead.
-    expect(body).not.toContain("/accounts/login/");
-    expect(body).toContain('action="http://localhost:8000/accounts/logout/"');
+    // loginHref rides the serialized astro-island props on every branch
+    // (quotes there are &quot;-escaped) — only a quote-anchored regex proves
+    // no rendered login anchor, since a bare toContain also matches the props.
+    expect(body).not.toMatch(/href="[^"]*\/accounts\/login\/"/);
+    expect(body).toMatch(/action="[^"]*\/accounts\/logout\/"/);
     expect(body).toContain('name="csrfmiddlewaretoken"');
   });
 
-  test("with a session cookie and zero groups (pending), the lobby legend renders and the nav buttons + M365 Card are hidden (bdd-08)", async () => {
+  test("with a session cookie and zero groups (pending), the pending surface renders and the cards + drawers stay hidden (bdd-08)", async () => {
     const res = await fetch(`${SSR_BASE}/`, {
       headers: { cookie: "sessionid=stub" },
     });
     expect(res.status).toBe(200);
     const body = await res.text();
+    expect(body).toContain(t("pending_title"));
     expect(body).toContain(t("lobby_pending"));
+    expect(body).not.toContain('href="/chatui/"');
     expect(body).not.toContain('href="/showcase/components/"');
     expect(body).not.toContain('href="/profile/"');
-    expect((body.match(/<span class="text-sm">/g) ?? []).length).toBe(0);
+    expect(body).not.toContain(t("shell_nav_label"));
+    expect(body).not.toContain(t("shell_chat_drawer_label"));
   });
 
-  test("with a session cookie and a role-holding group (groups: [admins]), the nav buttons + M365 Card render, no legend (bdd-08)", async () => {
+  test("a role-less session bounced back with ?denied=1 sees the denied surface on / (adr-20)", async () => {
+    const res = await fetch(`${SSR_BASE}/?${DENIED_QUERY}=1`, {
+      headers: { cookie: "sessionid=stub" },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain(t("denied_title"));
+    expect(body).toContain(t("denied_body"));
+    // The denied alert does not leak the cards either.
+    expect(body).not.toContain('href="/showcase/components/"');
+  });
+
+  test("with a session cookie and a role-holding group (groups: [admins]), the NAV_ITEMS cards and both drawers render, no pending surface (bdd-08)", async () => {
     const res = await fetch(`${SSR_BASE}/`, {
       headers: { cookie: "sessionid=stub-role" },
     });
     expect(res.status).toBe(200);
     const body = await res.text();
+    // One HomeCard per NAV_ITEMS row (shell/nav.ts).
+    expect(body).toContain('href="/chatui/"');
     expect(body).toContain('href="/showcase/components/"');
-    expect((body.match(/<span class="text-sm">/g) ?? []).length).toBe(2);
+    expect(body).toContain('href="/profile/"');
+    expect(body).toContain(t("shell_nav_chatui"));
+    expect(body).toContain(t("shell_nav_showcase"));
+    expect(body).toContain(t("shell_nav_profile"));
+    expect(body).not.toContain(t("pending_title"));
     expect(body).not.toContain(t("lobby_pending"));
-    // The profile deep-link lives inside SessionBadge's ☰ popover, gated on
-    // the role-holding (non-pending) session.
+    // The role-gated drawers render their edge tabs.
+    expect(body).toContain(t("shell_nav_label"));
+    expect(body).toContain(t("shell_chat_drawer_label"));
+    // The profile deep-link also lives inside SessionBadge's ☰ popover,
+    // gated on the role-holding (non-pending) session.
     expect(body).toContain('href="/profile/"');
   });
 

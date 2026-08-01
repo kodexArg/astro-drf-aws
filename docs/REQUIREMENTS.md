@@ -63,6 +63,9 @@ Pulled ephemerally by a `compose.yaml` dev command through `uv run --with` — n
 | bun | latest | stable | Package manager AND runtime; npm prohibited; Node dropped (Node 24 LTS = documented fallback only) |
 | htmx.org | 2.0.10 | stable | HTMX 2 client library via bun ([[HTMX]]). Package name on the registry is `htmx.org`. |
 | melt | ^0.44.0 | active | headless builder layer under Bits UI/shadcn-svelte ([[MELT-UI]], [[adr-04-frontend-and-design-system]]). Added 2026-07-14. |
+| @lucide/svelte | 1.26.0 | stable | Lucide icon set as Svelte components, vendored through `src/lib/components/icons/` ([[DESIGN-SYSTEM]]). Added 2026-08-01. |
+| tailwind-merge | 3.6.0 | stable | Class-merge helper behind the `cn()` util (`src/lib/utils.ts`) the vendored shadcn-svelte components compose classes with ([[FRONTEND]]). Added 2026-08-01. |
+| @fontsource-variable/nunito | ^5.3.0 | stable | Self-hosted Nunito variable font, imported once in `src/styles/app.css` ([[DESIGN-SYSTEM]]). Added 2026-08-01. |
 | @happy-dom/global-registrator | 20.10.6 | stable | dev-only. Registers a DOM into the `bun test` global scope so a component can be mounted client-side — the harness enforcing [[adr-22-showcase-ready-components]] rule 1. Never shipped in the frontend image ([[FRONTEND]]). Added 2026-07-16. |
 | @astrojs/check | 0.9.9 | stable | dev-only. Backs the `bun run check` (`astro check`) typecheck gate; pinned so a fresh clone runs it non-interactively instead of hitting astro's auto-install prompt. Never shipped in the frontend image ([[FRONTEND]]). Latest confirmed 2026-07-17 (checked 2026-07-17). Added 2026-07-17. |
 | typescript | 6.0.3 | stable | dev-only. Peer required by `@astrojs/check`; its peer range `^5.0.0 || ^6.0.0` excludes the registry-latest 7.0.2, so 6.0.3 is the latest satisfying version ([[adr-02-initial-stack]] rules 1–2). Never shipped in the frontend image ([[FRONTEND]]). Latest 6.x confirmed 2026-07-17 (checked 2026-07-17). Added 2026-07-17. |

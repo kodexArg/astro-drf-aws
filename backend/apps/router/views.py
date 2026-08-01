@@ -18,6 +18,7 @@ import logging
 from asgiref.sync import sync_to_async
 from botocore.exceptions import BotoCoreError, ClientError
 from django.conf import settings
+from rest_framework.exceptions import Throttled
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -217,7 +218,18 @@ class RouteView(APIView):
             latency_ms=None,
             user=request.user,
         )
-        return super().throttled(request, wait)
+        raise Throttled()
+
+    def handle_exception(self, exc):
+        """The CooldownThrottle reject is a bare 429 by contract ([[API]]):
+        empty body, no `Retry-After`, deliberately indistinguishable from the
+        silent rate-abuse block (#371) — never revealing which limiter fired.
+        `no-store` comes from the cache-control middleware. DRF's
+        `check_throttles` ignores `throttled()`'s return value, so the bare
+        shape is rendered here instead of via `super().throttled()`."""
+        if isinstance(exc, Throttled):
+            return Response(status=429)
+        return super().handle_exception(exc)
 
     def permission_denied(self, request, message=None, code=None):
         if request.user and request.user.is_authenticated:

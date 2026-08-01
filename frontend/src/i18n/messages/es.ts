@@ -12,18 +12,22 @@ export const es = {
     "Tu solicitud de acceso está pendiente de aprobación. Un administrador la revisará en breve.",
 
   // lobby (/)
-  control_hub: "Centro de control",
-  control_hub_intro:
-    "Los controles más comunes de este template — entrá al showcase, al router de chat o a tu perfil.",
   denied_title: "Necesitás un rol para esa página",
   denied_body:
     "Tu sesión está iniciada pero todavía no tiene un rol; esa página queda fuera de alcance hasta que un administrador te asigne uno.",
   pending_title: "Autorización pendiente",
-  nav_title: "Navegar",
-  nav_showcase: "Showcase",
   nav_chatui: "Chat",
   nav_profile: "Perfil",
-  m365_status: "Estado M365",
+
+  // home cards (views/HomeCardsView) — one card per NAV_ITEMS row
+  // (shell/nav.ts); each abstract is a short, non-invasive one-sentence
+  // description.
+  home_cards_title: "Inicio",
+  home_card_abstract_chatui:
+    "Pedí una página o una acción: el router elige un destino permitido.",
+  home_card_abstract_showcase:
+    "La galería de componentes del template, con demos interactivas.",
+  home_card_abstract_profile: "Tu cuenta, tu apariencia y tus preferencias.",
 
   // auth components
   auth_login: "Ingresar",
@@ -34,13 +38,16 @@ export const es = {
   auth_not_signed_in: "No hay sesión iniciada.",
   auth_open_menu: "Abrir menú",
 
+  // navbar icon controls
+  navbar_icon_fallback: "Acción de la barra",
+
   // theme components
   theme_toggle_mode: "Cambiar entre tema claro y oscuro",
+  theme_to_dark: "Modo oscuro",
+  theme_to_light: "Modo claro",
 
   // /chatui/ — router chat surface ([[CHATBOT]], adr-15)
   chatui_router_title: "Router",
-  chatui_router_empty:
-    "Pedí una página o una acción — el router la relaciona con un destino permitido. Nunca redacta una respuesta libre.",
   chatui_composer_placeholder: "Escribí un mensaje",
   chatui_composer_aria_label: "Mensaje de chat",
   chatui_composer_send: "Enviar",
@@ -56,6 +63,16 @@ export const es = {
   router_outcome_hard_reject: "Esa solicitud no pudo procesarse. Probá reformularla.",
   router_outcome_throttled: "Estás enviando mensajes muy rápido — esperá un momento.",
   router_outcome_network_error: "Algo falló al contactar al asistente. Probá de nuevo.",
+
+  // ChatUI assistant mode ([[CHATBOT]], adr-24) — status copy only; answers are model text
+  chatui_assistant_title: "Asistente",
+  chatui_assistant_composer_placeholder: "Preguntá sobre esta pantalla",
+  shell_chat_drawer_label: "Asistente de la página",
+  assistant_outcome_disabled: "El asistente no está disponible por el momento.",
+  assistant_outcome_throttled: "Estás enviando mensajes muy rápido — esperá un momento.",
+  assistant_outcome_unavailable: "El asistente no pudo responder ahora. Probá de nuevo.",
+  assistant_outcome_network_error: "Algo falló al contactar al asistente. Probá de nuevo.",
+  assistant_outcome_validation_error: "Esa consulta no es válida para esta pantalla.",
 
   // /profile/
   profile_title: "Perfil",
@@ -98,8 +115,6 @@ export const es = {
   gallery_hover_card: "Hover Card",
   gallery_scroll_area: "Scroll Area",
   gallery_drawer: "Drawer",
-  gallery_home_triangle: "Home Triangle",
-  gallery_corner_nav_triangle: "Corner Nav Triangle",
   gallery_form: "Formulario",
   gallery_select: "Select",
   gallery_combobox: "Combobox",
@@ -124,6 +139,26 @@ export const es = {
   gallery_toast: "Toast",
   gallery_auth: "Sesión",
   gallery_theme: "Tema",
+  gallery_shell: "Shell",
+  gallery_shell_note:
+    "El armazón de navegación del sitio: el drawer de navegación y el drawer del asistente anclados a los bordes de la ventana, compuestos desde los mismos primitivos que exhibe esta galería.",
+  gallery_shell_nav_drawer: "NavDrawer",
+  gallery_shell_nav_item: "NavItem",
+  gallery_shell_nav_item_idle: "Ejemplo inactivo",
+  gallery_shell_nav_item_active: "Ejemplo activo",
+  gallery_shell_nav_badge: "NavBadge",
+  gallery_shell_navbar_icon: "Ícono de barra (NavbarIcon)",
+  gallery_shell_navbar_icon_idle: "Ejemplo inactivo",
+  gallery_shell_navbar_icon_active: "Ejemplo activo",
+  gallery_shell_navbar_icon_bare: "Ejemplo sin ícono",
+  gallery_shell_surface: "Surface",
+
+  // app shell (shell/) — the nav drawer, the chat drawer, the navbar icons
+  shell_nav_label: "Navegación principal",
+  shell_nav_chatui: "Chat",
+  shell_nav_showcase: "Showcase",
+  shell_nav_profile: "Perfil",
+  shell_nav_badge_pending: "pendientes",
 
   // gallery — demo copy and sample-data labels
   demo_dialog_trigger: "Abrir diálogo",
@@ -181,7 +216,6 @@ export const es = {
   demo_scroll_area_item_6: "Revisión de gastos — equipo operaciones",
 
   // Drawer — component defaults (adr-22 zero-prop state) + gallery demo
-  drawer_default_title: "Panel",
   drawer_open: "Abrir panel",
   drawer_close: "Cerrar panel",
   drawer_empty: "Sin contenido",
@@ -193,15 +227,9 @@ export const es = {
   demo_drawer_right_title: "Detalles",
   demo_drawer_right_body:
     "Drawer derecho colapsable — ideal para contexto, filtros o el detalle de la fila seleccionada.",
-  // HomeTriangle — component default (adr-22 zero-prop state) + gallery demo
-  home_triangle_aria_label: "Inicio",
-  demo_home_triangle_note:
-    "Vista inerte del triángulo de inicio — sin href ni onHome, este ejemplo nunca navega ni ejecuta ninguna acción.",
-  corner_nav_triangle_aria_label_home: "Ir a inicio",
-  corner_nav_triangle_aria_label_chat: "Ir al chat",
-  corner_nav_triangle_aria_label_showcase: "Ir al showcase",
-  demo_corner_nav_triangle_note:
-    "Vista de demostración del triángulo de navegación — dentro de la galería no navega a una ruta real.",
+
+  // Surface primitive gallery demo
+  demo_surface_sample: "Contenido de ejemplo",
 
   demo_pagination_nav: "Paginación",
   demo_pagination_prev: "Página anterior",

@@ -161,6 +161,28 @@ def test_me_patch_theme_config_bad_bgpreset_enum_rejected(client):
     assert response.status_code == 400
 
 
+@pytest.mark.parametrize("side", ["left", "right"])
+def test_me_patch_theme_config_sidebar_side_accepted(client, side):
+    user = _user(sub="sub-theme-side")
+    client.force_login(user)
+    response = client.patch(
+        ME, {"theme_config": {"sidebarSide": side}}, content_type="application/json"
+    )
+    assert response.status_code == 200
+    assert response.json()["theme_config"] == {"sidebarSide": side}
+    user.refresh_from_db()
+    assert user.theme_config == {"sidebarSide": side}
+
+
+def test_me_patch_theme_config_bad_sidebar_side_enum_rejected(client):
+    user = _user(sub="sub-theme-side-bad")
+    client.force_login(user)
+    response = client.patch(
+        ME, {"theme_config": {"sidebarSide": "top"}}, content_type="application/json"
+    )
+    assert response.status_code == 400
+
+
 @pytest.mark.parametrize(
     "bad_color",
     [

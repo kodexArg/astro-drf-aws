@@ -38,19 +38,21 @@ Two more mechanics worth knowing before touching that file. It is the only DOM-b
 
 ```
 src/lib/components/
-  primitives/        # PageTitle.svelte, SectionTitle.svelte — .svelte, zero-hydration
+  primitives/        # PageTitle, SectionTitle, PageHeading, PageCanvas, Surface — .svelte, zero-hydration
+  header/            # LayoutHeader, NavBar — the page shell's top edge; a layout fixture, never a page's
+  shell/             # NavDrawer, ChatDrawer, NavItem, NavBadge, NavbarIcon, nav.ts (NAV_ITEMS) — the site nav + assistant drawers and their shared registry
   ui/                # shadcn-svelte vendored set (adr-04 r4), incl. table/
   data/              # DataTable, NumericValue, StatusBadge, ChipFilterBar, Pagination, Collapsible, Tree
   dashboard/         # MetricTile, MetricTileStrip, EntityCard, EntityGrid, SummaryCard
-  chat/              # ChatUI, ChatMessageList, ChatComposer — the router's chat surface (CHATBOT)
+  chat/              # ChatUI (router mode + `mode="assistant"`, one component, never forked), ChatMessageList, ChatComposer — the chat surfaces (CHATBOT)
   auth/              # AuthPanel, SessionBadge, ProfileForm
   form/              # Select, Combobox, Checkbox, Switch, DatePicker, DateRangePicker, PinInput, TagsInput — Melt builders (adr-04 r8 default)
   nav/               # Tabs, DropdownMenu, ContextMenu, Menubar, TableOfContents — Melt builder(s) + hand-rolled fallbacks
   feedback/          # Toast — Melt builder, module-level `toaster` singleton
-  overlay/           # Dialog, Drawer, Accordion, ConfirmDialog, Tooltip, Popover, HoverCard, ScrollArea, SidePanel — Melt builders (adr-04 r8 default), SOLID open/close primitives
+  overlay/           # Dialog, Drawer, Accordion, ConfirmDialog, Tooltip, Popover, HoverCard, ScrollArea — Melt builders (adr-04 r8 default), SOLID open/close primitives
   theme/             # ThemeModeToggle, QuickThemeToggle, ThemeCard — Melt-builder theme controls
-  showcase/          # AlertDialogDemo, TabsDemo, DropdownMenuDemo, ContextMenuDemo, MenubarDemo, TableOfContentsDemo, TooltipDemo, PopoverDemo, HoverCardDemo, CollapsibleDemo, TreeDemo, ScrollAreaDemo, SidePanelDemo, ToastTriggerDemo — gallery-only demo compositions, not app surface
-  views/             # LobbyView, ProfileView, ShowcaseView, ShowcaseGalleryView, ChatView — one zero-hydration page body per route
+  showcase/          # AlertDialogDemo, TabsDemo, DropdownMenuDemo, ContextMenuDemo, MenubarDemo, TableOfContentsDemo, TooltipDemo, PopoverDemo, HoverCardDemo, CollapsibleDemo, TreeDemo, ScrollAreaDemo, ToastTriggerDemo, SurfaceDemo — gallery-only demo compositions, not app surface
+  views/             # HomeCardsView (over HomeCard), ProfileView, ShowcaseGalleryView, ChatView — one zero-hydration page body per route
 ```
 
 **Every component name here is business-agnostic** — no domain (financial, HR, inventory, ...) is ever spelled into a folder or component name. A component's fitness for a specific kind of dashboard or report is recorded as guidance in the Component index below, never encoded in its identifier: a project cloning this template reads `DataTable`, not `FinancialTable`, and decides for itself where it fits.
@@ -65,7 +67,17 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 |---|---|---|---|
 | `PageTitle` | `primitives/` | Page-level heading, zero-hydration | Every page |
 | `SectionTitle` | `primitives/` | Section-level heading, zero-hydration | Every page |
-| `CornerNavTriangle` | `primitives/` | Fixed bottom-right isosceles-triangle nav, hand-rolled SVG (rounded on all corners incl. the screen-corner vertex — no Melt builder for this shape), cycles home→chat→showcase | Site-wide 3-front navigation |
+| `PageHeading` | `primitives/titles/` | Page-level heading — `SectionTitle` plus an optional help `Tooltip`; where a page's explanatory sentence lives instead of a subtitle paragraph | Any page needing a title |
+| `PageCanvas` | `primitives/` | The single `<main>`: `min-h-dvh`, full width, transparent, top-padded by the header-height token to clear the fixed header. Composed by `Base.astro`; views author no `<main>` of their own | `Base.astro` only |
+| `Surface` | `primitives/` | The named surface layer between the token set ([[DESIGN-SYSTEM]]) and finished components: one `level` prop selects a closed, token-only chrome preset — border, radius, background/foreground pair, padding, shadow. Zero props render an empty default level (adr-22 r1) | Any surfaced component reaches for this before hand-rolling its own border/radius/background string |
+| `LayoutHeader` | `header/` | The `<header>` banner landmark `Base.astro` renders on every page: fixed, out of flow, composing one `NavBar` and authoring no chrome of its own. A layout fixture — no page mounts or hides it | `Base.astro` only |
+| `NavBar` | `header/` | The rounded bar inside `LayoutHeader`: the page's single `<h1>` at the left, an `actions` snippet at the right carrying the session island. Chrome only — surface, radius and inset; the fixed positioning stays the header's. Renders a `<div>`, never a `<nav>` — it carries no navigation, whose links live in `NavDrawer`. Zero props render an empty bar (adr-22 r1) | `LayoutHeader` only |
+| `NavDrawer` | `shell/` | The site's navigation: the `NAV_ITEMS` routes as `NavItem` buttons inside a drawer, docked to the edge the theme field `sidebarSide` names (default left). A layout fixture — `Base.astro` mounts it once, role-gated ([[adr-20-authorization-lobby]]) | `Base.astro` only |
+| `ChatDrawer` | `shell/` | The drawer composition mounting `ChatUI` (`mode="assistant"`) inside `overlay/Drawer` on the opposite edge of `NavDrawer` — a composition, not a widget, and never a second chat component ([[adr-24-page-context-assistant]]) | `Base.astro` only |
+| `NavItem` | `shell/` | One navigation link, rendered as `ui/button` — `secondary` when active, `ghost` otherwise — with its icon, label and optional `NavBadge`. Authors no active-state chrome of its own; the icon comes from the caller, never resolved inside, so `NavItem` keeps knowing nothing about the registry | `NavDrawer`, `HomeCardsView` |
+| `NavBadge` | `shell/` | The pending-count numeral beside a nav label; renders nothing at zero or unknown | `NavItem` only |
+| `NavbarIcon` | `shell/` | The shared chrome for every icon control in `NavBar`'s actions cluster — idle/active/hover/focus tokens and a real accessible name. It owns no behaviour and no glyph: the consumer supplies both. Zero props render an inert placeholder button (adr-22 r1-2) | Any icon control added to `NavBar` |
+| `NAV_ITEMS` (`nav.ts`) | `shell/` | Not a component: the single nav registry — every route's path, label, icon and badge key. The only source `NavDrawer`, `HomeCardsView` and the assistant's `page` enum read; a second list anywhere is a second authority that can disagree | Every nav surface |
 | `DataTable` | `data/` | Generic sortable/expandable data table | Financial dashboards & reporting (line-item tables, statements) |
 | `NumericValue` | `data/` | Formatted numeric/currency display, sign-aware coloring | Financial dashboards & reporting (amounts, balances) |
 | `StatusBadge` | `data/` | Enum-to-label/variant badge | Financial dashboards & reporting (state indicators); general enum display |
@@ -78,7 +90,7 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 | `EntityCard` | `dashboard/` | Card summarizing one entity's key stats | Financial dashboards & reporting (account/holding cards); general entity display |
 | `EntityGrid` | `dashboard/` | Grid of `EntityCard` | Financial dashboards & reporting; general entity display |
 | `SummaryCard` | `dashboard/` | Pinned aggregate/rollup card | Financial dashboards & reporting |
-| `ChatUI` | `chat/` | Composed chat surface (list + composer) | [[CHATBOT]] router UI |
+| `ChatUI` | `chat/` | Composed chat surface (list + composer); `mode="assistant"` extends it in place for the page-context assistant — one component, two modes, never forked ([[adr-24-page-context-assistant]]) | [[CHATBOT]] router UI; assistant mode inside `ChatDrawer` |
 | `ChatMessageList` | `chat/` | Renders structured router outcomes only, never free prose | [[CHATBOT]] router UI |
 | `ChatComposer` | `chat/` | Posts raw user text to the router endpoint | [[CHATBOT]] router UI |
 | `AuthPanel` | `auth/` | Session-aware auth actions | Any authenticated page |
@@ -110,7 +122,6 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 | `Popover` | `overlay/` | Click-triggered floating content, bare Melt Popover builder (no menu semantics) | Quote boxes, contextual filters, any content richer than a Tooltip hint |
 | `HoverCard` | `overlay/` | Hover/focus-triggered rich preview, Melt Popover + hand-rolled hover semantics (no dedicated Melt Hover Card builder in 0.44) | Link/username previews |
 | `ScrollArea` | `overlay/` | Constrained-height scroll container, hand-rolled (no Melt ScrollArea builder in 0.44) with a themed scrollbar | Drawer/chat long content that must not grow the page |
-| `SidePanel` | `overlay/` | Persistent, viewport-docked collapsible panel (`side` left/right) with a peek tab, hand-rolled — slides its full width off-screen, animated via CSS transform; distinct from `Drawer` (modal slide-in) | App-shell navigation rails & context/detail panels |
 | `ThemeModeToggle` | `theme/` | Light/Dark switch, Melt builder | Any page exposing a mode toggle |
 | `QuickThemeToggle` | `theme/` | Cookie-only mode toggle, decoupled from `/profile` | `SessionBadge`'s ☰ menu (both branches) |
 | `ThemeCard` | `theme/` | Full theme editor (mode, bgPreset, colors, radius) persisted via `PATCH /api/me/` | `/profile/` |
@@ -126,12 +137,11 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 | `CollapsibleDemo` | `showcase/` | Composition of `data/Collapsible` supplying its parameterized `content` snippet | `/showcase/components/` gallery only |
 | `TreeDemo` | `showcase/` | Composition of `data/Tree` with no props — its default sample hierarchy is already realistic | `/showcase/components/` gallery only |
 | `ScrollAreaDemo` | `showcase/` | Composition of `overlay/ScrollArea` supplying its parameterized `content` snippet | `/showcase/components/` gallery only |
-| `SidePanelDemo` | `showcase/` | Composition of `overlay/SidePanel` mounting one left and one right instance (both collapsed by default) with an inline note | `/showcase/components/` gallery only |
 | `ToastTriggerDemo` | `showcase/` | Button that pushes a sample toast onto the shared `toaster` singleton | `/showcase/components/` gallery only |
-| `CornerNavTriangleDemo` | `showcase/` | Composition of `primitives/CornerNavTriangle`, docked inside a clipped gallery box (zero props, safe default per adr-22) | `/showcase/components/` gallery only |
-| `LobbyView` | `views/` | The `/` page body — header, lobby cards, denied/pending states; islands via named slots | `index.astro` only |
+| `SurfaceDemo` | `showcase/` | Composition of `primitives/Surface` — one labeled tile per `level`, side by side | `/showcase/components/` gallery only |
+| `HomeCard` | `views/` | Reusable single-column card — icon + title + abstract wrapped in one navigating `<a>`, zero-prop-safe (adr-22 r1-2) | `HomeCardsView` only |
+| `HomeCardsView` | `views/` | The `/` page body — the `HomeCard` list built from `NAV_ITEMS` plus the denied/pending lobby surfaces ([[adr-20-authorization-lobby]]); islands via named slots | `index.astro` only |
 | `ProfileView` | `views/` | The `/profile/` page body; form + theme islands via default slot | `profile.astro` only |
-| `ShowcaseView` | `views/` | The `/showcase/` page body; auth island via default slot | `showcase.astro` only |
 | `ShowcaseGalleryView` | `views/` | The `/showcase/components/` gallery body; twenty islands via named slots | `showcase/components.astro` only |
 | `ChatView` | `views/` | The `/chatui/` canvas wrapper; chat island via default slot | `chatui.astro` only |
 
