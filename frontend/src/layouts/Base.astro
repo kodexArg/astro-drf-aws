@@ -4,22 +4,38 @@
  * Docs: [[FRONTEND]]
  * LIVE-DOC:END */
 import "../styles/app.css";
-import { parseThemeConfig, computeThemeSSRAttrs } from "$lib/theme";
+import { parseThemeConfig, computeThemeSSRAttrs, DEFAULTS } from "$lib/theme";
+import { hasRole } from "$lib/auth";
+import { t } from "../i18n";
 import PageTitle from "$lib/components/primitives/titles/PageTitle.svelte";
-import CornerNavTriangle from "$lib/components/primitives/CornerNavTriangle.svelte";
+import LayoutHeader from "$lib/components/header/LayoutHeader.svelte";
+import PageCanvas from "$lib/components/primitives/PageCanvas.svelte";
+import SessionBadge from "$lib/components/auth/SessionBadge.svelte";
+import NavDrawer from "$lib/components/shell/NavDrawer.svelte";
+import ChatDrawer from "$lib/components/shell/ChatDrawer.svelte";
+import type { Me } from "$lib/types/user";
 
 interface Props {
   title?: string;
+  me?: Me | null;
 }
 
-const { title = process.env.PUBLIC_PROJECT_SLUG ?? "astro-drf-aws" } = Astro.props;
+const { title = process.env.PUBLIC_PROJECT_SLUG ?? "astro-drf-aws", me = null } = Astro.props;
+
+const publicBackendUrl = process.env.PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
 // SSR, no-flash theme apply (bdd-06 "Persistence across login — no flash";
 // [[DESIGN-SYSTEM]]): the `theme` cookie — set by the backend on login and
 // on a successful `PATCH /api/me/` ([[API]]) — is parsed and sanitized here,
 // server-side, before the first byte renders.
-const themeBlob = parseThemeConfig(Astro.cookies.get("theme")?.value);
-const { htmlClass, dataBgPreset, style } = computeThemeSSRAttrs(themeBlob);
+const themeConfig = parseThemeConfig(Astro.cookies.get("theme")?.value);
+const { htmlClass, dataBgPreset, style } = computeThemeSSRAttrs(themeConfig);
+const navSide = themeConfig.sidebarSide ?? DEFAULTS.sidebarSide;
+const chatSide = navSide === "right" ? "left" : "right";
+// Assistant context is the current path identity only — never page text (adr-24).
+const pageIdentity = Astro.url.pathname.endsWith("/")
+  ? Astro.url.pathname
+  : `${Astro.url.pathname}/`;
 ---
 
 <!doctype html>
@@ -30,12 +46,79 @@ const { htmlClass, dataBgPreset, style } = computeThemeSSRAttrs(themeBlob);
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <PageTitle title={title} />
   </head>
-  <body>
-    <slot />
-    <CornerNavTriangle pathname={Astro.url.pathname} />
-    <script>
 
+  <body>
+    <LayoutHeader {title}>
+      <Fragment slot="session">
+        <SessionBadge
+          client:load
+          me={me}
+          pending={me !== null && !hasRole(me)}
+          publicBackendUrl={publicBackendUrl}
+          loginHref={`${publicBackendUrl}/accounts/login/`}
+          logoutAction={`${publicBackendUrl}/accounts/logout/`}
+          panelHref="/profile/"
+          loginLabel={t("auth_login")}
+          logoutLabel={t("auth_logout")}
+        />
+      </Fragment>
+    </LayoutHeader>
+
+    <PageCanvas>
+      <slot />
+    </PageCanvas>
+
+    {
+      /* Role-gated: a role-less visitor is confined to `/`
+         ([[adr-20-authorization-lobby]] rule 1). */
+      hasRole(me) && (
+        <NavDrawer client:load pathname={Astro.url.pathname} side={navSide} navigates />
+      )
+    }
+    {
+      /* Opposite edge of the nav drawer; same role gate (adr-24 page-context). */
+      hasRole(me) && (
+        <ChatDrawer
+          client:load
+          side={chatSide}
+          page={pageIdentity}
+          publicBackendUrl={publicBackendUrl}
+          copy={{
+            title: t("chatui_assistant_title"),
+            composerPlaceholder: t("chatui_assistant_composer_placeholder"),
+            composerAriaLabel: t("chatui_composer_aria_label"),
+            composerSend: t("chatui_composer_send"),
+            messageGo: t("chatui_message_go"),
+            messageConfirm: t("chatui_message_confirm"),
+            outcomeCopy: {
+              assistant_outcome_disabled: t("assistant_outcome_disabled"),
+              assistant_outcome_throttled: t("assistant_outcome_throttled"),
+              assistant_outcome_unavailable: t("assistant_outcome_unavailable"),
+              assistant_outcome_network_error: t("assistant_outcome_network_error"),
+              assistant_outcome_validation_error: t("assistant_outcome_validation_error"),
+            },
+          }}
+        />
+      )
+    }
+
+    <script>
       import "htmx.org";
+    </script>
+
+    <script>
+      // Docked state is derived from the sentinel's own visibility, not scroll
+      // math, so it stays correct across resize/zoom.
+      const sentinel = document.querySelector("[data-nav-sentinel]");
+      const header = document.querySelector("[data-nav-header]");
+      if (sentinel && header) {
+        new IntersectionObserver(
+          ([entry]) => {
+            header.toggleAttribute("data-docked", !entry.isIntersecting);
+          },
+          { threshold: 0 },
+        ).observe(sentinel);
+      }
     </script>
   </body>
 </html>

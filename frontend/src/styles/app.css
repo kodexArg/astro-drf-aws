@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@fontsource-variable/nunito";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -48,6 +49,19 @@ button:disabled,
   /* One tunable hairline for every 1-device-pixel-ish rule (issue #190) —
      rem over px, everywhere. */
   --hairline: 0.0625rem;
+  /* The motion axis. Only two, because only two explicit durations exist in
+     the app: icon rotation/expand, and the drawer slide. Everything else
+     rides Tailwind's own --default-transition-duration, and easing needs no
+     token here — the one curve in use, ease-out, is already a Tailwind v4
+     theme variable. */
+  --duration-fast: 200ms;
+  --duration-base: 300ms;
+  /* Docked NavBar's convex bottom radius. */
+  --nav-dock-radius: 1.5rem;
+  /* The concave top fillets span the header's own side gutter, so they must
+     track LayoutHeader's `px-6 sm:px-10` — a fillet narrower than the gutter
+     leaves the docked bar's top edge short of the page edge. */
+  --nav-dock-gutter: 1.5rem;
   --background: oklch(0.985 0.004 60);
   --foreground: oklch(0.18 0.015 50);
   --card: oklch(0.995 0.002 60);
@@ -60,27 +74,33 @@ button:disabled,
   --secondary-foreground: oklch(0.30 0.020 50);
   --muted: oklch(0.96 0.010 55);
   --muted-foreground: oklch(0.52 0.020 50);
-  --accent: oklch(0.93 0.030 55);
+  /* --accent chroma matched to its neutral-warm siblings (--muted/--border
+     at 0.010, not the 0.030 this token carried): the outlier chroma read as
+     a maroon/dark-red hover cast, not the pale warm-gray tint this token
+     exists to be. */
+  --accent: oklch(0.94 0.015 55);
   --accent-foreground: oklch(0.30 0.020 50);
+  /* The "on" colour of a stateful control — NOT --accent, the neutral
+     warm-gray hover surface ([[DESIGN-SYSTEM]]). */
+  --accent-active: oklch(0.62 0.200 48);
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.90 0.010 55);
   --input: oklch(0.90 0.010 55);
   --ring: oklch(0.64 0.150 45);
   --canvas: oklch(0.94 0.006 55);
   --spotlight-highlight: oklch(0.975 0.012 95);
   --spotlight-shadow: oklch(0.8 0 0);
+  --sunken: oklch(0.90 0.010 55);
+  --sunken-shadow:
+    inset 0 0.125rem 0.3125rem oklch(0.20 0.020 50 / 0.16),
+    inset 0 -0.0625rem 0 oklch(1 0 0 / 0.55);
   --success: oklch(0.60 0.140 150);
   --success-foreground: oklch(0.99 0.010 150);
   --warning: oklch(0.75 0.150 85);
   --warning-foreground: oklch(0.25 0.030 85);
   --negative: oklch(0.577 0.245 27.325);
   --negative-foreground: oklch(0.99 0 0);
-  /* CornerNavTriangle (bdd-11): a fixed near-black glyph color, intentionally
-     NOT --primary-foreground (that pair is tuned near-white in light mode,
-     the wrong contrast direction for a black icon on the orange --primary
-     fill). Same near-black value in both themes — the orange fill is what
-     changes per mode, not the icon. */
-  --corner-nav-icon: oklch(0.12 0.01 50);
 }
 
 /* --primary alternates (swap the H, keep the L/C pairing pattern above):
@@ -105,9 +125,17 @@ button:disabled,
   --secondary-foreground: oklch(0.95 0.006 60);
   --muted: oklch(0.28 0.015 50);
   --muted-foreground: oklch(0.68 0.015 55);
-  --accent: oklch(0.30 0.030 55);
+  /* --accent: lightness raised out of the 0.30 band that, combined with the
+     old 0.030 chroma, rendered as a muddy dark maroon on hover (SessionBadge,
+     DateRangePicker/DatePicker triggers, every hover:bg-accent surface);
+     chroma dropped to match --border/--input's 0.015 so the hover step reads
+     as neutral warm-gray, not a tinted red. */
+  --accent: oklch(0.38 0.015 55);
   --accent-foreground: oklch(0.95 0.006 60);
+  /* Lifted for the same reason --primary is: the light value reads muddy. */
+  --accent-active: oklch(0.74 0.170 48);
   --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.16 0 0);
   /* Warm, opaque border system (issue #169) — never translucent white.
      Convention: default surface -> border-border; emphasis card ->
      border-primary/40 (SummaryCard's treatment); active/selected ->
@@ -118,16 +146,22 @@ button:disabled,
   --canvas: oklch(0.12 0.008 50);
   --spotlight-highlight: oklch(0.30 0.02 50);
   --spotlight-shadow: oklch(0.05 0 0);
+  --sunken: oklch(0.19 0.012 50);
+  --sunken-shadow:
+    inset 0 0.125rem 0.3125rem oklch(0 0 0 / 0.55),
+    inset 0 -0.0625rem 0 oklch(1 0 0 / 0.10);
   --success: oklch(0.72 0.130 150);
   --success-foreground: oklch(0.16 0.020 150);
   --warning: oklch(0.80 0.140 85);
   --warning-foreground: oklch(0.20 0.020 85);
   --negative: oklch(0.704 0.191 22.216);
   --negative-foreground: oklch(0.16 0 0);
-  --corner-nav-icon: oklch(0.12 0.01 50);
 }
 
 @theme inline {
+  --font-display: "Nunito Variable", ui-rounded, system-ui, sans-serif;
+  --duration-fast: var(--duration-fast);
+  --duration-base: var(--duration-base);
   --radius-sm: calc(var(--radius) - 0.25rem);
   --radius-md: calc(var(--radius) - 0.125rem);
   --radius-lg: var(--radius);
@@ -146,7 +180,9 @@ button:disabled,
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-active: var(--accent-active);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -157,7 +193,68 @@ button:disabled,
   --color-warning-foreground: var(--warning-foreground);
   --color-negative: var(--negative);
   --color-negative-foreground: var(--negative-foreground);
-  --color-corner-nav-icon: var(--corner-nav-icon);
+}
+
+.sunken {
+  background: var(--sunken);
+  box-shadow: var(--sunken-shadow);
+  border-color: transparent;
+}
+
+/* Docked NavBar: swaps the floating pill for a flush, flared bar once the
+   sentinel above the header leaves the viewport (toggled by Base.astro's
+   IntersectionObserver, never rendered server-side). */
+header[data-docked] > .nav-pill {
+  border-radius: 0 0 var(--nav-dock-radius) var(--nav-dock-radius);
+  box-shadow: none;
+  background: var(--sunken);
+}
+
+/* border-radius only curves away from the box; a concave flare curves
+   toward it, so the corners are painted with an inverted-radius gradient
+   instead. */
+header[data-docked] > .nav-pill::before,
+header[data-docked] > .nav-pill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: var(--nav-dock-gutter);
+  height: var(--nav-dock-gutter);
+  pointer-events: none;
+}
+
+header[data-docked] > .nav-pill::before {
+  left: calc(-1 * var(--nav-dock-gutter));
+  background: radial-gradient(
+    circle at bottom left,
+    transparent var(--nav-dock-gutter),
+    var(--sunken) var(--nav-dock-gutter)
+  );
+}
+
+header[data-docked] > .nav-pill::after {
+  right: calc(-1 * var(--nav-dock-gutter));
+  background: radial-gradient(
+    circle at bottom right,
+    transparent var(--nav-dock-gutter),
+    var(--sunken) var(--nav-dock-gutter)
+  );
+}
+
+/* Tailwind's `sm`, where LayoutHeader goes px-6 -> sm:px-10. */
+@media (width >= 40rem) {
+  :root {
+    --nav-dock-gutter: 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nav-pill {
+    transition:
+      border-radius var(--duration-fast),
+      background-color var(--duration-fast),
+      box-shadow var(--duration-fast);
+  }
 }
 
 /* Readability scrim for data-dense components on the dotted canvas
@@ -177,7 +274,12 @@ button:disabled,
 }
 
 body {
-  min-height: 100vh;
+  /* App-shell column: the in-flow sticky header stack takes its share and
+     `main` (PageCanvas, `flex-1`) fills exactly what is left — so a
+     one-viewport page (the chat) fits with no phantom scroll. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
   /* Relaxed line-height for calmer, easier reading (dark-mode readability
      iteration) — the "stretched text" ask; per-component leading utilities
      still override. */

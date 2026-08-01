@@ -29,7 +29,7 @@ Both tracks converge at the shadow-test stage below.
 ```yaml
 title: bdd-NN-slug
 type: bdd
-status: draft | agreed | building | shipped
+status: draft | agreed | building | shipped | retired
 created: YYYY-MM-DD
 tags: [bdd]
 ```
@@ -38,6 +38,7 @@ tags: [bdd]
 - `agreed` — behavior signed off; forking into TDD/frontend work may start.
 - `building` — either track in progress.
 - `shipped` — shadow tests pass; feature live.
+- `retired` — superseded; the entry keeps its body as historical record and carries a warning callout naming its successor.
 
 ## Shadow tests
 

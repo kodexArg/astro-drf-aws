@@ -73,6 +73,13 @@ describe("sanitizeThemeConfig", () => {
     expect(blob.bgPreset).toBeUndefined();
   });
 
+  test("keeps a valid sidebarSide and drops an out-of-enum one", () => {
+    // sidebarSide joined the closed key set with the ported shell — the
+    // drawer dock edge rides the same theme_config blob as mode/bgPreset.
+    expect(sanitizeThemeConfig({ sidebarSide: "left" })).toEqual({ sidebarSide: "left" });
+    expect(sanitizeThemeConfig({ sidebarSide: "top" }).sidebarSide).toBeUndefined();
+  });
+
   test("returns {} for a non-object value", () => {
     expect(sanitizeThemeConfig(null)).toEqual({});
     expect(sanitizeThemeConfig("dark")).toEqual({});

@@ -1,40 +1,34 @@
 <!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-15-chatbot-two-tier]]
-     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[CHATBOT]]
+     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-22-showcase-ready-components]] · [[adr-15-chatbot-two-tier]]
+     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]] · [[CHATBOT]]
      LIVE-DOC:END -->
 
 <!--
-  The full router surface ([[CHATBOT]], adr-15). This is a ROUTER, not a
-  chatbot: the composer sends the raw utterance to POST /api/router/route/
-  ([[API]]) and the message list renders only the closed enum that comes back
-  (navigate / confirm / NO_MATCH / Escalate / disabled). No free assistant
-  prose is ever generated or rendered here — the generating tier is out of
-  this template's scope (adr-15 rule 9).
+  One chat component, two modes (kdx-chatui). Default `router` posts to
+  POST /api/router/route/ and renders closed-enum outcomes only. `assistant`
+  posts to POST /api/assistant/ask/ with a page identity and renders free-text
+  answers as text nodes plus structured links — never confirm/actuators.
 -->
 <script lang="ts">
   import ChatMessageList, { type ChatMessage } from "./ChatMessageList.svelte";
   import ChatComposer from "./ChatComposer.svelte";
-  import SectionTitle from "$lib/components/primitives/titles/SectionTitle.svelte";
-  import { routeUtterance, copyForResult } from "$lib/router-client";
+  import { routeUtterance, copyForResult, resolveConfirmUrl } from "$lib/router-client";
+  import { askAssistant, statusKeyForAskResult } from "$lib/assistant-client";
   import { readCsrfTokenFromCookie } from "$lib/csrf";
 
   type ChatUICopy = {
     title: string;
-    emptyState: string;
     composerPlaceholder: string;
     composerAriaLabel: string;
     composerSend: string;
-    /** Typewriter phrases cycled while the composer is empty. */
     composerPlaceholderExamples?: string[];
     messageGo: string;
     messageConfirm: string;
-    /** Maps a `copyForResult` message key to its resolved, localized text. */
     outcomeCopy: Record<string, string>;
   };
 
   const EMPTY_COPY: ChatUICopy = {
     title: "",
-    emptyState: "",
     composerPlaceholder: "",
     composerAriaLabel: "",
     composerSend: "",
@@ -47,13 +41,16 @@
     class: className = undefined,
     publicBackendUrl = "",
     copy = EMPTY_COPY,
+    mode = "router",
+    page = "/",
   }: {
     class?: string;
     publicBackendUrl?: string;
-    /** Rendered copy arrives resolved from the page's frontmatter (LOCALIZATION).
-     * Defaults to blank strings (adr-22 rule 1) — a zero-prop mount renders the
-     * chrome with no copy rather than throwing. */
     copy?: ChatUICopy;
+    /** `router` (default) or `assistant` — one component, two modes. */
+    mode?: "router" | "assistant";
+    /** Closed nav-registry path for assistant mode (server-side context key). */
+    page?: string;
   } = $props();
 
   let messages = $state<ChatMessage[]>([]);
@@ -65,21 +62,13 @@
     messages = [...messages, { ...message, id: String(seq++) } as ChatMessage];
   }
 
-  // Bottom-anchoring, imperative half: array/DOM order stays natural append
-  // order (ChatMessageList renders `messages` unreversed) — `justify-end`
-  // below handles the under-full case, this effect handles the overflow
-  // case by pinning the scroll position to the newest message on every
-  // change, with no reversal anywhere in the render path.
   $effect(() => {
     messages.length;
     if (messageContainer) messageContainer.scrollTop = messageContainer.scrollHeight;
   });
 
-  async function handleSubmit(text: string): Promise<void> {
-    push({ role: "user", text });
-    pending = true;
+  async function handleSubmitRouter(text: string): Promise<void> {
     const result = await routeUtterance(publicBackendUrl, text, readCsrfTokenFromCookie());
-    pending = false;
 
     if (result.kind === "outcome" && result.data.outcome === "Action") {
       const action = result.data.action;
@@ -91,34 +80,82 @@
       return;
     }
 
-    // Every non-Action result maps to fixed, frontend-owned copy keyed on the
-    // outcome enum — never model-generated prose (adr-15 rule 5). The key
-    // is resolved against `copy.outcomeCopy`, itself built from `t(...)`.
     const outcomeKey = copyForResult(result);
     push({ role: "status", text: (outcomeKey && copy.outcomeCopy[outcomeKey]) ?? "" });
   }
 
+  async function handleSubmitAssistant(text: string): Promise<void> {
+    const result = await askAssistant(
+      publicBackendUrl,
+      text,
+      page,
+      readCsrfTokenFromCookie(),
+    );
+
+    if (result.kind === "answer") {
+      push({
+        role: "assistant",
+        text: result.data.answer,
+        links: result.data.links,
+      });
+      return;
+    }
+
+    const statusKey = statusKeyForAskResult(result);
+    push({ role: "status", text: (statusKey && copy.outcomeCopy[statusKey]) ?? "" });
+  }
+
+  async function handleSubmit(text: string): Promise<void> {
+    push({ role: "user", text });
+    pending = true;
+    try {
+      if (mode === "assistant") {
+        await handleSubmitAssistant(text);
+      } else {
+        await handleSubmitRouter(text);
+      }
+    } finally {
+      pending = false;
+    }
+  }
+
   function confirmNavigate(message: Extract<ChatMessage, { role: "confirm" }>): void {
-    window.location.assign(message.target);
+    // Assistant mode never emits confirm; guard keeps zero-prop mounts safe.
+    if (mode === "assistant") return;
+
+    const form = document.createElement("form");
+    form.method = "post";
+    form.action = resolveConfirmUrl(publicBackendUrl, message.target);
+    form.hidden = true;
+
+    const token = document.createElement("input");
+    token.type = "hidden";
+    token.name = "csrfmiddlewaretoken";
+    token.value = readCsrfTokenFromCookie();
+    form.appendChild(token);
+
+    document.body.appendChild(form);
+    form.submit();
   }
 </script>
 
-<div class={`mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-4 px-4 py-8 ${className ?? ""}`}>
-  <SectionTitle as="h1">{copy.title}</SectionTitle>
-  <div bind:this={messageContainer} class="flex flex-1 flex-col justify-end overflow-y-auto">
-    {#if messages.length === 0}
-      <p class="text-sm text-muted-foreground">
-        {copy.emptyState}
-      </p>
-    {:else}
+<div
+  class={`mx-auto flex min-h-0 w-full min-w-0 max-w-2xl flex-1 flex-col gap-4 overflow-x-hidden px-4 py-8 ${className ?? ""}`}
+  data-chat-mode={mode}
+>
+  <div
+    bind:this={messageContainer}
+    class="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto"
+  >
+    {#if messages.length > 0}
       <ChatMessageList
         {messages}
-        onconfirm={confirmNavigate}
+        onconfirm={mode === "router" ? confirmNavigate : undefined}
         copy={{ go: copy.messageGo, confirm: copy.messageConfirm }}
       />
     {/if}
   </div>
-  <div class="sticky bottom-4">
+  <div class="flex shrink-0 flex-col gap-2">
     <ChatComposer
       {pending}
       onsubmit={handleSubmit}

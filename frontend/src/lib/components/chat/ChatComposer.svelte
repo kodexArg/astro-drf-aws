@@ -1,6 +1,6 @@
 <!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-15-chatbot-two-tier]]
-     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[CHATBOT]]
+     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-22-showcase-ready-components]] · [[adr-15-chatbot-two-tier]]
+     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]] · [[CHATBOT]]
      LIVE-DOC:END -->
 
 <!--
@@ -12,6 +12,7 @@
   import { onDestroy } from "svelte";
   import { Input } from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
+  import { Send } from "$lib/components/icons";
   import { createTypewriterCycle, type Scheduler } from "$lib/typewriter-placeholder";
 
   let {
@@ -33,6 +34,8 @@
     onsubmit: (text: string) => void;
     class?: string;
   } = $props();
+
+  const uid = $props.id();
 
   let value = $state("");
   let animatedPlaceholder = $state("");
@@ -76,38 +79,28 @@
   }
 </script>
 
-<div class={`flex items-center gap-2 ${className ?? ""}`}>
-  <div class="relative flex-1">
+<div class={`flex min-w-0 w-full items-center gap-2 ${className ?? ""}`}>
+  <div class="relative min-w-0 flex-1">
     <Input
+      id={`chat-message-${uid}`}
+      name="chat-message"
       bind:value
       onkeydown={handleKeydown}
       placeholder={value.length === 0 && placeholderExamples.length === 0 ? placeholder : ""}
       aria-label={ariaLabel}
       disabled={pending}
+      class="min-w-0"
     />
     {#if value.length === 0 && animatedPlaceholder}
       <span
-        class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground"
+        class="pointer-events-none absolute inset-y-0 left-3 right-3 flex items-center overflow-hidden text-ellipsis whitespace-nowrap text-sm text-muted-foreground"
       >
         {animatedPlaceholder}
       </span>
     {/if}
   </div>
-  <Button type="button" onclick={submit} disabled={!value.trim() || pending}>
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="h-4 w-4"
-      aria-hidden="true"
-    >
-      <path d="M22 2 11 13" />
-      <path d="M22 2 15 22l-4-9-9-4Z" />
-    </svg>
+  <Button type="button" class="shrink-0" onclick={submit} disabled={!value.trim() || pending}>
+    <Send class="size-4" aria-hidden="true" />
     {sendLabel}
   </Button>
 </div>

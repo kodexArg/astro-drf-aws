@@ -139,6 +139,10 @@ def test_throttled_burst_returns_429_and_audit_row(client, django_user_model, se
 
     assert first.status_code == 200
     assert second.status_code == 429
+    # Bare by contract ([[API]]): indistinguishable from the silent
+    # rate-abuse block — empty body, no Retry-After to reveal the limiter.
+    assert second.content == b""
+    assert "Retry-After" not in second
     assert IntentQuery.objects.filter(user=user, choice="throttled").exists()
 
 
@@ -167,6 +171,7 @@ def test_rate_blocked_user_gets_bare_429_no_inference(client, django_user_model,
 
     assert response.status_code == 429
     assert response.content == b""
+    assert "Retry-After" not in response
     assert called["inference"] is False
     assert IntentQuery.objects.filter(user=user, choice="rate_blocked").exists()
 

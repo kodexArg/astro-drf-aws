@@ -1,6 +1,6 @@
 <!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]]
-     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]]
+     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-22-showcase-ready-components]]
+     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]]
      LIVE-DOC:END -->
 
 <!--
@@ -14,22 +14,11 @@
   Content sits behind Melt's native `popover="manual"` attribute
   (getPopover(), Popover builder source), which is hidden-by-default per
   the HTML Popover API — first paint never shows it open, only a user
-  click calls `showPopover()`.
-
-  Root cause of the #189/#373 regression (this alone WAS NOT enough): the
-  popover-content divs also carried Tailwind's unconditional `flex`
-  utility class. `.flex { display: flex }` is an ordinary
-  author-stylesheet rule — same-or-higher cascade priority than the UA's
-  built-in `[popover]:not(:popover-open) { display: none }` default — so
-  `flex` WON the cascade and permanently overrode the native hidden
-  state, regardless of the `popover`/`inert` attributes being
-  structurally correct (verified: SSR HTML always emitted
-  `popover="manual" inert` faithfully). This is why the #277 structural
-  fix never held across #275/#299's re-verifications: none of them
-  touched the CSS defeating the very mechanism they relied on. The
-  durable fix is `[&:popover-open]:flex` in place of a bare `flex` —
-  `display: flex` now applies ONLY in the open state; the UA default
-  governs the closed state, unopposed.
+  click calls `showPopover()`. The popover-content divs therefore carry
+  `[&:popover-open]:flex` in place of a bare `flex`: `display: flex`
+  applies ONLY in the open state; the UA's built-in
+  `[popover]:not(:popover-open) { display: none }` default governs the
+  closed state, unopposed by an author-stylesheet `flex` rule.
 -->
 <script lang="ts">
   import { onMount } from "svelte";
@@ -37,9 +26,11 @@
   import { Button } from "$lib/components/ui/button";
   import { Avatar, AvatarImage, AvatarFallback } from "$lib/components/ui/avatar";
   import QuickThemeToggle from "$lib/components/theme/QuickThemeToggle.svelte";
+  import { Mail } from "$lib/components/icons";
   import { readCsrfTokenFromCookie } from "$lib/csrf";
   import { resolveDisplayName, resolveInitials } from "$lib/display-name";
   import { cn } from "$lib/utils";
+  import { sanitizeThemeConfig, writeThemeCookie, type ThemeConfig } from "$lib/theme";
   import { t } from "../../../i18n";
   import type { Me } from "$lib/types/user";
 
@@ -47,6 +38,9 @@
     me = null,
     pending = false,
     publicBackendUrl = "",
+    loginHref = "#",
+    panelHref = "#",
+    logoutAction = "",
     loginLabel = "",
     logoutLabel = "",
     onLogout,
@@ -59,7 +53,14 @@
      * `<SessionBadge me={demoMe} />` invocation shows the profile link, a
      * plain `<a href>` navigation, not a mutating action (adr-22 rule 2). */
     pending?: boolean;
+    /** Backend origin the theme persist PATCHes (`{backend}/api/me/`). */
     publicBackendUrl?: string;
+    /** Real login route; caller-wired, defaults to inert (adr-22 rule 2). */
+    loginHref?: string;
+    /** Real /profile/ route; caller-wired, defaults to inert. */
+    panelHref?: string;
+    /** Real logout POST target; empty leaves the form a safe no-op on submit. */
+    logoutAction?: string;
     /** Rendered copy arrives resolved from the page's frontmatter (LOCALIZATION) */
     loginLabel?: string;
     logoutLabel?: string;
@@ -84,6 +85,36 @@
     if (onLogout) {
       event.preventDefault();
       onLogout(event);
+      return;
+    }
+    if (!logoutAction) event.preventDefault();
+  }
+
+  // Reconciles theme_config — the DB confirms the write, then the cookie is
+  // rewritten from that response so it converges on the server-confirmed
+  // value; a failed PATCH leaves the optimistic cookie in place until the
+  // next login or PATCH ([[adr-20-authorization-lobby]]).
+  async function persistTheme(blob: ThemeConfig): Promise<void> {
+    try {
+      const res = await fetch(`${publicBackendUrl}/api/me/`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": readCsrfTokenFromCookie(),
+        },
+        body: JSON.stringify({ theme_config: blob }),
+      });
+      if (!res.ok) {
+        console.warn("theme_config persist rejected", res.status);
+        return;
+      }
+      const confirmed = sanitizeThemeConfig(((await res.json()) as Me).theme_config);
+      writeThemeCookie(confirmed);
+    } catch (err) {
+      // Never surfaced to the user: the cookie already painted, and the DB
+      // wins at the next login/PATCH reconciliation.
+      console.warn("theme_config persist failed; cookie is ahead of the DB", err);
     }
   }
 
@@ -95,8 +126,13 @@
 </script>
 
 {#if me}
-  <div
-    class="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-2 text-card-foreground shadow-sm"
+  <button
+    type="button"
+    {...popover.trigger}
+    aria-label={t("auth_open_menu")}
+    class={cn(
+      "flex h-9 items-center gap-2 rounded-full border border-border bg-card pl-1 pr-2 text-card-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+    )}
   >
     <Avatar class="size-7">
       {#if me.picture}
@@ -106,30 +142,30 @@
       {/if}
     </Avatar>
     <span class="max-w-32 truncate text-sm font-medium">{username}</span>
-    <button
-      type="button"
-      {...popover.trigger}
-      aria-label={t("auth_open_menu")}
-      class={cn(
-        "inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
-      )}
-    >
-      <span aria-hidden="true">&#9776;</span>
-    </button>
-  </div>
+    <span aria-hidden="true" class="text-muted-foreground">&#9776;</span>
+  </button>
 
   <div
     {...popover.content}
     class="z-50 hidden min-w-56 flex-col gap-3 rounded-md border border-border bg-popover p-3 text-popover-foreground shadow-md [&:popover-open]:flex"
   >
-    <span class="truncate text-sm text-muted-foreground">{me.email}</span>
-    <QuickThemeToggle />
+    <span class="flex items-center gap-2 text-sm text-muted-foreground">
+      <Mail class="size-4" aria-hidden="true" />
+      <span class="truncate">{me.email}</span>
+    </span>
+    <QuickThemeToggle label={t("theme_toggle_mode")} onPersist={persistTheme} />
     {#if !pending}
-      <Button href="/profile/" variant="ghost" size="sm" class="w-full justify-start">{t("nav_profile")}</Button>
+      <Button href={panelHref} variant="ghost" size="sm" class="h-9 w-full justify-start gap-2">
+        <span aria-hidden="true">{"\u{1F39B}"}</span>
+        {t("nav_profile")}
+      </Button>
     {/if}
-    <form method="post" action={`${publicBackendUrl}/accounts/logout/`} onsubmit={handleLogoutSubmit}>
+    <form method="post" action={logoutAction || "#"} onsubmit={handleLogoutSubmit}>
       <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken} />
-      <Button type="submit" variant="destructive" size="sm" class="w-full">{logoutLabel}</Button>
+      <Button type="submit" variant="destructive" size="sm" class="h-9 w-full justify-start gap-2">
+        <span aria-hidden="true">{"\u{1F6AA}"}</span>
+        {logoutLabel}
+      </Button>
     </form>
   </div>
 {:else}
@@ -144,13 +180,13 @@
     >
       <span aria-hidden="true">&#9776;</span>
     </button>
-    <Button href={`${publicBackendUrl}/accounts/login/`}>{loginLabel}</Button>
+    <Button href={loginHref} class="rounded-full">{loginLabel}</Button>
   </div>
 
   <div
     {...popover.content}
     class="z-50 hidden min-w-40 flex-col gap-3 rounded-md border border-border bg-popover p-3 text-popover-foreground shadow-md [&:popover-open]:flex"
   >
-    <QuickThemeToggle />
+    <QuickThemeToggle label={t("theme_toggle_mode")} />
   </div>
 {/if}
