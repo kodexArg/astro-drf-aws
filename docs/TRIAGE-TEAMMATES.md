@@ -12,7 +12,7 @@ The `triage-and-fix` Workflow takes **one issue** and ends with a pull request, 
 that issue, or a new issue. Between those two points nothing is improvised: a JavaScript
 script holds the plan, and every node is an agent whose **tool grant is its contract**.
 
-Vendored per [[adr-14-harness]] and inventoried in [[HARNESS]]. The skill that documents and
+Vendored per [[adr-02-harness]] and inventoried in [[HARNESS]]. The skill that documents and
 validates it is `.claude/skills/kdx-wf-triage-and-fix/`; the script the runtime actually runs
 is `.claude/workflows/triage-and-fix.js`; the cast lives in `agents/wf-*.md`.
 
@@ -180,7 +180,7 @@ empirically — a probe agent declared `tools: []` reports `NO TOOLS AVAILABLE` 
 tool calls.
 
 It answers one question: *does this code stand up with nothing else in hand?* That is a
-different gate than a guardian's ([[adr-11-guardians]]): a guardian checks code **against**
+different gate than a guardian's ([[adr-03-guardians]]): a guardian checks code **against**
 the constitution; the shadow checks whether it is self-sufficient **without** it. Code that
 only makes sense with [[PRD]] open beside it fails here regardless of any guardian verdict.
 
@@ -229,19 +229,19 @@ would leave N half-hunts.
 This workflow is generic. **This repo's mandatory gates are not in it**, and no node enforces
 them:
 
-- **No [[BDD]] or [[TDD]] entry is written.** [[adr-07-development-flow]] rule 1 requires the
-  BDD entry to exist before the code does; [[adr-03-api-and-backend]] rule 2 requires
+- **No [[BDD]] or [[TDD]] entry is written.** [[adr-11-development-flow]] rule 1 requires the
+  BDD entry to exist before the code does; [[adr-07-api-and-backend]] rule 2 requires
   `plan → API → TDD → models.py`. No schema field carries either.
-- **No guardian is engaged.** [[adr-11-guardians]] rule 3 — *guardians are sought, not only
+- **No guardian is engaged.** [[adr-03-guardians]] rule 3 — *guardians are sought, not only
   triggered*. Seven `agent()` calls and none is a guardian.
 - **No [[API]] row check.** A new endpoint's row must land before its code
-  ([[adr-03-api-and-backend]] rule 1).
-- **No live-doc block or CODEMAP stamping** ([[adr-17-live-doc-backlinks]]).
+  ([[adr-07-api-and-backend]] rule 1).
+- **No live-doc block or CODEMAP stamping** ([[adr-19-live-doc-backlinks]]).
 - **The hunter's constitution check is narrower than the ABC gate** in [[AGENTS]]: it is
   permissive-by-default (`false` only when a written rule *forbids* the issue) and never asks
   whether the change touches [[API]].
 
-The bard opens a PR; it never merges. That leaves [[adr-19-issue-worktree-pr]] rule 4's gate
+The bard opens a PR; it never merges. That leaves [[adr-04-issue-delivery]] rule 4's gate
 room to run — but **nothing inside this workflow populates it**. Treat a `triage-and-fix` PR
 as a draft that still owes its gates.
 

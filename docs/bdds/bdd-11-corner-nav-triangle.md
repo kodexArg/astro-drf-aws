@@ -82,7 +82,7 @@ which stays top-left, right-angle, single-target, unmodified).
   3-point `clip-path` polygon cannot round any vertex, so this is
   necessarily a **hand-rolled custom component**: no Melt builder exists
   for a rounded-corner arbitrary polygon (ladder rung 3, last resort,
-  [[adr-04-frontend-and-design-system]] r8, [[MELT-UI]]) — the ladder is
+  [[adr-08-frontend-and-design-system]] r8, [[MELT-UI]]) — the ladder is
   honored by explicitly ruling out Melt/shadcn first, not skipped.
   Mechanism: an SVG `<path>` (not a CSS `clip-path`) with rounded corners
   via cubic-bezier corner-arcs at a fixed radius, filled with
@@ -146,7 +146,7 @@ into the component.
 ## Backend half
 
 None. Pure frontend/routing feature — no new `[[API]]` row, no Django
-change. The [[adr-07-development-flow]] checkpoint resolves immediately:
+change. The [[adr-11-development-flow]] checkpoint resolves immediately:
 existing routes (`/`, `/chatui/`, `/showcase/components/`) already exist.
 
 ## Error handling

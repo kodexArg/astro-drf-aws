@@ -6,7 +6,7 @@ not declared in docs/VARIABLES.md does not exist. VARIABLES governs what the
 backend and frontend services read, so the sweep is scoped to those two trees
 plus the committed .env* templates. Harness tooling — repo-root tests/, scripts/,
 .claude/hooks/ — reads env as CLI knobs, never as app runtime, and is out of
-scope by the same rule ([[adr-18-markdown-vault-mcp]] rule 3 states this outright
+scope by the same rule ([[adr-20-markdown-vault-mcp]] rule 3 states this outright
 for the vault launcher).
 Exit 2 feeds the violation back to the agent; any internal error exits 0.
 """

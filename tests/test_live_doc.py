@@ -1,4 +1,4 @@
-"""Harness test for the live-doc linker ([[adr-17-live-doc-backlinks]], [[HARNESS]]).
+"""Harness test for the live-doc linker ([[adr-19-live-doc-backlinks]], [[HARNESS]]).
 
 Asserts the block invariants without re-implementing the linker: no drift, exactly
 one block per matched file, wikilinks-only bodies, API cited by the route surface,
@@ -104,7 +104,7 @@ def main() -> None:
 
     # 5. CODEMAP exists and points at the ruling ADR
     codemap = (ROOT / "docs" / "CODEMAP.md").read_text()
-    assert "adr-17-live-doc-backlinks" in codemap, "CODEMAP missing ADR link"
+    assert "adr-19-live-doc-backlinks" in codemap, "CODEMAP missing ADR link"
     ok("CODEMAP.md present and linked")
 
     print("\nALL LIVE-DOC CHECKS PASSED")

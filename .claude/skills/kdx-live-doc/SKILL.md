@@ -1,6 +1,6 @@
 ---
 name: kdx-live-doc
-description: Stamp and re-sync the live-doc block (wikilinks-only) on every code file in this template, linking each file to the ADRs and docs that govern it, and regenerate docs/CODEMAP.md. The stamped project name comes from the PROJECT_SLUG env var; the linker's fallback when unset is this template's reference slug. Use when adding or moving code, changing which ADR governs a file, or when a live-doc block is missing/stale. Ruled by adr-17-live-doc-backlinks.
+description: Stamp and re-sync the live-doc block (wikilinks-only) on every code file in this template, linking each file to the ADRs and docs that govern it, and regenerate docs/CODEMAP.md. The stamped project name comes from the PROJECT_SLUG env var; the linker's fallback when unset is this template's reference slug. Use when adding or moving code, changing which ADR governs a file, or when a live-doc block is missing/stale. Ruled by adr-19-live-doc-backlinks.
 ---
 
 # kdx-live-doc — code ↔ live-doc linker
@@ -9,7 +9,7 @@ Stamps a **live-doc block** ([[GLOSSARY]]) at the top of every code file the man
 matches: a delimited `LIVE-DOC:START … LIVE-DOC:END` region, wrapped in the file's
 native comment syntax, holding **wikilinks only** — the ADRs that govern the file, the
 docs those ADRs own, and `[[API]]` for the route surface. Then regenerates
-`docs/CODEMAP.md`, the generated doc→code inverse index. Force: [[adr-17-live-doc-backlinks]].
+`docs/CODEMAP.md`, the generated doc→code inverse index. Force: [[adr-19-live-doc-backlinks]].
 
 ## Run it
 
@@ -41,9 +41,9 @@ starting `adr-` render under *Governed by*, `API` under *API*, everything else u
 
 ## Rules it enforces
 
-- Block carries **links, never prose** — no restatement of a doc ([[adr-17-live-doc-backlinks]] rule 2).
+- Block carries **links, never prose** — no restatement of a doc ([[adr-19-live-doc-backlinks]] rule 2).
 - `models/views/viewsets/serializers/urls/permissions` additionally cite `[[API]]` (rule 4).
 - `CODEMAP.md` is **generated**, never hand-edited (rule 5).
 
 Adding a new file type or root is a manifest edit; adding a rule ADR would own is a
-supersession of [[adr-17-live-doc-backlinks]], not a change here.
+supersession of [[adr-19-live-doc-backlinks]], not a change here.

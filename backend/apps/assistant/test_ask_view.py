@@ -1,10 +1,10 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-24-page-context-assistant]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-25-page-context-assistant]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
 """Tests for `AskView` (POST /api/assistant/ask/) — RBAC + response contract
-([[adr-24-page-context-assistant]], [[adr-10-auth]] rule 2, [[adr-16-async-mandatory]])."""
+([[adr-25-page-context-assistant]], [[adr-14-auth]] rule 2, [[adr-18-async-mandatory]])."""
 
 import pytest
 from botocore.exceptions import BotoCoreError

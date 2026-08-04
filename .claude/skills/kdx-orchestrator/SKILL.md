@@ -2,7 +2,6 @@
 name: kdx-orchestrator
 description: Switch the main chat into orchestrator mode as an Agent Team lead. ALWAYS forms an agent team on startup, then decomposes the user's task and assigns read/write work to teammates (orch-low/medium/high roles) via a shared task list — never implementing inline. Use when the user types /kdx-orchestrator or starts a message line with `->` (direct dispatch).
 argument-hint: "[task]"
-disable-model-invocation: true
 ---
 
 # Orchestrator Mode — Agent Team Lead

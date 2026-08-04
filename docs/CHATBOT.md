@@ -8,10 +8,10 @@ tags: [harness, chatbot, router, assistant, ai, security]
 
 # CHATBOT
 
-The template's conversational surface and the architecture behind it. Ruled by [[adr-15-chatbot-two-tier]] and, for the assistant surface, [[adr-24-page-context-assistant]]. This file **owns the content**; the ADRs state only the rules and link here.
+The template's conversational surface and the architecture behind it. Ruled by [[adr-17-chatbot-two-tier]] and, for the assistant surface, [[adr-25-page-context-assistant]]. This file **owns the content**; the ADRs state only the rules and link here.
 
 > [!note] Naming — settled
-> `chatui`, `router`, the endpoint segment `route` (`/api/router/route/`), the models `Intent` and `IntentQuery`, the reserved outcomes `NO_MATCH`/`ESCALATE`, the action field `kind`, and the env stem `ROUTER_*` are all registered in [[GLOSSARY]] ([[adr-01-glossary-and-localization]]).
+> `chatui`, `router`, the endpoint segment `route` (`/api/router/route/`), the models `Intent` and `IntentQuery`, the reserved outcomes `NO_MATCH`/`ESCALATE`, the action field `kind`, and the env stem `ROUTER_*` are all registered in [[GLOSSARY]] ([[adr-05-glossary-and-localisation]]).
 
 ## The one-line split
 
@@ -26,7 +26,7 @@ A chat-like UI — `chatui` — where the user types free text into a box and ge
 The router:
 
 1. Takes the utterance.
-2. Builds the menu **server-side in Django**, filtered by the requesting user's permissions (Django Groups + DRF permission classes, [[adr-10-auth]]) — before the model sees anything.
+2. Builds the menu **server-side in Django**, filtered by the requesting user's permissions (Django Groups + DRF permission classes, [[adr-14-auth]]) — before the model sees anything.
 3. Calls **Amazon Nova Micro on Bedrock** (us-east-1) with a **JSON-Schema-constrained** request whose only free variable is an `enum` field, at **temperature 0**.
 4. Gets back exactly one member of that enum. Nothing else is a valid response.
 5. Maps that member to a preconfigured link, site action, or `GET` view and executes it.
@@ -37,7 +37,7 @@ The shipped menu is a **closed, permission-filtered menu** built from a growable
 
 **A response outside the enum is a hard reject** — logged as a fault, never repaired, never defaulted to a nearest match, never retried into one. Silent repair would reintroduce exactly the ambiguity the enum exists to delete. Every decision, including rejects and escalations, persists an audit row (see Retention below).
 
-**The router's build stops here.** The router-mediated generating path below is *made possible* by this design; it is not built, not designed in detail, and not scheduled. A **direct** user → generating-tier channel is a separate, recorded decision — the page-context assistant, further down ([[adr-24-page-context-assistant]]) — and it changes no line of the router's contract.
+**The router's build stops here.** The router-mediated generating path below is *made possible* by this design; it is not built, not designed in detail, and not scheduled. A **direct** user → generating-tier channel is a separate, recorded decision — the page-context assistant, further down ([[adr-25-page-context-assistant]]) — and it changes no line of the router's contract.
 
 ### Local development calls Bedrock directly
 
@@ -92,7 +92,7 @@ This is a claim about the *mechanism*, and it is the only form in which the clai
 
 ## The permanent invariant
 
-This is the spine of [[adr-15-chatbot-two-tier]] and the reason the enum-constrained tier is built first:
+This is the spine of [[adr-17-chatbot-two-tier]] and the reason the enum-constrained tier is built first:
 
 | Tier | Emits | Rights |
 |---|---|---|
@@ -124,7 +124,7 @@ Shipping the seam dead, from day one, is what keeps the generating tier from eve
 ## The page-context assistant — the direct channel
 
 > [!important] The decision
-> A **direct user → generating-tier channel** is authorized: the page-context assistant. It bypasses the router entirely. Its force is [[adr-24-page-context-assistant]], which lifts [[adr-15-chatbot-two-tier]]'s rule-9 stop for exactly this surface, adds to that ADR, and supersedes none of its rules.
+> A **direct user → generating-tier channel** is authorized: the page-context assistant. It bypasses the router entirely. Its force is [[adr-25-page-context-assistant]], which lifts [[adr-17-chatbot-two-tier]]'s rule-9 stop for exactly this surface, adds to that ADR, and supersedes none of its rules.
 
 Until this decision, this document described the generating tier as reachable **only** through the router's structured reinterpretation. It is now reachable two ways, and they are different objects: the router-mediated path above is still unbuilt and undesigned, while this one is decided, bounded, and entered through [[API]] as `POST /api/assistant/ask/`.
 
@@ -132,17 +132,17 @@ Until this decision, this document described the generating tier as reachable **
 
 ### The v1 bounds
 
-- **Read-only, forever.** No actuator rights, no `confirm`, no write, no mutating endpoint — [[adr-15-chatbot-two-tier]] rule 1 unchanged. An action the assistant wants re-enters through the router (rule 4); v1 emits no action at all.
-- **Server-assembled, group-filtered context.** The request carries a **page identity** — a member of the closed nav registry — plus the params the page itself used; never page text, never DOM scrape, never client-shipped content. The backend recomputes that page's data through the same layer the page's declared `GET` endpoints use, under the caller's Django Groups. A page whose backing endpoint the caller may not read yields **no context**, not an error, and never a figure the caller could not have fetched by hand ([[adr-10-auth]], [[adr-24-page-context-assistant]] rule 3).
-- **Structured, registry-validated links.** Link suggestions travel in their own constrained field and each `target` is validated server-side against the nav registry; anything outside it is dropped. The prose may name a view; only the validated array renders as an anchor. The frontend renders the answer as text nodes — no HTML, no Markdown interpretation, no link minted from prose ([[adr-24-page-context-assistant]] rule 4).
+- **Read-only, forever.** No actuator rights, no `confirm`, no write, no mutating endpoint — [[adr-17-chatbot-two-tier]] rule 1 unchanged. An action the assistant wants re-enters through the router (rule 4); v1 emits no action at all.
+- **Server-assembled, group-filtered context.** The request carries a **page identity** — a member of the closed nav registry — plus the params the page itself used; never page text, never DOM scrape, never client-shipped content. The backend recomputes that page's data through the same layer the page's declared `GET` endpoints use, under the caller's Django Groups. A page whose backing endpoint the caller may not read yields **no context**, not an error, and never a figure the caller could not have fetched by hand ([[adr-14-auth]], [[adr-25-page-context-assistant]] rule 3).
+- **Structured, registry-validated links.** Link suggestions travel in their own constrained field and each `target` is validated server-side against the nav registry; anything outside it is dropped. The prose may name a view; only the validated array renders as an anchor. The frontend renders the answer as text nodes — no HTML, no Markdown interpretation, no link minted from prose ([[adr-25-page-context-assistant]] rule 4).
 - **Kill switch.** `ASSISTANT_ENABLED=false` short-circuits to a fixed `disabled` outcome with zero inference calls, exactly as `ROUTER_ENABLED` does for the router ([[VARIABLES]]).
 - **Abuse guard, reused.** The router's per-user cooldown and its silent rate block are reused rather than reimplemented; both return `429`, indistinguishable to the caller.
 - **Bounded audit retention, mirroring the router's.** Every ask persists an `AssistantQuery` audit row under a bounded-window policy of the same shape as `IntentQuery`'s (Retention, below): `ASSISTANT_AUDIT_RETENTION_DAYS` bounds the window, `purge_assistant_audit` deletes past it ([[VARIABLES]]). No conversation memory exists beyond those rows.
-- **Rendered copy, localizable.** The answer reaches the screen, so it is rendered output localizable through the i18n layer like any user-facing string; prompt scaffolding identifiers, keys, and every other non-rendered string stay English ([[LOCALIZATION]], [[adr-24-page-context-assistant]] rule 5).
+- **Rendered copy, localizable.** The answer reaches the screen, so it is rendered output localizable through the i18n layer like any user-facing string; prompt scaffolding identifiers, keys, and every other non-rendered string stay English ([[LOCALISATION]], [[adr-25-page-context-assistant]] rule 5).
 
 ### View-first context — the agnostic principle
 
-**The content of the user's current view is the first context any AI answer draws on**, and the first tier of any retrieval layered on later. That is a *priority ordering* and deliberately nothing else: it names no store, no embedding strategy, no chunking, no vendor, and no retrieval contract ([[adr-24-page-context-assistant]] rule 2). It sits beside the RAG paragraph below rather than replacing it — the page's already-computed variables are hot context precisely because they were computed once, server-side, for the screen, so chat and screen can never disagree.
+**The content of the user's current view is the first context any AI answer draws on**, and the first tier of any retrieval layered on later. That is a *priority ordering* and deliberately nothing else: it names no store, no embedding strategy, no chunking, no vendor, and no retrieval contract ([[adr-25-page-context-assistant]] rule 2). It sits beside the RAG paragraph below rather than replacing it — the page's already-computed variables are hot context precisely because they were computed once, server-side, for the screen, so chat and screen can never disagree.
 
 ### The escalation seam is unchanged
 
@@ -160,13 +160,13 @@ The raw utterance persists in `IntentQuery`, but under a bounded retention polic
 
 ## The action descriptor — the backend chooses, the frontend acts
 
-The choosing tier's response is a **typed action descriptor**, never a performed side effect. The router selects; it does not navigate, redirect, or execute on the caller's behalf. This narrows [[adr-15-chatbot-two-tier]] rule 1's "actuator rights" to *emitting a descriptor*, not *performing an action* — content, not a rule change, so it lives here rather than in a new ADR ([[adr-00-adr-doctrine]] rule 1).
+The choosing tier's response is a **typed action descriptor**, never a performed side effect. The router selects; it does not navigate, redirect, or execute on the caller's behalf. This narrows [[adr-17-chatbot-two-tier]] rule 1's "actuator rights" to *emitting a descriptor*, not *performing an action* — content, not a rule change, so it lives here rather than in a new ADR ([[adr-00-adr-doctrine]] rule 1).
 
 The descriptor carries typed, validated slots:
 
 - **`kind`** — `navigate` or `confirm`. Reversibility decides which: `navigate` fires immediately and MUST be safe and idempotent (`GET` only); `confirm` returns a proposal the browser must present to the user before executing it as a separate, CSRF-protected request against `target`, subject to that endpoint's own authorization. Every irreversible or state-changing action is `confirm` — logout included.
 - **`target`** — the URL or endpoint the frontend acts on.
-- **`label`** — the hand-authored, human-facing text for the choice ([[LOCALIZATION]] — registry content, not code).
+- **`label`** — the hand-authored, human-facing text for the choice ([[LOCALISATION]] — registry content, not code).
 
 The response body carries **no prose beyond the registry-authored `label`**: the reserved outcomes (`NO_MATCH`, `ESCALATE`, the kill switch's `disabled`) return their outcome key only, and the frontend owns the corresponding user-facing copy. A router response that mutates state, redirects, or free-text-explains itself is a defect — it would make the choosing tier a generator, eroding the invariant above.
 
@@ -180,6 +180,6 @@ The chatbot is the intended **future entry point for a RAG**. The template only 
 
 ## Relationship to the sibling documents
 
-- [[API]] — every endpoint this feature needs enters there first, in its own guarded act, before any code ([[adr-03-api-and-backend]]).
-- [[AUTH]] / [[adr-10-auth]] — unchanged. Cognito authenticates; Django authorizes. The router authorizes nothing; it narrows a menu Django already authorized.
-- [[adr-24-page-context-assistant]] — the rules of the direct channel; this file owns the content those rules point to.
+- [[API]] — every endpoint this feature needs enters there first, in its own guarded act, before any code ([[adr-07-api-and-backend]]).
+- [[AUTH]] / [[adr-14-auth]] — unchanged. Cognito authenticates; Django authorizes. The router authorizes nothing; it narrows a menu Django already authorized.
+- [[adr-25-page-context-assistant]] — the rules of the direct channel; this file owns the content those rules point to.

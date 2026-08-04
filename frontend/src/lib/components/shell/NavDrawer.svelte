@@ -1,5 +1,5 @@
-<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-22-showcase-ready-components]]
+<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+     Governed by: [[adr-08-frontend-and-design-system]] · [[adr-23-showcase-ready-components]]
      Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]]
      LIVE-DOC:END -->
 
@@ -16,7 +16,7 @@
   routes with their labels and icons; a second list here would be a second
   authority that can disagree with it.
 
-  Rung 3 of the ladder ([[adr-04-frontend-and-design-system]] rule 3), and only
+  Rung 3 of the ladder ([[adr-08-frontend-and-design-system]] rule 3), and only
   just: the drawer holds open/closed state, which rung 1 cannot and rung 2 would
   need a round-trip for. The links are plain anchors, but real navigation is
   caller-enabled via `navigates` — inert by default (adr-22 rule 2).

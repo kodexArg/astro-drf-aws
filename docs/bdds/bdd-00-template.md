@@ -23,7 +23,7 @@ agreed before any code exists.
 ## Frontend half
 
 The Astro/Svelte/HTMX surface: pages, components, the interactivity rung
-climbed ([[adr-04-frontend-and-design-system]]), design-system compliance
+climbed ([[adr-08-frontend-and-design-system]]), design-system compliance
 ([[DESIGN-SYSTEM]]), variables consumed (`PUBLIC_*` only — [[VARIABLES]]).
 
 ## Backend half

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Issue -> Worktree -> PR nudge (PreToolUse on Bash).
 
-Layer 2 of the enforcement stack in adr-19-issue-worktree-pr: a bypassable local
+Layer 2 of the enforcement stack in adr-04-issue-delivery: a bypassable local
 reminder, never the boundary. It fires on a git commit or a push at main/prod and
 prints the flow to context; it also fires on a `git worktree remove` to nudge the
 rule-5 ordering (remove only after the PR merges, never before). It never denies
@@ -71,7 +71,7 @@ def main():
         cmd = payload.get("tool_input", {}).get("command", "")
         if COMMIT.search(cmd) or PUSH_PROTECTED.search(cmd):
             print(
-                "PR-flow nudge (adr-19-issue-worktree-pr): every change is "
+                "PR-flow nudge (adr-04-issue-delivery): every change is "
                 "issue -> (worktree optional) -> PR; main is reached only by merging a "
                 "PR, never by a direct hand-commit. Integrate as the gh/kodexArg "
                 "identity, then delete the worktree (git worktree remove) and branch. "
@@ -80,7 +80,7 @@ def main():
         if WORKTREE_REMOVE.search(cmd):
             note = _open_pr_note(cmd)
             print(
-                "Worktree-removal nudge (adr-19-issue-worktree-pr rule 5): a "
+                "Worktree-removal nudge (adr-04-issue-delivery rule 5): a "
                 "worktree is removed only AFTER its PR has merged, never before "
                 "— no worktree outlives its PR, but neither does it die ahead of "
                 "one. Confirm the PR reached its terminal outcome first."

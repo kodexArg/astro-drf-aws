@@ -19,7 +19,7 @@ These are the well-determined places the literal may still appear:
       deploy workflow's `PROJECT_SLUG: <slug>` line — the literal there is
       the one legitimate seed value, not a stray copy;
   (d) the line also contains `LIVE-DOC` — a generated live-doc block header
-      (adr-17-live-doc-backlinks), not a hardcode;
+      (adr-19-live-doc-backlinks), not a hardcode;
   (e) a short, explicit EXCEPTIONS list below, for opaque values that are
       not derivable from PROJECT_SLUG at all: `.github/workflows/
       deploy-prod.yml` lines holding one of the six AWS-random-suffix ARNs

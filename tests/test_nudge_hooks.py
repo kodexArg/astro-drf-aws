@@ -14,12 +14,13 @@ API_HOOK = ROOT / ".claude" / "hooks" / "require_api_read.py"
 PR_FLOW_HOOK = ROOT / ".claude" / "hooks" / "require_pr_flow.py"
 
 # Coverage parity: reproduces today's dispatch_guardians.py WATCHLISTS
-# glob-by-glob. adr-11 rule 5 keeps the watchlist in exactly two places
-# (each guardian's Watchlist section + the hook WATCHLISTS); this test
-# guards the hook half against silent drift when the two hooks were merged.
+# glob-by-glob. adr-03-guardians rule 5 keeps the watchlist in exactly two
+# places (each guardian's Watchlist section + the hook WATCHLISTS); this
+# test guards the hook half against silent drift when the two hooks were
+# merged.
 EXPECTED_WATCHLISTS = {
     "astro-drf-aws-prd": (
-        "docs/PRD.md",
+        "docs/constitution/PRD.md",
         "AGENTS.md",
         "CLAUDE.md",
         "README.md",
@@ -29,13 +30,12 @@ EXPECTED_WATCHLISTS = {
         "agents/*",
         ".claude/rules/*",
         "docs/adrs/*",
-        "docs/obsolete/*",
         ".github/workflows/*",
         "compose.yaml",
-        "docs/REQUIREMENTS.md",
+        "docs/constitution/REQUIREMENTS.md",
         "docs/GLOSSARY.md",
-        "docs/LOCALIZATION.md",
-        "docs/INFRASTRUCTURE.md",
+        "docs/constitution/LOCALISATION.md",
+        "docs/constitution/INFRASTRUCTURE.md",
         "docs/VARIABLES.md",
         "docs/INVENTORY.md",
         "*/pyproject.toml",

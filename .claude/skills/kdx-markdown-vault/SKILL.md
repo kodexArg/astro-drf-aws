@@ -1,6 +1,6 @@
 ---
 name: kdx-markdown-vault
-description: Drive the markdown-vault-docs MCP — the first source of truth for docs/ content in the astro-drf-aws template. Use for any question about docs/ prose or its wikilink graph (search, read, backlinks, similarity), before Grep/Read. Also covers bootstrap, reindex, and the write caveat. Ruled by adr-18-markdown-vault-mcp; full config in docs/markdown-vault-mcp.md.
+description: Drive the markdown-vault-docs MCP — the first source of truth for docs/ content in the astro-drf-aws template. Use for any question about docs/ prose or its wikilink graph (search, read, backlinks, similarity), before Grep/Read. Also covers bootstrap, reindex, and the write caveat. Ruled by adr-20-markdown-vault-mcp; full config in docs/markdown-vault-mcp.md.
 ---
 
 # kdx-markdown-vault — query the docs/ vault graph
@@ -9,7 +9,7 @@ The `markdown-vault-docs` MCP indexes `docs/` (this template's Obsidian vault) a
 searchable, backlink-aware, semantically-indexed graph. It is the **first source of
 truth for `docs/` content** — query it before Grep/Read for any `docs/` prose or
 wikilink question. Grep/Read stay correct for code, configs, and non-`docs/` files;
-code structure goes to `codebase-memory-mcp` first. Force: [[adr-18-markdown-vault-mcp]].
+code structure goes to `codebase-memory-mcp` first. Force: [[adr-20-markdown-vault-mcp]].
 Config SSOT: [[markdown-vault-mcp]].
 
 ## When to reach for it
@@ -17,7 +17,7 @@ Config SSOT: [[markdown-vault-mcp]].
 - "Where is X documented?" / "which doc owns this rule?" → `search` (`mode='hybrid'`).
 - "What links to [[API]]?" / "what does this doc reference?" → `get_backlinks` / `get_outlinks`.
 - "What's related to this note?" → `get_similar` (semantic).
-- "Show me the full doc" → `read` / `fetch` by relative path (e.g. `adrs/adr-10-auth.md`).
+- "Show me the full doc" → `read` / `fetch` by relative path (e.g. `adrs/adr-14-auth.md`).
 - Graph hygiene → `get_orphan_notes`, `get_broken_links`.
 
 ## Tool cheat-sheet

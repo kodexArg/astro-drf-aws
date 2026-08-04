@@ -21,7 +21,7 @@ button**, I see a floating menu of actions — keyboard-navigable, one item
 disabled, every label localized — matching the `nav/` row-actions /
 user-menu shape the epic (#178) prioritizes this component for.
 
-## Chosen build path (locked, [[MELT-UI]] / [[adr-04-frontend-and-design-system]] r8)
+## Chosen build path (locked, [[MELT-UI]] / [[adr-08-frontend-and-design-system]] r8)
 
 Melt 0.44 (pinned, [[REQUIREMENTS]]) ships no `Dropdown Menu` builder — the
 epic comment's "36 builders" list names one, but it is not present in the
@@ -118,7 +118,7 @@ And focus returns to the trigger button — the Melt `Popover` builder's
 ```gherkin
 Given the trigger label, every menu item's label, and the demo's section
   heading in the gallery
-When the page renders in any configured locale ([[LOCALIZATION]])
+When the page renders in any configured locale ([[LOCALISATION]])
 Then each string is drawn from a `snake_case` English message ID
   (`demo_dropdown_*` / `gallery_dropdownmenu*`) via `t()` — no literal string
   is hardcoded in the component or the showcase page
@@ -161,7 +161,7 @@ existing `*Demo.svelte` convention. It is wired into
 
 `frontend/src/i18n/`'s catalog gains the `demo_dropdown_*` (trigger label,
 item labels, disabled item label) and `gallery_dropdownmenu*` (section
-heading, intro line) message IDs ([[LOCALIZATION]]).
+heading, intro line) message IDs ([[LOCALISATION]]).
 
 `docs/COMPONENTIZATION.md`'s Component index and folder-tree comment for
 `nav/` gain the `DropdownMenu` / `DropdownMenuDemo` rows in the same PR
@@ -172,7 +172,7 @@ the epic's own comment, not a behavior this BDD governs).
 ## Backend half
 
 None. This is a frontend-only showcase addition — no new `[[API]]` row, no
-Django code, no migration. The [[adr-07-development-flow]] checkpoint
+Django code, no migration. The [[adr-11-development-flow]] checkpoint
 ("does [[API]] solve the need?") resolves immediately: the existing
 endpoint set already covers everything this feature touches, because it
 touches none of them.

@@ -14,7 +14,7 @@ type: bdd
 
 ## Use case
 
-As an **anonymous visitor** or a **signed-in user with no Group membership yet**, when I request any page, I land on `/` — the lobby ([[GLOSSARY]]: lobby) — and, once signed in, I see a pending-authorization legend (`lobby_pending`, [[GLOSSARY]], [[LOCALIZATION]]) until an admin grants me a role. As a **signed-in user who already holds a role**, every route opens normally and I never see the lobby's pending state.
+As an **anonymous visitor** or a **signed-in user with no Group membership yet**, when I request any page, I land on `/` — the lobby ([[GLOSSARY]]: lobby) — and, once signed in, I see a pending-authorization legend (`lobby_pending`, [[GLOSSARY]], [[LOCALISATION]]) until an admin grants me a role. As a **signed-in user who already holds a role**, every route opens normally and I never see the lobby's pending state.
 
 ## Scenarios
 
@@ -33,9 +33,9 @@ And requesting `/` directly renders the lobby with the sign-in affordance, no le
 Given a user who has completed Cognito login (a Django session exists)
 And their `AccessRequest.role` is still null ([[GLOSSARY]]: `AccessRequest`, `role`)
 When they request `/`
-Then they see the `lobby_pending` legend ([[GLOSSARY]], [[LOCALIZATION]])
+Then they see the `lobby_pending` legend ([[GLOSSARY]], [[LOCALISATION]])
 When they request any other route
-Then they are redirected back to `/` — no `403`, the lobby is the landing point for a role-less session ([[adr-20-authorization-lobby]] rule 1)
+Then they are redirected back to `/` — no `403`, the lobby is the landing point for a role-less session ([[adr-21-authorization-lobby]] rule 1)
 ```
 
 ### An admin grants a role
@@ -43,8 +43,8 @@ Then they are redirected back to `/` — no `403`, the lobby is the landing poin
 ```gherkin
 Given a role-less signed-in user stuck on the lobby
 When an `admins` member sets `AccessRequest.role` to a Group in Django admin (`/admin/`, [[API]])
-Then the `post_save` signal adds that Group to the user's `user.groups` ([[adr-20-authorization-lobby]] rule 3)
-And the user's very next request — a plain refresh, no re-login — reaches their previously blocked route normally ([[adr-20-authorization-lobby]] rule 4)
+Then the `post_save` signal adds that Group to the user's `user.groups` ([[adr-21-authorization-lobby]] rule 3)
+And the user's very next request — a plain refresh, no re-login — reaches their previously blocked route normally ([[adr-21-authorization-lobby]] rule 4)
 ```
 
 ### A role-holding user never sees the lobby's pending state
@@ -58,15 +58,15 @@ And every other route opens normally, subject only to that route's own permissio
 
 ## Frontend half
 
-`/` is the existing home page ([[FRONTEND]]) carrying the `SessionBadge` component ([[COMPONENTIZATION]], [[AUTH]]) — this entry widens it, not replaces it: for a role-less authenticated session it additionally renders the `lobby_pending` legend, server-rendered HTML only (rung 1 of the interactivity ladder, [[adr-04-frontend-and-design-system]] — no HTMX fragment, no island; the state — `role` present or not — is read once, server-side, on page render). The legend text itself is a rendered i18n string keyed `lobby_pending` ([[GLOSSARY]], [[LOCALIZATION]]) — the Spanish value is the i18n layer's to define, not this entry's. No `PUBLIC_*` variable is added ([[VARIABLES]]).
+`/` is the existing home page ([[FRONTEND]]) carrying the `SessionBadge` component ([[COMPONENTIZATION]], [[AUTH]]) — this entry widens it, not replaces it: for a role-less authenticated session it additionally renders the `lobby_pending` legend, server-rendered HTML only (rung 1 of the interactivity ladder, [[adr-08-frontend-and-design-system]] — no HTMX fragment, no island; the state — `role` present or not — is read once, server-side, on page render). The legend text itself is a rendered i18n string keyed `lobby_pending` ([[GLOSSARY]], [[LOCALISATION]]) — the Spanish value is the i18n layer's to define, not this entry's. No `PUBLIC_*` variable is added ([[VARIABLES]]).
 
 ## Backend half
 
-Feeds [[tdd-02-access-request]]: the `AccessRequest` model, its nullable `role` field, and the `post_save` signal that mirrors a grant into `user.groups` ([[adr-20-authorization-lobby]]). **No new [[API]] row** — the admin grant path reuses the already-declared `/admin/` mount and the gate check reads Group membership through the same session Django already establishes, surfaced to the frontend via the already-declared `GET /api/me/` `groups` field ([[API]]); `api: []` in [[tdd-02-access-request]].
+Feeds [[tdd-02-access-request]]: the `AccessRequest` model, its nullable `role` field, and the `post_save` signal that mirrors a grant into `user.groups` ([[adr-21-authorization-lobby]]). **No new [[API]] row** — the admin grant path reuses the already-declared `/admin/` mount and the gate check reads Group membership through the same session Django already establishes, surfaced to the frontend via the already-declared `GET /api/me/` `groups` field ([[API]]); `api: []` in [[tdd-02-access-request]].
 
 ## Error handling
 
-An anonymous visitor hitting a non-lobby route is redirected to `/accounts/login/`, unchanged from today's session gate ([[AUTH]]). A role-less authenticated session hitting a non-lobby route is redirected to `/` — never a `403` — since the lobby, not an error page, is the correct landing point for "not yet authorized" ([[adr-20-authorization-lobby]] rule 2). All authenticated responses stay `no-store` ([[CACHE]], [[adr-06-cache]] rule 4).
+An anonymous visitor hitting a non-lobby route is redirected to `/accounts/login/`, unchanged from today's session gate ([[AUTH]]). A role-less authenticated session hitting a non-lobby route is redirected to `/` — never a `403` — since the lobby, not an error page, is the correct landing point for "not yet authorized" ([[adr-21-authorization-lobby]] rule 2). All authenticated responses stay `no-store` ([[CACHE]], [[adr-10-cache]] rule 4).
 
 ## Shadow-test spec
 

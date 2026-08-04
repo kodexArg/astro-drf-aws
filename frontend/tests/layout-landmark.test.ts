@@ -4,7 +4,7 @@ import path from "node:path";
 
 // Source-level backstop for [[bdd-26-layout-main-and-fixed-header]]: the rule is
 // about where `<main>` is authored, not how it renders
-// ([[adr-04-frontend-and-design-system]] rule 9).
+// ([[adr-08-frontend-and-design-system]] rule 9).
 
 const SRC = path.join(import.meta.dir, "..", "src");
 const COMPONENTS = path.join(SRC, "lib", "components");
@@ -71,7 +71,7 @@ describe("bdd-26 — the header is a sibling of the main", () => {
   test("Base.astro composes PageCanvas rather than authoring markup", async () => {
     const source = await markupOf(LAYOUTS, "Base.astro");
 
-    // [[adr-04-frontend-and-design-system]] rule 9.
+    // [[adr-08-frontend-and-design-system]] rule 9.
     expect(source).toContain("PageCanvas");
     expect(source).not.toMatch(MAIN_TAG);
 

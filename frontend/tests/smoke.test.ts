@@ -6,7 +6,7 @@ import { DENIED_QUERY, DENIED_REDIRECT } from "../src/lib/authGate";
 // Base.astro's LayoutHeader/NavBar chrome (`data-nav-header` pill, sentinel)
 // around HomeCardsView — with the NAV_ITEMS cards shown only to a
 // role-holding session and the pending/denied surfaces otherwise
-// (adr-20-authorization-lobby); /showcase/components/, /chatui/ and /profile/
+// (adr-21-authorization-lobby); /showcase/components/, /chatui/ and /profile/
 // are role-gated; /healthz responds 200; each route carries an explicit
 // Cache-Control. Runs against the built standalone server (`bun run build`
 // first). No backend is required — no cookie is sent, so the anonymous

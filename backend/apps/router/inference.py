@@ -1,5 +1,5 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
@@ -7,14 +7,14 @@ LIVE-DOC:END"""
 
 `BedrockInferenceClient` is the real client: a `boto3` `bedrock-runtime`
 `converse` call at temperature 0 whose only sanctioned output is one verbatim
-member of the closed menu ([[adr-15-chatbot-two-tier]] rule 7); anything else
+member of the closed menu ([[adr-17-chatbot-two-tier]] rule 7); anything else
 is hard-rejected by the caller, never repaired. It is synchronous by design —
 callers on the event loop wrap it in `asgiref.sync_to_async`, never
-`aiobotocore` ([[adr-16-async-mandatory]] rule 4).
+`aiobotocore` ([[adr-18-async-mandatory]] rule 4).
 
 `MockInferenceClient` is the DEBUG-only deterministic stand-in: it never hits
 the network and always returns a menu member. `get_inference_client` gates it
-exactly as the dev-auth path is gated ([[adr-10-auth]] rule 6 precedent):
+exactly as the dev-auth path is gated ([[adr-14-auth]] rule 6 precedent):
 `DEBUG=False` can never reach the mock.
 """
 
@@ -37,7 +37,7 @@ class BedrockInferenceClient:
 
     The closed-enum guarantee does NOT live here: this client returns the
     model's raw text and the caller enforces menu membership with a hard
-    reject ([[adr-15-chatbot-two-tier]] rule 2). An empty or malformed model
+    reject ([[adr-17-chatbot-two-tier]] rule 2). An empty or malformed model
     response is returned as "" — never a menu member, so it always rejects.
     """
 
@@ -74,7 +74,7 @@ class BedrockInferenceClient:
 def get_inference_client():
     """The one selection point between mock and real inference.
 
-    Mirrors [[adr-10-auth]] rule 6: the mock is a DEBUG-only development
+    Mirrors [[adr-14-auth]] rule 6: the mock is a DEBUG-only development
     path; a non-DEBUG process can only ever construct the real Bedrock
     client. No setting can force the mock into a deploy context.
     """

@@ -9,7 +9,7 @@ tags: [harness, tdd, backend]
 # TDD — instruction manual for `docs/tdds/`
 
 > [!note] Active
-> Every new backend piece is born here, wherever its subject exists ([[adr-07-development-flow]] r6). The template ships no `tdd-NN` entries; a project creates its own under `docs/tdds/`.
+> Every new backend piece is born here, wherever its subject exists ([[adr-11-development-flow]] r6). The template ships no `tdd-NN` entries; a project creates its own under `docs/tdds/`.
 
 ## Scope
 

@@ -10,7 +10,7 @@ tags: [harness, cache]
 
 The enforced cache strategy for both services. Backend integration rules in [[BACKEND]]; frontend rules in [[FRONTEND]]; the ALB topology is owned by [[INFRASTRUCTURE]].
 
-No cache server, ever ([[adr-06-cache]]): **Redis and ElastiCache are prohibited in this template.** The stack must never grow a cache server. The four layers below are sufficient by design — the trade is deliberate: lower cost and operational simplicity on Fargate over microsecond cache hits.
+No cache server, ever ([[adr-10-cache]]): **Redis and ElastiCache are prohibited in this template.** The stack must never grow a cache server. The four layers below are sufficient by design — the trade is deliberate: lower cost and operational simplicity on Fargate over microsecond cache hits.
 
 ## Layer 1 — HTTP (first line)
 
@@ -36,4 +36,4 @@ No cache server, ever ([[adr-06-cache]]): **Redis and ElastiCache are prohibited
 - Prefer **prerendering / static output** for pages that do not need SSR; a page that can be static never spends a container cycle.
 - SSR responses set explicit `Cache-Control` per route ([[FRONTEND]]).
 
-Default-deny for authenticated responses ([[adr-06-cache]]): authenticated API responses are `no-store` unless a row-level decision in [[API]] says otherwise. Caching personalized data is opt-in per endpoint, never a blanket policy.
+Default-deny for authenticated responses ([[adr-10-cache]]): authenticated API responses are `no-store` unless a row-level decision in [[API]] says otherwise. Caching personalized data is opt-in per endpoint, never a blanket policy.

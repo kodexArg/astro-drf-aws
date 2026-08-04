@@ -17,11 +17,11 @@ declare itself the page. From a **tab at one edge of the viewport** I slide
 out the **nav drawer** holding every route as its own item — icon, label,
 and its pending-count badge where it has one — and from the **opposite
 edge** I slide out the **chat drawer** hosting the page-context assistant
-([[adr-24-page-context-assistant]]). Both drawers are **hidden by default**
+([[adr-25-page-context-assistant]]). Both drawers are **hidden by default**
 and take no room until I ask for them; which edge the nav drawer docks to
 is **mine to choose** on `/profile/`, and the chat drawer always takes the
 opposite one. As a **role-less session**, I see neither drawer
-([[adr-20-authorization-lobby]]).
+([[adr-21-authorization-lobby]]).
 
 This entry replaces the old navigation — `LobbyView`'s lobby cards as the
 landing body, `HomeTriangle`, `CornerNavTriangle` (retired with
@@ -63,7 +63,7 @@ Then the NavDrawer tab sits on the edge the theme field sidebarSide names (defau
 And the ChatDrawer tab sits on the opposite edge
 And both drawers are collapsed, taking no room until their tab is used
 
-Given a role-less session (anonymous or pending, [[adr-20-authorization-lobby]])
+Given a role-less session (anonymous or pending, [[adr-21-authorization-lobby]])
 When any route renders
 Then neither drawer is mounted
 ```
@@ -85,7 +85,7 @@ And no other item is active
 Rung 1 of the interactivity ladder for the canvas, header and links —
 server-rendered HTML, plain anchors, no hydration; the drawers hydrate
 only their open/close state (rung 3, as any click-reactive widget —
-[[adr-04-frontend-and-design-system]] r3).
+[[adr-08-frontend-and-design-system]] r3).
 
 - **`PageCanvas`** (`primitives/`, new) — the single `<main>`: `flex-1`
   inside `body`'s app-shell flex column (`display: flex; flex-direction:
@@ -93,12 +93,12 @@ only their open/close state (rung 3, as any click-reactive widget —
   **no header clearance**: the header is in-flow (`sticky`) and reserves
   its own space, so the canvas fills exactly what the header stack leaves.
   Composed by `Base.astro`; the layout never authors this markup inline
-  ([[adr-04-frontend-and-design-system]] r9). `flex-1` rather than
+  ([[adr-08-frontend-and-design-system]] r9). `flex-1` rather than
   `min-h-dvh`: a full-viewport min-height below the in-flow header ends a
   header-height past the fold — the phantom scroll that pushed the
   standalone chat's composer off-screen — while long pages still stretch
   `body` past one viewport. Registered in [[GLOSSARY]] before first
-  use ([[adr-01-glossary-and-localization]] r1).
+  use ([[adr-05-glossary-and-localisation]] r1).
 - **`LayoutHeader`** (`header/`) — keeps the **`banner` landmark** and is
   `sticky top-0 z-20` (never `fixed`): in-flow, so it reserves its own
   vertical space and no clearance token exists. It stays a **sibling** of
@@ -113,7 +113,7 @@ only their open/close state (rung 3, as any click-reactive widget —
   view; the views drop their own. It renders a `<div>`, never a `<nav>`,
   since it carries no navigation — those links are the `NavDrawer`'s.
   Zero props render an empty bar without throwing
-  ([[adr-22-showcase-ready-components]] r1).
+  ([[adr-23-showcase-ready-components]] r1).
 - **The view components** — `HomeCardsView`, `ChatView`, `ProfileView`,
   `ShowcaseGalleryView` — author **no `<main>` and no
   `min-h-screen` of their own**. They become content, not landmarks.
@@ -138,20 +138,20 @@ only their open/close state (rung 3, as any click-reactive widget —
   **opposite edge** of `NavDrawer` — one theme field, two mirrored sides.
   A composition, not a widget, and never a second chat component:
   `ChatUI` is extended in place with the assistant mode, never forked
-  ([[adr-24-page-context-assistant]], [[COMPONENTIZATION]]).
+  ([[adr-25-page-context-assistant]], [[COMPONENTIZATION]]).
 - **Both drawers are role-gated at the layout.** `Base.astro` mounts them
   only for a session holding at least one Django Group; a role-less
   session — anonymous or pending — sees neither
-  ([[adr-20-authorization-lobby]] rule 1). The drawers perform no gating
+  ([[adr-21-authorization-lobby]] rule 1). The drawers perform no gating
   of their own.
 - **`HomeCardsView` / `HomeCard`** (`views/`, new — [[GLOSSARY]]) — the
   `/` page body: one `HomeCard` per `NAV_ITEMS` entry (icon + title +
   abstract wrapped in a single navigating `<a>`, zero-prop-safe per
-  [[adr-22-showcase-ready-components]] r1-2), plus the denied/pending
+  [[adr-23-showcase-ready-components]] r1-2), plus the denied/pending
   lobby surfaces [[bdd-08-authorization-lobby]] defines. It replaces the
   retired `LobbyView`; the old `HomeTriangle`/`CornerNavTriangle`
   affordances are gone, their fronts now ordinary registry entries.
-- **Zero-prop safety** ([[adr-22-showcase-ready-components]] r1): mounted
+- **Zero-prop safety** ([[adr-23-showcase-ready-components]] r1): mounted
   bare, every new component renders its collapsed/empty default and throws
   nothing — `frontend/tests/component-mount.test.ts` covers them the
   moment they land (self-discovering glob, no list to update).
@@ -166,12 +166,12 @@ value a `400`, exactly as `bgPreset` is; it reuses the existing blob, its
 cookie mirror and its `PATCH /api/me/` path. **No new [[API]] row** — no
 route is added; but the blob's accepted keys grow, so [[API]]'s
 `theme_config` validation paragraph MUST be updated in the same batch
-([[adr-03-api-and-backend]] rule 1) — today it still lists the pre-shell
+([[adr-07-api-and-backend]] rule 1) — today it still lists the pre-shell
 key set. No model field, no migration.
 
 The assistant endpoint the `ChatDrawer` talks to is its own entry's
 subject — `POST /api/assistant/ask/`, already declared in [[API]]
-([[adr-24-page-context-assistant]]) — and is out of scope here.
+([[adr-25-page-context-assistant]]) — and is out of scope here.
 
 ## Error handling
 
@@ -179,7 +179,7 @@ No new failure surface on the shell itself: no fetch, no mutation, no
 navigation beyond plain anchors. The zero-prop contract carries the
 defensive requirement — `PageCanvas` with no props renders an empty,
 valid `<main>`; `NavBar` an empty bar; the drawers collapsed on their
-default edges — never throwing ([[adr-22-showcase-ready-components]] r1,
+default edges — never throwing ([[adr-23-showcase-ready-components]] r1,
 enforced by `frontend/tests/component-mount.test.ts`).
 
 The one regression risk this entry names honestly: the canvas and the
@@ -189,7 +189,7 @@ chat's composer lands below the fold), and a `fixed` header would overlap
 content nothing clears. `body`'s app-shell flex column plus `PageCanvas`'s
 `flex-1` own both halves for every page, so the failure mode only returns
 if a future page bypasses the layout — which
-[[adr-04-frontend-and-design-system]] r9 already forbids.
+[[adr-08-frontend-and-design-system]] r9 already forbids.
 `Cache-Control` remains each route's own concern, unchanged ([[CACHE]]).
 
 ## Shadow-test spec

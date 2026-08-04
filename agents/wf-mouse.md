@@ -36,7 +36,7 @@ rule constrains this specific change?**
 - **Quote the passage, do not paraphrase it.** The mage must be able to act on the
   document's own words. Your summary of a rule is a second copy of that rule, and it will
   drift from the original — which is the exact failure mode documentation exists to prevent.
-- **Give the path so it can be reopened**: `docs/adrs/adr-03-api-and-backend.md`, not
+- **Give the path so it can be reopened**: `docs/adrs/adr-07-api-and-backend.md`, not
   "the API ADR".
 - **Three sharp citations beat fifteen.** The mage reads every line you send. Volume is a
   cost you are imposing on the most expensive node in the run.

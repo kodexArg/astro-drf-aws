@@ -8,21 +8,21 @@ tags: [frontend, componentization, design-system]
 
 # COMPONENTIZATION
 
-Content home for [[adr-04-frontend-and-design-system]] r9. Stack context: [[FRONTEND]]; component layering: [[DESIGN-SYSTEM]], [[MELT-UI]].
+Content home for [[adr-08-frontend-and-design-system]] r9. Stack context: [[FRONTEND]]; component layering: [[DESIGN-SYSTEM]], [[MELT-UI]].
 
 > [!important] This doc owns technique and folder paths — not names
-> This document is the SSOT for the componentization **technique** (the `.astro`-routes-only / `.svelte`-everything-else rule) and the **folder-path taxonomy** (which category a component's file lives under). It is **not** where a component's canonical name is decided: **[[GLOSSARY]] is the naming authority for every component name**, per [[adr-01-glossary-and-localization]] rule 1 ([[adr-00-adr-doctrine]] owner ruling, issue #206). The Component index below records the name-to-folder mapping for reference, but a new component's name still gets its GLOSSARY row first, before its first use, exactly like any other identifier-worthy term.
+> This document is the SSOT for the componentization **technique** (the `.astro`-routes-only / `.svelte`-everything-else rule) and the **folder-path taxonomy** (which category a component's file lives under). It is **not** where a component's canonical name is decided: **[[GLOSSARY]] is the naming authority for every component name**, per [[adr-05-glossary-and-localisation]] rule 1 ([[adr-00-adr-doctrine]] owner ruling, issue #206). The Component index below records the name-to-folder mapping for reference, but a new component's name still gets its GLOSSARY row first, before its first use, exactly like any other identifier-worthy term.
 
 ## The rule
 
 **`.astro` is for routes and layouts only.** A file under `src/pages/**.astro` or `src/layouts/**.astro` composes components and holds page-level wiring — data fetching, prop assembly, layout slots — and authors no non-trivial markup of its own. Every other visual unit is a `.svelte` component, including a page's title: `<title>{title}</title>` hand-authored inline in a `.astro` file is a defect under this rule, not a style preference.
 
 - **A static title still ships zero client JS.** A `.svelte` component rendered inside Astro's SSR output with no hydration directive (`client:load`, `client:visible`, etc.) produces plain server-rendered markup — the componentization mandate costs nothing at runtime.
-- **A `.svelte` file with no client directive is still rung 1 of the interactivity ladder** ([[FRONTEND]], [[adr-04-frontend-and-design-system]] r3) — this rule is about markup *ownership*, not about adding hydration. Escalating to an actual island remains a separate, per-feature decision.
+- **A `.svelte` file with no client directive is still rung 1 of the interactivity ladder** ([[FRONTEND]], [[adr-08-frontend-and-design-system]] r3) — this rule is about markup *ownership*, not about adding hydration. Escalating to an actual island remains a separate, per-feature decision.
 
 ## The component contract, and the harness that enforces it
 
-[[adr-22-showcase-ready-components]] gives every component a contract: it renders with zero props without throwing (rule 1), and its default invocation performs no mutating action (rule 2). The point is reuse without a fork — the same vendored component serves the gallery and a real app page, so a gallery-only copy never has to exist.
+[[adr-23-showcase-ready-components]] gives every component a contract: it renders with zero props without throwing (rule 1), and its default invocation performs no mutating action (rule 2). The point is reuse without a fork — the same vendored component serves the gallery and a real app page, so a gallery-only copy never has to exist.
 
 **Rule 1 is enforced by test, not by review.** `frontend/tests/component-mount.test.ts` globs this folder tree, mounts every component with zero props, and fails on a throw. The suite discovers its own subjects: a new `.svelte` file here is covered the moment it lands, with no list to update. That self-discovery is the mechanism — an enumerated list of subjects decays back into the code-review-only enforcement the harness replaces.
 
@@ -32,7 +32,7 @@ Two more mechanics worth knowing before touching that file. It is the only DOM-b
 
 **The context-bound exemption.** A component whose only valid invocation is as a child of a parent compound component — reading a context that parent sets, never mounted bare by a caller — is exempt from rule 1, and the harness's `CONTEXT_BOUND` list is that exemption's exact membership. The vendored `ui/alert-dialog/` parts are today's only members: each throws on a bare mount by design, stating the parent requirement. The parent is bound by rule 1 with no exemption, and the list holds exact paths — never a directory wildcard — so a new component can never drift into the exemption unnoticed.
 
-**Rule 2 is covered in part by test, in part by review — and the same file says which is which.** `frontend/tests/component-mount.test.ts` now also mounts every discovered component with zero props, stubs `fetch` to record any non-GET method, flushes pending effects, and fails if a mutating request (POST/PATCH/DELETE) went out. That catches the mount-and-effect vector: a mutation wired into `onMount` or an `$effect`, which fires with no caller wiring. What it does **not** cover is the click/interaction-fired mutation — a Save or logout that only PATCHes or POSTs from a handler, its action prop caller-wireable (today `ProfileForm` and `ThemeCard`'s `PATCH /api/me/`, `SessionBadge`'s logout POST). Dispatching clicks to reach that path would demand routing each action through a no-op-defaulting prop — a component change outside this test's scope — so it stays a code-review gate. This is a real control over one vector plus an explicit limit on the other, not a claim of full coverage; [[adr-22-showcase-ready-components]] states the limit rather than implying a control that does not exist.
+**Rule 2 is covered in part by test, in part by review — and the same file says which is which.** `frontend/tests/component-mount.test.ts` now also mounts every discovered component with zero props, stubs `fetch` to record any non-GET method, flushes pending effects, and fails if a mutating request (POST/PATCH/DELETE) went out. That catches the mount-and-effect vector: a mutation wired into `onMount` or an `$effect`, which fires with no caller wiring. What it does **not** cover is the click/interaction-fired mutation — a Save or logout that only PATCHes or POSTs from a handler, its action prop caller-wireable (today `ProfileForm` and `ThemeCard`'s `PATCH /api/me/`, `SessionBadge`'s logout POST). Dispatching clicks to reach that path would demand routing each action through a no-op-defaulting prop — a component change outside this test's scope — so it stays a code-review gate. This is a real control over one vector plus an explicit limit on the other, not a claim of full coverage; [[adr-23-showcase-ready-components]] states the limit rather than implying a control that does not exist.
 
 ## Folder tree
 
@@ -57,7 +57,7 @@ src/lib/components/
 
 **Every component name here is business-agnostic** — no domain (financial, HR, inventory, ...) is ever spelled into a folder or component name. A component's fitness for a specific kind of dashboard or report is recorded as guidance in the Component index below, never encoded in its identifier: a project cloning this template reads `DataTable`, not `FinancialTable`, and decides for itself where it fits.
 
-Each category resolves its own components through the layering order owned by [[DESIGN-SYSTEM]] and [[MELT-UI]]: Melt builder first, vendored shadcn-svelte second, hand-rolled custom third ([[adr-04-frontend-and-design-system]] r8). `overlay/` is the layer most likely to need a Melt builder from scratch, since no shadcn-svelte equivalent for a generic (non-alert) dialog, a drawer, or an accordion is vendored in `ui/` today.
+Each category resolves its own components through the layering order owned by [[DESIGN-SYSTEM]] and [[MELT-UI]]: Melt builder first, vendored shadcn-svelte second, hand-rolled custom third ([[adr-08-frontend-and-design-system]] r8). `overlay/` is the layer most likely to need a Melt builder from scratch, since no shadcn-svelte equivalent for a generic (non-alert) dialog, a drawer, or an accordion is vendored in `ui/` today.
 
 ## Component index
 
@@ -72,8 +72,8 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 | `Surface` | `primitives/` | The named surface layer between the token set ([[DESIGN-SYSTEM]]) and finished components: one `level` prop selects a closed, token-only chrome preset — border, radius, background/foreground pair, padding, shadow. Zero props render an empty default level (adr-22 r1) | Any surfaced component reaches for this before hand-rolling its own border/radius/background string |
 | `LayoutHeader` | `header/` | The `<header>` banner landmark `Base.astro` renders on every page: fixed, out of flow, composing one `NavBar` and authoring no chrome of its own. A layout fixture — no page mounts or hides it | `Base.astro` only |
 | `NavBar` | `header/` | The rounded bar inside `LayoutHeader`: the page's single `<h1>` at the left, an `actions` snippet at the right carrying the session island. Chrome only — surface, radius and inset; the fixed positioning stays the header's. Renders a `<div>`, never a `<nav>` — it carries no navigation, whose links live in `NavDrawer`. Zero props render an empty bar (adr-22 r1) | `LayoutHeader` only |
-| `NavDrawer` | `shell/` | The site's navigation: the `NAV_ITEMS` routes as `NavItem` buttons inside a drawer, docked to the edge the theme field `sidebarSide` names (default left). A layout fixture — `Base.astro` mounts it once, role-gated ([[adr-20-authorization-lobby]]) | `Base.astro` only |
-| `ChatDrawer` | `shell/` | The drawer composition mounting `ChatUI` (`mode="assistant"`) inside `overlay/Drawer` on the opposite edge of `NavDrawer` — a composition, not a widget, and never a second chat component ([[adr-24-page-context-assistant]]) | `Base.astro` only |
+| `NavDrawer` | `shell/` | The site's navigation: the `NAV_ITEMS` routes as `NavItem` buttons inside a drawer, docked to the edge the theme field `sidebarSide` names (default left). A layout fixture — `Base.astro` mounts it once, role-gated ([[adr-21-authorization-lobby]]) | `Base.astro` only |
+| `ChatDrawer` | `shell/` | The drawer composition mounting `ChatUI` (`mode="assistant"`) inside `overlay/Drawer` on the opposite edge of `NavDrawer` — a composition, not a widget, and never a second chat component ([[adr-25-page-context-assistant]]) | `Base.astro` only |
 | `NavItem` | `shell/` | One navigation link, rendered as `ui/button` — `secondary` when active, `ghost` otherwise — with its icon, label and optional `NavBadge`. Authors no active-state chrome of its own; the icon comes from the caller, never resolved inside, so `NavItem` keeps knowing nothing about the registry | `NavDrawer`, `HomeCardsView` |
 | `NavBadge` | `shell/` | The pending-count numeral beside a nav label; renders nothing at zero or unknown | `NavItem` only |
 | `NavbarIcon` | `shell/` | The shared chrome for every icon control in `NavBar`'s actions cluster — idle/active/hover/focus tokens and a real accessible name. It owns no behaviour and no glyph: the consumer supplies both. Zero props render an inert placeholder button (adr-22 r1-2) | Any icon control added to `NavBar` |
@@ -90,7 +90,7 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 | `EntityCard` | `dashboard/` | Card summarizing one entity's key stats | Financial dashboards & reporting (account/holding cards); general entity display |
 | `EntityGrid` | `dashboard/` | Grid of `EntityCard` | Financial dashboards & reporting; general entity display |
 | `SummaryCard` | `dashboard/` | Pinned aggregate/rollup card | Financial dashboards & reporting |
-| `ChatUI` | `chat/` | Composed chat surface (list + composer); `mode="assistant"` extends it in place for the page-context assistant — one component, two modes, never forked ([[adr-24-page-context-assistant]]) | [[CHATBOT]] router UI; assistant mode inside `ChatDrawer` |
+| `ChatUI` | `chat/` | Composed chat surface (list + composer); `mode="assistant"` extends it in place for the page-context assistant — one component, two modes, never forked ([[adr-25-page-context-assistant]]) | [[CHATBOT]] router UI; assistant mode inside `ChatDrawer` |
 | `ChatMessageList` | `chat/` | Renders structured router outcomes only, never free prose | [[CHATBOT]] router UI |
 | `ChatComposer` | `chat/` | Posts raw user text to the router endpoint | [[CHATBOT]] router UI |
 | `AuthPanel` | `auth/` | Session-aware auth actions | Any authenticated page |
@@ -140,7 +140,7 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 | `ToastTriggerDemo` | `showcase/` | Button that pushes a sample toast onto the shared `toaster` singleton | `/showcase/components/` gallery only |
 | `SurfaceDemo` | `showcase/` | Composition of `primitives/Surface` — one labeled tile per `level`, side by side | `/showcase/components/` gallery only |
 | `HomeCard` | `views/` | Reusable single-column card — icon + title + abstract wrapped in one navigating `<a>`, zero-prop-safe (adr-22 r1-2) | `HomeCardsView` only |
-| `HomeCardsView` | `views/` | The `/` page body — the `HomeCard` list built from `NAV_ITEMS` plus the denied/pending lobby surfaces ([[adr-20-authorization-lobby]]); islands via named slots | `index.astro` only |
+| `HomeCardsView` | `views/` | The `/` page body — the `HomeCard` list built from `NAV_ITEMS` plus the denied/pending lobby surfaces ([[adr-21-authorization-lobby]]); islands via named slots | `index.astro` only |
 | `ProfileView` | `views/` | The `/profile/` page body; form + theme islands via default slot | `profile.astro` only |
 | `ShowcaseGalleryView` | `views/` | The `/showcase/components/` gallery body; twenty islands via named slots | `showcase/components.astro` only |
 | `ChatView` | `views/` | The `/chatui/` canvas wrapper; chat island via default slot | `chatui.astro` only |

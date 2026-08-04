@@ -1,11 +1,11 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]] · [[adr-03-api-and-backend]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]] · [[adr-07-api-and-backend]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 API: [[API]]
 LIVE-DOC:END"""
 
 """`RouteView` — the chatbot router choosing tier's HTTP endpoint
-([[adr-15-chatbot-two-tier]], [[adr-16-async-mandatory]]).
+([[adr-17-chatbot-two-tier]], [[adr-18-async-mandatory]]).
 
 RBAC-gated, async, wired through `get_inference_client` — the real Bedrock
 client in any non-DEBUG process, the deterministic mock only under DEBUG
@@ -62,7 +62,7 @@ def _build_menu_and_lookup(user):
     """Build the permission-filtered menu and its phrase->Intent map, both
     sourced from `build_menu`'s single permission-filtered queryset — no
     second, unscoped `Intent` re-query (SECURITY #266:
-    [[adr-15-chatbot-two-tier]] rules 2/3)."""
+    [[adr-17-chatbot-two-tier]] rules 2/3)."""
     return build_menu(user)
 
 
@@ -73,7 +73,7 @@ class RouteView(APIView):
     throttle_classes = [CooldownThrottle]
 
     async def dispatch(self, request, *args, **kwargs):
-        """Async-capable dispatch ([[adr-16-async-mandatory]]).
+        """Async-capable dispatch ([[adr-18-async-mandatory]]).
 
         DRF 3.17's `APIView.dispatch` is synchronous end to end and cannot
         host an `async def` handler unmodified. This override keeps the same
@@ -116,7 +116,7 @@ class RouteView(APIView):
         request_serializer.is_valid(raise_exception=True)
         utterance = request_serializer.validated_data["utterance"]
 
-        # Silent rate-abuse guard (#371, [[adr-16-async-mandatory]]): a single
+        # Silent rate-abuse guard (#371, [[adr-18-async-mandatory]]): a single
         # cheap cache read, checked before any router work — never reveals why.
         if await _is_rate_blocked(request.user.pk):
             await _write_audit_row(

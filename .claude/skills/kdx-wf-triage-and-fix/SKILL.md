@@ -73,7 +73,7 @@ produces or reads one. Strip every animal from this skill and every outcome is b
 ## Files
 
 Everything is a real file in this repo — no symlink, no copy of anything, and no
-dependence on a machine-global harness ([[adr-14-harness]]). Each piece lives in the one
+dependence on a machine-global harness ([[adr-02-harness]]). Each piece lives in the one
 home its consumer reads it from, which is why they are not all under this skill:
 
 | File | What it is |

@@ -1,5 +1,5 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
@@ -44,7 +44,7 @@ def test_route_utterance_returns_menu_choice_via_stub_with_zero_network_calls():
 def test_route_utterance_no_boto3_or_network_import():
     """Importing the inference module must not pull boto3 into sys.modules —
     only constructing `BedrockInferenceClient` does (lazy import), so the
-    mock path stays entirely network-free ([[adr-16-async-mandatory]])."""
+    mock path stays entirely network-free ([[adr-18-async-mandatory]])."""
     import sys
 
     import apps.router.inference as inference_module

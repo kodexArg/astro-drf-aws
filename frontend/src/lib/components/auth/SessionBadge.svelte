@@ -1,5 +1,5 @@
-<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-22-showcase-ready-components]]
+<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+     Governed by: [[adr-08-frontend-and-design-system]] · [[adr-23-showcase-ready-components]]
      Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]]
      LIVE-DOC:END -->
 
@@ -48,7 +48,7 @@
     me?: Me | null;
     /** True for an authenticated, role-less (lobby-confined) session — gates
      * the profile deep-link, since /profile/ itself redirects a pending
-     * session back to / ([[adr-20-authorization-lobby]]). Defaults to
+     * session back to / ([[adr-21-authorization-lobby]]). Defaults to
      * `false`, the more common/demo-friendly default: a bare
      * `<SessionBadge me={demoMe} />` invocation shows the profile link, a
      * plain `<a href>` navigation, not a mutating action (adr-22 rule 2). */
@@ -93,7 +93,7 @@
   // Reconciles theme_config — the DB confirms the write, then the cookie is
   // rewritten from that response so it converges on the server-confirmed
   // value; a failed PATCH leaves the optimistic cookie in place until the
-  // next login or PATCH ([[adr-20-authorization-lobby]]).
+  // next login or PATCH ([[adr-21-authorization-lobby]]).
   async function persistTheme(blob: ThemeConfig): Promise<void> {
     try {
       const res = await fetch(`${publicBackendUrl}/api/me/`, {

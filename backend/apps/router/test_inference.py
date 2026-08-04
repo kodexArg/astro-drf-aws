@@ -1,12 +1,12 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
 """Tests for the inference clients and their selection (#253):
-`get_inference_client` gating (mock is DEBUG-only, [[adr-10-auth]] rule 6
+`get_inference_client` gating (mock is DEBUG-only, [[adr-14-auth]] rule 6
 precedent), `BedrockInferenceClient.choose` request shape (temperature 0,
-[[adr-15-chatbot-two-tier]] rule 7), and its raw-output contract — the
+[[adr-17-chatbot-two-tier]] rule 7), and its raw-output contract — the
 closed-enum guarantee stays in the caller, never here."""
 
 import pytest
@@ -73,7 +73,7 @@ def test_choose_sends_temperature_zero_and_full_menu():
 
 def test_choose_returns_raw_text_even_off_menu():
     """The client never repairs or nearest-matches — the hard reject lives
-    in the view ([[adr-15-chatbot-two-tier]] rule 2)."""
+    in the view ([[adr-17-chatbot-two-tier]] rule 2)."""
     fake = _FakeBedrockRuntime(response=_response("something invented"))
     choice, _ = _client(fake).choose("hi", MENU)
     assert choice == "something invented"

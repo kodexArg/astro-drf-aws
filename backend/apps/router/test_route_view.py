@@ -1,10 +1,10 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
 """Tests for `RouteView` (POST /api/router/route/) — RBAC + response contract
-([[adr-15-chatbot-two-tier]], [[adr-10-auth]] rule 2, [[adr-16-async-mandatory]])."""
+([[adr-17-chatbot-two-tier]], [[adr-14-auth]] rule 2, [[adr-18-async-mandatory]])."""
 
 import pytest
 from django.contrib.auth.models import Group
@@ -198,7 +198,7 @@ def test_no_store_header(client, django_user_model):
 
 
 def test_hard_reject_writes_audit_row_with_raw_choice(client, django_user_model, monkeypatch):
-    """[[adr-15-chatbot-two-tier]] rule 2: a hard reject is logged as a fault,
+    """[[adr-17-chatbot-two-tier]] rule 2: a hard reject is logged as a fault,
     never repaired, never defaulted — the audit row keeps the raw off-menu
     choice and no `chosen_intent`."""
     user = _user(django_user_model, "admin-10", groups=["admins"])
@@ -215,7 +215,7 @@ def test_hard_reject_writes_audit_row_with_raw_choice(client, django_user_model,
 
 
 def test_gated_intent_not_offered_is_hard_rejected_even_if_model_names_it(client, django_user_model, monkeypatch):
-    """[[adr-15-chatbot-two-tier]] rules 2/3: permission filtering happens
+    """[[adr-17-chatbot-two-tier]] rules 2/3: permission filtering happens
     before inference and narrows the enum — even if the model names a
     phrase belonging to a gated intent the user is not offered, it is a
     hard reject, never repaired to the gated action."""
@@ -279,7 +279,7 @@ def test_phrase_collision_rejected_before_reaching_view():
     no longer reach the view — `Intent.phrase` is unique, so seeding a second
     row with a duplicate phrase is rejected DB-side at data-entry time. The
     view-level "resolves to the gated row" failure mode is now structurally
-    impossible ([[adr-15-chatbot-two-tier]] rule 2)."""
+    impossible ([[adr-17-chatbot-two-tier]] rule 2)."""
     gated_group, _ = Group.objects.get_or_create(name="secret-ops-4")
     Intent.objects.create(phrase="log out", target="/accounts/logout/", kind="confirm", order=1)
     with transaction.atomic():
@@ -292,7 +292,7 @@ def test_phrase_collision_rejected_before_reaching_view():
 def test_unauthorized_user_gets_only_reserved_outcomes(client, django_user_model):
     """A router-eligible user (admins) with zero visible registry intents —
     every Intent is gated to a group they lack — sees only the two reserved
-    outcomes, never a degenerate empty menu ([[adr-15-chatbot-two-tier]])."""
+    outcomes, never a degenerate empty menu ([[adr-17-chatbot-two-tier]])."""
     gated_group, _ = Group.objects.get_or_create(name="secret-ops-3")
     Intent.objects.create(phrase="wipe database", target="/admin/wipe/", order=1, group=gated_group)
     user = _user(django_user_model, "admin-13", groups=["admins"])

@@ -1,10 +1,10 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-13-m365-graph]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-16-m365-graph]]
 Docs: [[BACKEND]]
 API: [[API]]
 LIVE-DOC:END"""
 
-"""Thin Microsoft Graph v1.0 client, app-only (adr-13-m365-graph).
+"""Thin Microsoft Graph v1.0 client, app-only (adr-16-m365-graph).
 
 Auth is client_credentials via msal's ConfidentialClientApplication, using
 the `.default` scope — no user, no browser, no stored token. msal keeps its

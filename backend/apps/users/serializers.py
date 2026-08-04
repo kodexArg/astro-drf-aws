@@ -1,5 +1,5 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-10-auth]] · [[adr-03-api-and-backend]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-14-auth]] · [[adr-07-api-and-backend]]
 Docs: [[BACKEND]] · [[AUTH]]
 API: [[API]]
 LIVE-DOC:END"""
@@ -28,7 +28,7 @@ _RADIUS_RE = re.compile(r"^[0-9]*\.?[0-9]+(px|rem|em|%|vh|vw|ch)$")
 
 # Mirrors the frontend shell's NAV_ITEMS hrefs (the closed nav registry,
 # [[API]] — POST /api/assistant/ask/), plus the empty default — the server is
-# the boundary, not the frontend's own routing ([[adr-24-page-context-assistant]]).
+# the boundary, not the frontend's own routing ([[adr-25-page-context-assistant]]).
 DEFAULT_PAGE_CHOICES = {
     "",
     "/",

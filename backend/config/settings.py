@@ -1,5 +1,5 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-02-initial-stack]] · [[adr-06-cache]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-06-initial-stack]] · [[adr-10-cache]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[VARIABLES]]
 LIVE-DOC:END"""
 
@@ -209,8 +209,8 @@ LOGOUT_REDIRECT_URL = _env("LOGOUT_REDIRECT_URL", "/")
 
 THROTTLE_COOLDOWN_SECONDS = int(_env("THROTTLE_COOLDOWN_SECONDS", "2"))
 
-# Router silent rate-abuse guard (#371, [[VARIABLES]], [[adr-16-async-mandatory]],
-# [[adr-06-cache]] — state lives in the shared DatabaseCache, no Redis).
+# Router silent rate-abuse guard (#371, [[VARIABLES]], [[adr-18-async-mandatory]],
+# [[adr-10-cache]] — state lives in the shared DatabaseCache, no Redis).
 ROUTER_RATE_IDLE_SKIP_SECONDS = int(_env("ROUTER_RATE_IDLE_SKIP_SECONDS", "20"))
 ROUTER_RATE_THRESHOLD_PER_MINUTE = float(_env("ROUTER_RATE_THRESHOLD_PER_MINUTE", "20"))
 ROUTER_RATE_BLOCK_SECONDS = int(_env("ROUTER_RATE_BLOCK_SECONDS", "300"))
@@ -219,7 +219,7 @@ ROUTER_RATE_BLOCK_SECONDS = int(_env("ROUTER_RATE_BLOCK_SECONDS", "300"))
 # `purge_router_audit` deletes IntentQuery rows older than this by created_at.
 ROUTER_AUDIT_RETENTION_DAYS = int(_env("ROUTER_AUDIT_RETENTION_DAYS", "30"))
 
-# Kill switch for the router choosing tier ([[CHATBOT]], [[adr-15-chatbot-two-tier]]):
+# Kill switch for the router choosing tier ([[CHATBOT]], [[adr-17-chatbot-two-tier]]):
 # false short-circuits POST /api/router/route/ to 503 before any inference call.
 ROUTER_ENABLED = _env_bool("ROUTER_ENABLED", True)
 
@@ -230,7 +230,7 @@ BEDROCK_REGION = _env("BEDROCK_REGION", "us-east-1")
 ROUTER_BEDROCK_MODEL_ID = _env("ROUTER_BEDROCK_MODEL_ID", "us.amazon.nova-micro-v1:0")
 
 # Page-context assistant generating tier ([[VARIABLES]], [[CHATBOT]],
-# [[adr-24-page-context-assistant]]).
+# [[adr-25-page-context-assistant]]).
 ASSISTANT_ENABLED = _env_bool("ASSISTANT_ENABLED", True)
 ASSISTANT_BEDROCK_MODEL_ID = _env("ASSISTANT_BEDROCK_MODEL_ID", "us.amazon.nova-micro-v1:0")
 ASSISTANT_USE_MOCK_INFERENCE = _env_bool("ASSISTANT_USE_MOCK_INFERENCE", True)

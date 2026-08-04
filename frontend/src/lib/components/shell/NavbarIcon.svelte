@@ -1,5 +1,5 @@
-<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-22-showcase-ready-components]]
+<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+     Governed by: [[adr-08-frontend-and-design-system]] · [[adr-23-showcase-ready-components]]
      Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]]
      LIVE-DOC:END -->
 
@@ -19,12 +19,12 @@
     ...rest
   }: {
     /** Omitted renders the placeholder dot, so a bare mount still shows a
-     * real control ([[adr-22-showcase-ready-components]] r1). */
+     * real control ([[adr-23-showcase-ready-components]] r1). */
     icon?: Component<{ class?: string; "aria-hidden"?: string }>;
     /** Accessible name; Spanish, resolved by the caller ([[LOCALIZATION]]). */
     label?: string;
     active?: boolean;
-    /** No-op by default ([[adr-22-showcase-ready-components]] r2). */
+    /** No-op by default ([[adr-23-showcase-ready-components]] r2). */
     onclick?: () => void;
     class?: string;
     [key: string]: unknown;

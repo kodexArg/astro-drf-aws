@@ -86,7 +86,7 @@ And no `theme_config` read or write is attempted
 ## Frontend half
 
 **Theme controls — Svelte island, rung 3 of the interactivity ladder**
-([[adr-04-frontend-and-design-system]] rule 3, [[FRONTEND]]). The panel
+([[adr-08-frontend-and-design-system]] rule 3, [[FRONTEND]]). The panel
 holds four continuously-varying, client-owned inputs (mode toggle, preset
 choice, four color pickers, a radius control) whose every interaction must
 repaint the page's CSS custom properties *before* any server round trip —
@@ -129,9 +129,9 @@ radius}` ([[GLOSSARY]]: `theme_config`, `mode`, `bgPreset`;
 [[DESIGN-SYSTEM]]: user-configurable subset). As of this entry, [[API]]'s
 `PATCH /api/me/` contract lists only `nickname` and `avatar_visible` as
 write fields — widening it to `theme_config` is a prerequisite, its own
-reviewable [[API]] row change ([[adr-03-api-and-backend]] rule 3) before any
+reviewable [[API]] row change ([[adr-07-api-and-backend]] rule 3) before any
 [[TDD]] entry for this write path is drafted, per the
-[[adr-07-development-flow]] rule 4 checkpoint: does [[API]] solve the need
+[[adr-11-development-flow]] rule 4 checkpoint: does [[API]] solve the need
 today? No — the row must be added first, then the checkpoint reruns.
 `GET /api/me/`'s `UserSerializer` output needs the same widening so the
 island can prefill saved values on page load.
@@ -155,7 +155,7 @@ reverts to the last-saved theme except the field that failed. The `theme`
 cookie is refreshed only on a `200` from `PATCH /api/me/`, never
 speculatively from the client-side preview. `403` (session expired
 mid-edit) redirects to `/accounts/login/`, matching bdd-05's pattern. All
-authenticated responses are `no-store` ([[CACHE]], [[adr-06-cache]] rule 4).
+authenticated responses are `no-store` ([[CACHE]], [[adr-10-cache]] rule 4).
 
 ## Shadow-test spec
 

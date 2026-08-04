@@ -8,7 +8,7 @@ tags: [harness, github, git]
 
 # GH — GitHub + git for this template
 
-Owner: **`kodexArg`**. Repo protocol: SSH. CLI: `gh` (used directly). Ruled by [[adr-08-github-and-git]].
+Owner: **`kodexArg`**. Repo protocol: SSH. CLI: `gh` (used directly). Ruled by [[adr-12-github-and-git]].
 
 ## Branches
 
@@ -92,7 +92,7 @@ One primary type label per issue/PR; add `blocked` only when stuck.
 
 ### OIDC subject format — immutable IDs
 
-Ruled by [[adr-23-oidc-immutable-subject-claim]]. GitHub repos **created, renamed, or transferred after 2026-07-15** emit their Actions OIDC `sub` claim in the **immutable subject format**, which appends the owner and repository numeric IDs — permanent identifiers a delete-and-recreate cannot reuse. There is no opt-out for such repos ([changelog 2026-04-23](https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/)).
+Ruled by [[adr-24-oidc-immutable-subject-claim]]. GitHub repos **created, renamed, or transferred after 2026-07-15** emit their Actions OIDC `sub` claim in the **immutable subject format**, which appends the owner and repository numeric IDs — permanent identifiers a delete-and-recreate cannot reuse. There is no opt-out for such repos ([changelog 2026-04-23](https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/)).
 
 | | `sub` format |
 |---|---|
@@ -107,4 +107,4 @@ Consequences that bind this template and every project spawned from it:
 - Repos born before the cutoff keep the classic format until they are recreated, renamed, or transferred — then they flip and their trust entries must follow.
 
 > [!note] Ephemeral reference run
-> For the template's own stage-3 run the `dev ← main` pipeline is **out of scope**: `main` is the local development line, `prod` is the only branch reaching AWS, and OIDC deploy trust exists for `refs/heads/prod` only. The `dev ← main` trust above stays doctrine for real projects. Ruled by [[adr-12-ephemeral-run]].
+> For the template's own stage-3 run the `dev ← main` pipeline is **out of scope**: `main` is the local development line, `prod` is the only branch reaching AWS, and OIDC deploy trust exists for `refs/heads/prod` only. The `dev ← main` trust above stays doctrine for real projects. Ruled by [[adr-15-ephemeral-run]].

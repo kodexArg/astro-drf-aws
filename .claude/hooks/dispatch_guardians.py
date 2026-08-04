@@ -10,7 +10,13 @@ single output block:
     via RULES — wikilinks and a one-line "why review" only, never rule
     restatement (adr-00 rule 1).
 WATCHLISTS mirrors the Watchlist section of each agent file — keep them in
-sync (adr-11 rule 5: exactly two places, identical in coverage).
+sync (adr-03-guardians rule 5: exactly two places, identical in coverage).
+
+Doctrine-tier docs (PRD/REQUIREMENTS/LOCALISATION/INFRASTRUCTURE/HARNESS) can
+move under docs/constitution/ or elsewhere without notice; guardians_for()
+falls back to a docs/-relative basename match for any exact (non-glob)
+"docs/*.md" watchlist entry, so a future doc reshuffle degrades to "still
+matches" rather than "silently no-ops".
 
 Both jobs dedupe per session-scoped batch: each guardian/ADR is named once
 per session, not once per file, via a gitignored seen-set at
@@ -26,7 +32,7 @@ from pathlib import Path
 
 WATCHLISTS = {
     "astro-drf-aws-prd": (
-        "docs/PRD.md",
+        "docs/constitution/PRD.md",
         "AGENTS.md",
         "CLAUDE.md",
         "README.md",
@@ -36,13 +42,12 @@ WATCHLISTS = {
         "agents/*",
         ".claude/rules/*",
         "docs/adrs/*",
-        "docs/obsolete/*",
         ".github/workflows/*",
         "compose.yaml",
-        "docs/REQUIREMENTS.md",
+        "docs/constitution/REQUIREMENTS.md",
         "docs/GLOSSARY.md",
-        "docs/LOCALIZATION.md",
-        "docs/INFRASTRUCTURE.md",
+        "docs/constitution/LOCALISATION.md",
+        "docs/constitution/INFRASTRUCTURE.md",
         "docs/VARIABLES.md",
         "docs/INVENTORY.md",
         "*/pyproject.toml",
@@ -68,39 +73,39 @@ RULES = (
     (
         ("frontend/src/pages/*.astro", "frontend/src/pages/**/*.astro"),
         "Write",
-        "New route: review [[adr-20-authorization-lobby]] (every route needing "
+        "New route: review [[adr-21-authorization-lobby]] (every route needing "
         "auth requires a Django session AND >=1 Django Group, except '/' the "
-        "lobby — declare this route's gate), [[adr-04-frontend-and-design-system]] "
+        "lobby — declare this route's gate), [[adr-08-frontend-and-design-system]] "
         "rule 9 (this file is a route/layout only — compose .svelte components, "
-        "author no non-trivial markup), and [[adr-05-htmx]] (no shadow routes — "
+        "author no non-trivial markup), and [[adr-09-htmx]] (no shadow routes — "
         "any fragment route this page uses must be declared in [[API]] first).",
     ),
     (
         ("*/settings*.py",),
         None,
-        "Backend settings touched: review [[adr-16-async-mandatory]] (stay "
-        "ASGI/async-capable), [[adr-06-cache]] (every response carries an "
-        "explicit Cache-Control), and [[adr-10-auth]] (Cognito is the only "
+        "Backend settings touched: review [[adr-18-async-mandatory]] (stay "
+        "ASGI/async-capable), [[adr-10-cache]] (every response carries an "
+        "explicit Cache-Control), and [[adr-14-auth]] (Cognito is the only "
         "auth provider, RBAC stays in Django Groups).",
     ),
     (
         ("*/permissions.py",),
         None,
-        "Permission classes touched: review [[adr-10-auth]] (RBAC is Django "
-        "Groups only, never a Cognito claim) and [[adr-20-authorization-lobby]] "
+        "Permission classes touched: review [[adr-14-auth]] (RBAC is Django "
+        "Groups only, never a Cognito claim) and [[adr-21-authorization-lobby]] "
         "(the lobby gate — session AND >=1 Group, except '/').",
     ),
     (
         ("compose.yaml",),
         None,
-        "Compose file touched: review [[adr-09-docker-compose]] (reserved app "
+        "Compose file touched: review [[adr-13-docker-compose]] (reserved app "
         "paths, single root compose.yaml, profiles, no Redis).",
     ),
     (
         ("*/models.py",),
         None,
-        "Models touched: review [[adr-20-authorization-lobby]] (AccessRequest.role "
-        "-> Django Group only via the post_save signal) and [[adr-03-api-and-backend]] "
+        "Models touched: review [[adr-21-authorization-lobby]] (AccessRequest.role "
+        "-> Django Group only via the post_save signal) and [[adr-07-api-and-backend]] "
         "(a model change may invalidate the corresponding [[API]] / [[TDD]] entry).",
     ),
 )
@@ -113,11 +118,25 @@ def project_dir():
     return Path(__file__).resolve().parents[2]
 
 
+def _matches_watchlist_entry(rel, pattern):
+    if fnmatch.fnmatch(rel, pattern) or fnmatch.fnmatch(rel, pattern.rstrip("*") + "*"):
+        return True
+    # Basename fallback: an exact (non-glob) "docs/<name>.md" entry also
+    # matches that same basename anywhere under docs/ (e.g. a doctrine doc
+    # relocated to docs/constitution/) so a future doc move degrades safely
+    # instead of silently no-op'ing this watch.
+    if pattern.startswith("docs/") and "*" not in pattern:
+        rel_path = Path(rel)
+        if rel_path.parts and rel_path.parts[0] == "docs" and rel_path.name == Path(pattern).name:
+            return True
+    return False
+
+
 def guardians_for(rel):
     hits = []
     for agent, patterns in WATCHLISTS.items():
         for pattern in patterns:
-            if fnmatch.fnmatch(rel, pattern) or fnmatch.fnmatch(rel, pattern.rstrip("*") + "*"):
+            if _matches_watchlist_entry(rel, pattern):
                 hits.append(agent)
                 break
     return hits
