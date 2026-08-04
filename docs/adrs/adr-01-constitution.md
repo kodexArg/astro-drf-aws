@@ -5,7 +5,7 @@ category: harness
 use_case: writing or amending the PRD or a constitution doc, deciding whether a document belongs in the constitution tier or loose docs/, settling authority between the PRD, the ADRs, and other markdown
 created: 2026-08-04
 modified: 2026-08-04
-tags: [adr, harness, constitution, prd]
+tags: [adr, harness, constitution, prd, assertions]
 ---
 
 # ADR-01 — constitution (source markdown)
@@ -40,15 +40,23 @@ lives in [[CONVENTION]] and this family's `adr-00`.
    ADR in force is a precondition for adding anything to the project (rule
    9). This ADR is the entry point for the project's written law beneath
    [[PRD]]; every other ADR specializes a theme beneath it.
-5. **The ADR family accumulates; the constitution tier sorts.** `docs/adrs/`
-   is a numbered family ruled by `adr-00-adr-doctrine`. It does not sort by
-   stability — it appends. Sorting by "meaningful and stable" applies only
-   to constitution vs. loose `docs/` documents.
+5. **Families accumulate; the constitution tier sorts.** `docs/adrs/` and
+   `docs/assertions/` are numbered families, each ruled by its own `-00`
+   discipline file (`adr-00-adr-doctrine`, [[assertion-00-discipline]]).
+   Neither sorts by stability — both append. Sorting by "meaningful and
+   stable" applies only to constitution vs. loose `docs/` documents.
 6. **The ABC gate is this order, applied.** Every request checks, in order:
    does it follow [[PRD]]; does it comply with the ADRs in force; does it
    modify [[API]] ([[AGENTS]]). This ADR is why that order is checked in
    that sequence — rule 1's authority order, applied to a single change.
-7. **Knowledge under `docs/`.** Everything the project *knows* lives under
+7. **Assertions are laws.** Owner-reserved, kept few, optional as a set —
+   a project with zero assertions is healthy. Every assertion that exists
+   under `docs/assertions/` must be met via proving tests linked from its
+   own body ([[TDD]], [[assertion-00-discipline]]). They are an entry path
+   for important features, beneath the ADRs in the authority order of rule
+   1. When an assertion and the constitution disagree, the assertion is
+   the one that is wrong ([[assertion-00-discipline]]).
+8. **Knowledge under `docs/`.** Everything the project *knows* lives under
    `docs/`. `backend/` and `frontend/` hold what the project *is*. Facts
    that an ADR rule stands on live in `docs/` documents and are reached by
    wikilink — never inlined into the ADR ([[adr-00-adr-doctrine]] rule 1).
@@ -67,6 +75,7 @@ lives in [[CONVENTION]] and this family's `adr-00`.
 - `docs/constitution/` — stable binding tier, [[PRD]] included
 - `docs/` — loose documents that iterate with the code
 - `docs/adrs/` — decision family
+- `docs/assertions/` — law family
 
 ### related files
 
@@ -77,3 +86,5 @@ lives in [[CONVENTION]] and this family's `adr-00`.
 - [[CONVENTION]] — global frontmatter
 - [[API]] — the third gate of the ABC in rule 6
 - [[AGENTS]] — the ABC gate itself
+- [[assertion-00-discipline]] — the law family's own discipline
+- [[TDD]] — the tests-first method assertions drive

@@ -3,10 +3,43 @@ title: TDD
 type: reference
 status: active
 created: 2026-07-10
-tags: [harness, tdd, backend]
+tags: [harness, tdd, backend, assertions]
 ---
 
-# TDD — instruction manual for `docs/tdds/`
+# TDD — the test-first method, and the instruction manual for `docs/tdds/`
+
+## The assertion method: tests first, code second, the assertion stays
+
+This document is also the working method the
+[[assertion-00-discipline|assertion family]] shares whenever an assertion's
+law is unmet. **Tests first. Code second. The assertion stays.**
+
+An assertion is a law. The tests linked from its `## RELATED` section are
+how the project answers that law; the implementation is what makes those
+tests pass. Order is not optional:
+
+1. Interpret the assertion until every concrete rule is named (latency
+   bound, click depth, query shape, header value, group membership, …).
+2. Write or demand the **failing** tests that encode those rules — one
+   assertion may need more than one test; every rule the paragraph states
+   must be covered.
+3. Link those tests under the assertion's `### Tests` chapter before
+   treating the batch as ready for implementation.
+4. Implement the fix or feature until the tests pass.
+5. Leave the tests in the tree. They are the permanent check that the law
+   still holds — not a scaffold deleted after green.
+
+A link under `### Tests` counts only if it can actually be run and the run
+**demonstrates** the assertion's rules — a README bullet, a manual
+checklist, or a code comment is not a proving test. If the only evidence is
+prose, the assertion is unmet. Set `verified` to today only after actually
+running the linked tests and watching them pass ([[assertion-00-discipline]]).
+
+This is the same flow the backend manual below already prescribes for
+`docs/tdds/` — an assertion's proving test is simply another kind of TDD
+entry, born the same way: failing test first, implementation second.
+
+## `docs/tdds/` — instruction manual for backend TDD entries
 
 > [!note] Active
 > Every new backend piece is born here, wherever its subject exists ([[adr-11-development-flow]] r6). The template ships no `tdd-NN` entries; a project creates its own under `docs/tdds/`.

@@ -4,13 +4,22 @@
 
 - group: harness-relocation-to-docs
   priority: high
-  commit: pending
+  commit: 51871d4
   changes:
     - refactor(harness): skills (20) and agents (26) relocated to docs/ as single real copies; .claude/skills, .claude/agents, .agents/agents, root skills/ become symlinks to their docs/ homes per harness-default layout (replaces two-real-copy vendored model)
     - refactor(adr): adr-02-harness edited in place — two-copy policy moved to REJECTED section with reason it lost (single real + links vs multiple writable copies); inventory corrected to 20 skills / 26 agents
     - refactor(harness): vault excludes skills/hooks/agents from prose index (scripts/mvmcp.py) — skill SKILL.md names collide with basename-uniqueness in live-doc resolver
     - chore(hooks): all nine Claude-lifecycle hooks remain under .claude/hooks/ (docs/hooks/ reserved empty for future host-agnostic hooks per constitution)
     - docs: docs/constitution/HARNESS.md + CONVENTION.md updated; AGENTS.md reference updates
+
+- group: assertions-family
+  priority: normal
+  commit: pending
+  changes:
+    - feat(constitution): docs/assertions/ tier added with four entries — discipline plus three proven assertions (zero-props / group-gated-rbac / explicit-cache-control), each linked to a test demonstrating it
+    - refactor(adr): adr-01-constitution edited in place to name assertions as numbered knowledge family; rule 7 added — assertions are owner-reserved laws, and on conflict the assertion is the source of truth; they stay few
+    - refactor(docs): docs/TDD.md absorbed tests-first assertion method rather than spawning second prose file on naming collision
+    - chore(backend): backend/pyproject.toml documents verified green-suite command — 244 passed / 3 skipped / 0 failed / 0 errors; frontend 817/817, compose 6/6, nudge hooks 7/7, guardian triangle 2/2
 
 - group: constitution-tier-migration
   priority: high
