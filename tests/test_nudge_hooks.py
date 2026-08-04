@@ -27,7 +27,7 @@ EXPECTED_WATCHLISTS = {
         ".github/workflows/*",
     ),
     "astro-drf-aws-adr": (
-        "agents/*",
+        "docs/agents/*",
         ".claude/rules/*",
         "docs/adrs/*",
         ".github/workflows/*",

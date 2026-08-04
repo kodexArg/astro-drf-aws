@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+- group: harness-relocation-to-docs
+  priority: high
+  commit: pending
+  changes:
+    - refactor(harness): skills (20) and agents (26) relocated to docs/ as single real copies; .claude/skills, .claude/agents, .agents/agents, root skills/ become symlinks to their docs/ homes per harness-default layout (replaces two-real-copy vendored model)
+    - refactor(adr): adr-02-harness edited in place — two-copy policy moved to REJECTED section with reason it lost (single real + links vs multiple writable copies); inventory corrected to 20 skills / 26 agents
+    - refactor(harness): vault excludes skills/hooks/agents from prose index (scripts/mvmcp.py) — skill SKILL.md names collide with basename-uniqueness in live-doc resolver
+    - chore(hooks): all nine Claude-lifecycle hooks remain under .claude/hooks/ (docs/hooks/ reserved empty for future host-agnostic hooks per constitution)
+    - docs: docs/constitution/HARNESS.md + CONVENTION.md updated; AGENTS.md reference updates
+
 - group: constitution-tier-migration
   priority: high
   commit: c6a685a

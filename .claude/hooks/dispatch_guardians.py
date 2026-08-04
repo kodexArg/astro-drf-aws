@@ -4,7 +4,7 @@
 One prose-only PostToolUse hook, formerly two (dispatch_guardians.py and
 adr_reminder.py, merged for the nudge-dedup issue). It does two jobs in a
 single output block:
-  - maps every written file to the guardian agents watching it (agents/*.md)
+  - maps every written file to the guardian agents watching it (docs/agents/*.md)
     via WATCHLISTS and nudges a dispatch to verify the change;
   - names the ADR(s) to review when a governance-sensitive file is touched
     via RULES — wikilinks and a one-line "why review" only, never rule
@@ -39,7 +39,7 @@ WATCHLISTS = {
         ".github/workflows/*",
     ),
     "astro-drf-aws-adr": (
-        "agents/*",
+        "docs/agents/*",
         ".claude/rules/*",
         "docs/adrs/*",
         ".github/workflows/*",

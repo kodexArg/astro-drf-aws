@@ -12,7 +12,9 @@ tags: [harness, skills, agents, ssot]
 
 ## Vendoring rule
 
-Every required skill is **vendored as a real copy** under `.claude/skills/<name>/` (git-tracked, the home the Claude harness loads) and mirrored under `skills/<name>/`. This template does **not** rely on the global symlink harness (`~/.agents/skills/`, `~/.claude/skills/`) documented for kodex's machines — a cloned repo on any machine must expose the full set with no external links. Adding or removing a required skill updates this table in the same batch ([[adr-02-harness]]).
+Every required skill is **vendored as a real copy** under `docs/skills/<name>/` — the SSOT home — reached through the host-specific links `.claude/skills/` and root `skills/`, both symlinks onto `docs/skills/` (never a second real copy). Agent definitions follow the same shape: SSOT `docs/agents/`, reached as `.claude/agents/` and `.agents/agents/`. This template does **not** rely on the global symlink harness (`~/.agents/skills/`, `~/.claude/skills/`) documented for kodex's machines — a cloned repo on any machine must expose the full set with no external links. Adding or removing a required skill updates this table in the same batch ([[adr-02-harness]]).
+
+Both `docs/skills/` and `docs/agents/` are excluded from the `markdown-vault-docs` prose index (configured in `scripts/mvmcp.py`): every skill file is named `SKILL.md`, which collides with the vault's basename-uniqueness assumption, so this tooling is reached by path, never as a vault note.
 
 ## Required skills
 
@@ -36,6 +38,8 @@ Every required skill is **vendored as a real copy** under `.claude/skills/<name>
 | `kdx-live-doc` | Stamps and re-syncs the [[GLOSSARY]]:live-doc block on every matched code file and regenerates `docs/CODEMAP.md`; the sanctioned path for the code→doc linking ruled by [[adr-19-live-doc-backlinks]]. Deterministic script + `manifest.json` — runnable by any tier. | any code file, `docs/CODEMAP.md` |
 | `kdx-markdown-vault` | How the `markdown-vault-docs` MCP is driven — the first source of truth for `docs/` content ([[adr-20-markdown-vault-mcp]], [[markdown-vault-mcp]]): when to query it over Grep/Read, the tool cheat-sheet, the write/reindex caveat. | main loop, any `docs/` question |
 | `kdx-wf-triage-and-fix` | The `triage-and-fix` Workflow — takes one issue end to end (scout → triage → route → plan → build → blind review → publish) through a deterministic JavaScript Workflow script over the `wf-*` cast. Vendored here and **not** machine-global: the cast's `tools:` grants are the enforcement, so it must travel with the repo like any other harness piece. How the party works: [[TRIAGE-TEAMMATES]]. | `Workflow({name: 'triage-and-fix'})`, the `wf-*` cast |
+| `kdx-report` | Formats a batch's findings into the fixed report shape consumed at the end of an `orch-*`/`wf-*` dispatch. | any worker producing a final report |
+| `kdx-send-to-telegram` | Delivers a completion/status ping to kodex's Telegram over the bot token, for a long-running batch with no other notification channel. | main loop, long-running batches |
 
 ## Vendored MCP servers
 
@@ -50,11 +54,11 @@ Beyond skills, the template vendors one **MCP server** and transports it with th
 - **`codebase-memory`** — a graph provided by the `codebase-memory-mcp` MCP server and enforced by the `SessionStart` hook; it is not a vendored skill dir. Unlike `markdown-vault-docs`, it stays **not vendored**: it is a heavy graph service shared across every project on the machine, not a per-vault index cheap to run project-local ([[adr-20-markdown-vault-mcp]] rule 4). The two are disjoint — code graph vs `docs/` graph.
   - **It is local-only.** The server is a machine-wide static binary registered in user scope, and neither the binary nor its registration travels with a clone — so it is present on kodex's machines and **absent in a Claude Code cloud session**, which carries only what the repo commits. Vendoring it is not on the table: the sandbox's GitHub proxy refuses release assets from repositories not attached to the session, whatever the network access level. Treat the graph as a local accelerator, never a dependency: away from this machine, code discovery falls back to Grep/Glob/Read with no loss of correctness, and the `graph_first` hook stays silent there rather than name a tool that isn't installed.
 - **`kdx-shared-agent-context-manager`, `kdx-pc-ssh`** — incidental mentions inside `kdx-orchestrator` (a context MCP that is main-loop-only; a Cloudflare tunnel name in an example). Neither is a dependency of this template.
-- The global convenience skills of kodex's machines (`kdx-report`, `kdx-handoff`, `mermaid-diagrams`, `kdx-send-to-telegram`, …) are available when present but are **not required** for the template to build, test, and deploy — so they are not vendored.
+- The remaining global convenience skills of kodex's machines (`kdx-handoff`, `mermaid-diagrams`, …) are available when present but are **not required** for the template to build, test, and deploy — so they are not vendored. (`kdx-report` and `kdx-send-to-telegram` moved into the required table above once they were vendored under `docs/skills/`.)
 
 ## Guardian & orchestrator agents
 
-Agents are the other half of the harness. Their SSOT is `agents/`, reached as `.claude/agents/` and `.agents/agents/`. The three guardians (`astro-drf-aws-prd` / `-adr` / `-api`) gate [[PRD]], the ADRs, and [[API]] ([[adr-03-guardians]]); the `orch-*` workers are the orchestrator fan-out; the `wf-*` cast are the nodes of the `triage-and-fix` Workflow, resolved by `agentType` from the script and never dispatched by hand. These are not skills and are not listed above, but the harness is incomplete without them.
+Agents are the other half of the harness. Their SSOT is `docs/agents/`, reached as `.claude/agents/` and `.agents/agents/`. The three guardians (`astro-drf-aws-prd` / `-adr` / `-api`) gate [[PRD]], the ADRs, and [[API]] ([[adr-03-guardians]]); the `orch-*` workers are the orchestrator fan-out; the `wf-*` cast are the nodes of the `triage-and-fix` Workflow, resolved by `agentType` from the script and never dispatched by hand. These are not skills and are not listed above, but the harness is incomplete without them.
 
 ### Invocation shape — every agent is a subagent (decided 2026-07-18, #321)
 

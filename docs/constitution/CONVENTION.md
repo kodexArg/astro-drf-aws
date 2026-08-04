@@ -20,9 +20,11 @@ Every markdown document under `docs/` opens with a YAML frontmatter block —
 read it to decide whether the file is worth opening, and tooling indexes it
 without parsing prose.
 
-Tooling files are exempt: `.claude/skills/`, `skills/`, `agents/`, and
-`.claude/hooks/` obey the formats their tools fix (a skill's `SKILL.md`
-carries `name` + `description`), not this convention.
+Tooling files are exempt: `docs/skills/` and `docs/agents/` (the SSOT homes,
+reached via the `.claude/skills/`, root `skills/`, `.claude/agents/`, and
+`.agents/agents/` links) and `.claude/hooks/` obey the formats their tools
+fix (a skill's `SKILL.md` carries `name` + `description`), not this
+convention.
 
 Required keys for this template's constitution/loose/BDD/TDD docs:
 
