@@ -14,7 +14,7 @@
 
 - group: assertions-family
   priority: normal
-  commit: pending
+  commit: 14df183
   changes:
     - feat(constitution): docs/assertions/ tier added with four entries — discipline plus three proven assertions (zero-props / group-gated-rbac / explicit-cache-control), each linked to a test demonstrating it
     - refactor(adr): adr-01-constitution edited in place to name assertions as numbered knowledge family; rule 7 added — assertions are owner-reserved laws, and on conflict the assertion is the source of truth; they stay few
