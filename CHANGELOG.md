@@ -4,7 +4,7 @@
 
 - group: constitution-tier-migration
   priority: high
-  commit: pending
+  commit: c6a685a
   changes:
     - refactor(constitution): docs/ reorganized to docs/constitution/ tier; PRD.md, REQUIREMENTS.md, HARNESS.md, INFRASTRUCTURE.md (first five as git renames)
     - docs(localization): LOCALIZATION renamed to LOCALISATION (harness-default spelling)
