@@ -12,7 +12,7 @@ Exact version pins for the template. Policy: **latest available, beta acceptable
 
 Stack context: backend rules → [[BACKEND]], frontend rules → [[FRONTEND]], database → [[BD]], full product scope → [[PRD]].
 
-Frontend toolchain is **bun** — package manager AND runtime; npm is prohibited and Node is not in the stack (Node 24 LTS is recorded only as a documented fallback). Redis is prohibited ([[CACHE]]). Ruled by [[adr-02-initial-stack]].
+Frontend toolchain is **bun** — package manager AND runtime; npm is prohibited and Node is not in the stack (Node 24 LTS is recorded only as a documented fallback). Redis is prohibited ([[CACHE]]). Ruled by [[adr-06-initial-stack]].
 
 ## Backend (Python)
 
@@ -27,14 +27,14 @@ Frontend toolchain is **bun** — package manager AND runtime; npm is prohibited
 | django-cors-headers | 4.9.0 | stable | |
 | PyJWT | 2.10.1 | stable | Live Cognito ID-token verification (RS256/JWKS) at the `/accounts/callback/` seam ([[AUTH]]). Installed with the `[crypto]` extra (pulls `cryptography`) for RS256. Added 2026-07-12. |
 | uv | 0.11.28 | stable | Python toolchain — not pip |
-| msal | 1.37.0 | stable | Microsoft Graph delegated OAuth/refresh-token acquisition ([[adr-13-m365-graph]]). Added 2026-07-12. |
-| httpx | 0.28.1 | stable | Thin HTTP client for Graph REST v1.0 calls ([[adr-13-m365-graph]]). Added 2026-07-12. |
-| boto3 | 1.40.15 | stable | **Runtime dependency (flipped 2026-07-14, closes #96):** Bedrock inference calls for the chatbot `router` choosing tier, wrapped in `asgiref.sync_to_async` — never `aiobotocore` ([[adr-16-async-mandatory]] rule 4, [[BACKEND]]). Still also used test-side by the `cognito_live` integration test ([[AUTH]]). |
+| msal | 1.37.0 | stable | Microsoft Graph delegated OAuth/refresh-token acquisition ([[adr-16-m365-graph]]). Added 2026-07-12. |
+| httpx | 0.28.1 | stable | Thin HTTP client for Graph REST v1.0 calls ([[adr-16-m365-graph]]). Added 2026-07-12. |
+| boto3 | 1.40.15 | stable | **Runtime dependency (flipped 2026-07-14, closes #96):** Bedrock inference calls for the chatbot `router` choosing tier, wrapped in `asgiref.sync_to_async` — never `aiobotocore` ([[adr-18-async-mandatory]] rule 4, [[BACKEND]]). Still also used test-side by the `cognito_live` integration test ([[AUTH]]). |
 | whitenoise | 6.12.0 | stable | In-process static-file serving for `/admin/` and the DRF browsable API — no CDN, no S3 media, admin-only low-volume statics ([[BACKEND]]). Checked 2026-07-16, closes #254. |
 
 ## Backend — dev/test (not shipped in the image)
 
-Dev/test-only dependencies for the [[TDD]] T2 flow (`uv run pytest`) and the `kdx-django-6-drf` skill. Installed in a **`dev` dependency group** (`uv` dev group), **excluded from the production container image** — never a runtime dependency. Ruled by [[adr-02-initial-stack]] (a used package must be pinned).
+Dev/test-only dependencies for the [[TDD]] T2 flow (`uv run pytest`) and the `kdx-django-6-drf` skill. Installed in a **`dev` dependency group** (`uv` dev group), **excluded from the production container image** — never a runtime dependency. Ruled by [[adr-06-initial-stack]] (a used package must be pinned).
 
 | Package | Version | Status | Note (checked 2026-07-11) |
 |---|---|---|---|
@@ -44,11 +44,11 @@ Dev/test-only dependencies for the [[TDD]] T2 flow (`uv run pytest`) and the `kd
 
 ## Backend — local-dev tooling (`uv run --with`, not shipped)
 
-Pulled ephemerally by a `compose.yaml` dev command through `uv run --with` — not in the `dev` group, never in the production image (`uv sync --no-dev`). Ruled by [[adr-02-initial-stack]] (a used package must be pinned): the pin lives both here and in the `--with` invocation. Local Compose hot reload is owned by [[DOCKER]].
+Pulled ephemerally by a `compose.yaml` dev command through `uv run --with` — not in the `dev` group, never in the production image (`uv sync --no-dev`). Ruled by [[adr-06-initial-stack]] (a used package must be pinned): the pin lives both here and in the `--with` invocation. Local Compose hot reload is owned by [[DOCKER]].
 
 | Package | Version | Status | Note (checked 2026-07-16) |
 |---|---|---|---|
-| watchfiles | 1.2.0 | stable | Reload signal for `uvicorn --reload` in the local `backend` dev server ([[DOCKER]], [[adr-16-async-mandatory]]). Pinned in `compose.yaml` as `--with watchfiles==1.2.0`. Added 2026-07-16. |
+| watchfiles | 1.2.0 | stable | Reload signal for `uvicorn --reload` in the local `backend` dev server ([[DOCKER]], [[adr-18-async-mandatory]]). Pinned in `compose.yaml` as `--with watchfiles==1.2.0`. Added 2026-07-16. |
 
 ## Frontend (bun)
 
@@ -62,13 +62,13 @@ Pulled ephemerally by a `compose.yaml` dev command through `uv run --with` — n
 | shadcn-svelte | 1.4.1 | stable | CLI that vendors components into the repo ([[FRONTEND]]) |
 | bun | latest | stable | Package manager AND runtime; npm prohibited; Node dropped (Node 24 LTS = documented fallback only) |
 | htmx.org | 2.0.10 | stable | HTMX 2 client library via bun ([[HTMX]]). Package name on the registry is `htmx.org`. |
-| melt | ^0.44.0 | active | headless builder layer under Bits UI/shadcn-svelte ([[MELT-UI]], [[adr-04-frontend-and-design-system]]). Added 2026-07-14. |
+| melt | ^0.44.0 | active | headless builder layer under Bits UI/shadcn-svelte ([[MELT-UI]], [[adr-08-frontend-and-design-system]]). Added 2026-07-14. |
 | @lucide/svelte | 1.26.0 | stable | Lucide icon set as Svelte components, vendored through `src/lib/components/icons/` ([[DESIGN-SYSTEM]]). Added 2026-08-01. |
 | tailwind-merge | 3.6.0 | stable | Class-merge helper behind the `cn()` util (`src/lib/utils.ts`) the vendored shadcn-svelte components compose classes with ([[FRONTEND]]). Added 2026-08-01. |
 | @fontsource-variable/nunito | ^5.3.0 | stable | Self-hosted Nunito variable font, imported once in `src/styles/app.css` ([[DESIGN-SYSTEM]]). Added 2026-08-01. |
-| @happy-dom/global-registrator | 20.10.6 | stable | dev-only. Registers a DOM into the `bun test` global scope so a component can be mounted client-side — the harness enforcing [[adr-22-showcase-ready-components]] rule 1. Never shipped in the frontend image ([[FRONTEND]]). Added 2026-07-16. |
+| @happy-dom/global-registrator | 20.10.6 | stable | dev-only. Registers a DOM into the `bun test` global scope so a component can be mounted client-side — the harness enforcing [[adr-23-showcase-ready-components]] rule 1. Never shipped in the frontend image ([[FRONTEND]]). Added 2026-07-16. |
 | @astrojs/check | 0.9.9 | stable | dev-only. Backs the `bun run check` (`astro check`) typecheck gate; pinned so a fresh clone runs it non-interactively instead of hitting astro's auto-install prompt. Never shipped in the frontend image ([[FRONTEND]]). Latest confirmed 2026-07-17 (checked 2026-07-17). Added 2026-07-17. |
-| typescript | 6.0.3 | stable | dev-only. Peer required by `@astrojs/check`; its peer range `^5.0.0 || ^6.0.0` excludes the registry-latest 7.0.2, so 6.0.3 is the latest satisfying version ([[adr-02-initial-stack]] rules 1–2). Never shipped in the frontend image ([[FRONTEND]]). Latest 6.x confirmed 2026-07-17 (checked 2026-07-17). Added 2026-07-17. |
+| typescript | 6.0.3 | stable | dev-only. Peer required by `@astrojs/check`; its peer range `^5.0.0 || ^6.0.0` excludes the registry-latest 7.0.2, so 6.0.3 is the latest satisfying version ([[adr-06-initial-stack]] rules 1–2). Never shipped in the frontend image ([[FRONTEND]]). Latest 6.x confirmed 2026-07-17 (checked 2026-07-17). Added 2026-07-17. |
 
 ## Database
 
@@ -78,11 +78,11 @@ Pulled ephemerally by a `compose.yaml` dev command through `uv run --with` — n
 
 ## Harness tooling (MCP)
 
-Not shipped in any container — a **dev-harness** dependency, installed into a project-local venv under `.mvmcp/.venv` by `scripts/mvmcp.py`, never on a Fargate task. Ruled by [[adr-18-markdown-vault-mcp]]; usage in [[markdown-vault-mcp]].
+Not shipped in any container — a **dev-harness** dependency, installed into a project-local venv under `.mvmcp/.venv` by `scripts/mvmcp.py`, never on a Fargate task. Ruled by [[adr-20-markdown-vault-mcp]]; usage in [[markdown-vault-mcp]].
 
 | Package | Version | Status | Note (checked 2026-07-14) |
 |---|---|---|---|
-| markdown-vault-mcp | 3.0.4 | stable | The vendored `markdown-vault-docs` MCP over `docs/` ([[adr-18-markdown-vault-mcp]], [[HARNESS]]). Two install shapes at this one version, selected per environment ([[markdown-vault-mcp]]: vault MCP profile): the `full` profile adds the `[embeddings]` extra (pulls `fastembed`) for local semantic search — no API key, no external service, model `BAAI/bge-small-en-v1.5`; the `keyword` profile installs the plain package, where `fastembed`'s model host is unreachable. The extra is not a second pin — the version is identical either way. Added 2026-07-14. |
+| markdown-vault-mcp | 3.0.4 | stable | The vendored `markdown-vault-docs` MCP over `docs/` ([[adr-20-markdown-vault-mcp]], [[HARNESS]]). Two install shapes at this one version, selected per environment ([[markdown-vault-mcp]]: vault MCP profile): the `full` profile adds the `[embeddings]` extra (pulls `fastembed`) for local semantic search — no API key, no external service, model `BAAI/bge-small-en-v1.5`; the `keyword` profile installs the plain package, where `fastembed`'s model host is unreachable. The extra is not a second pin — the version is identical either way. Added 2026-07-14. |
 
 ## Re-pin rule
 

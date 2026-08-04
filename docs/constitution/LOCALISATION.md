@@ -1,18 +1,18 @@
 ---
-title: LOCALIZATION
+title: LOCALISATION
 type: reference
 status: active
 created: 2026-07-10
 tags: [harness, localization]
 ---
 
-# LOCALIZATION
+# LOCALISATION
 
 Simple and strict, following Django/DRF standard i18n. This doc owns all language and locale rules for both services ([[BACKEND]], [[FRONTEND]]).
 
 ## The one rule
 
-Everything that is code is English — always, no exceptions ([[adr-01-glossary-and-localization]]): identifiers, comments, docstrings, commit messages, API paths, env var names, test names, log messages. All English, everywhere, permanently. Why: agents and tooling read code as an index; a second language in code doubles the search space and breaks grepability.
+Everything that is code is English — always, no exceptions ([[adr-05-glossary-and-localisation]]): identifiers, comments, docstrings, commit messages, API paths, env var names, test names, log messages. All English, everywhere, permanently. Why: agents and tooling read code as an index; a second language in code doubles the search space and breaks grepability.
 
 **Comments and docstrings:** allowed only in English. Prefer none (KISS — code should explain itself). Do not ban comments as a hard rule; ban *non-English* and *noise*. When a future ADR requires docstring wikilinks ([[BACKEND]]), those docstrings are English too.
 

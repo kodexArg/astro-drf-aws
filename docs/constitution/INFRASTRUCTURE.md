@@ -38,14 +38,14 @@ Consequent to the no-NAT trade-off above, every Fargate task — the backend and
 > [!warning] Accepted risk, not a finding
 > Task ENIs are internet-routable, and the task security group (`alvs-<env>-task-sg`) is the sole isolation layer — no NAT, no private subnet, no network ACL beyond the SG. The migrate task in particular carries `DB_PASSWORD` and `SECRET_KEY` as env secrets while holding a public IP. The trade-off is accepted for cost reasons consistent with the "No NAT gateways" decision immediately above; it is not silently accepted risk, it is documented accepted risk.
 
-**Contrast and optional future path.** Isolated subnets already exist for this project, RDS-only today (`alvs-prod-iso-1a` / `alvs-prod-iso-1b`, [[INVENTORY]]). A future hardening — moving Fargate tasks into isolated subnets with `assignPublicIp=DISABLED`, plus VPC interface endpoints for ECR, Secrets Manager, and CloudWatch Logs (mirroring the Bedrock endpoint pattern below) — is named here as optional future work. It is not silently precluded, but it is out of scope for this note and requires its own issue and engagement with this file's ownership ([[adr-02-initial-stack]] rule 5) before it is pursued.
+**Contrast and optional future path.** Isolated subnets already exist for this project, RDS-only today (`alvs-prod-iso-1a` / `alvs-prod-iso-1b`, [[INVENTORY]]). A future hardening — moving Fargate tasks into isolated subnets with `assignPublicIp=DISABLED`, plus VPC interface endpoints for ECR, Secrets Manager, and CloudWatch Logs (mirroring the Bedrock endpoint pattern below) — is named here as optional future work. It is not silently precluded, but it is out of scope for this note and requires its own issue and engagement with this file's ownership ([[adr-06-initial-stack]] rule 5) before it is pursued.
 
 ### Bedrock VPC interface endpoint
 
 - **`com.amazonaws.us-east-1.bedrock-runtime`** interface endpoint, one per env, placed in that env's **public subnets** (the same subnets the Fargate tasks run in — this stack has no isolated/private application subnet; RDS's isolated subnets are DB-only and out of scope here).
-- **Private DNS enabled** — the backend resolves `bedrock-runtime.us-east-1.amazonaws.com` to the endpoint's private ENIs with zero code change ([[BACKEND]], async wrap per [[adr-16-async-mandatory]] rule 4).
+- **Private DNS enabled** — the backend resolves `bedrock-runtime.us-east-1.amazonaws.com` to the endpoint's private ENIs with zero code change ([[BACKEND]], async wrap per [[adr-18-async-mandatory]] rule 4).
 - Security group `alvs-<env>-bedrock-vpce-sg` — ingress tcp/443 from `alvs-<env>-task-sg` only; interface endpoints originate no outbound connections, so no egress rule is required.
-- Purpose: lets the backend reach Bedrock without a NAT gateway, keeping the no-NAT trade-off above and [[adr-02-initial-stack]] rule 5 intact — this is the private-networking path Bedrock inference needs instead of public-IP egress.
+- Purpose: lets the backend reach Bedrock without a NAT gateway, keeping the no-NAT trade-off above and [[adr-06-initial-stack]] rule 5 intact — this is the private-networking path Bedrock inference needs instead of public-IP egress.
 
 ## Containers
 
@@ -130,8 +130,8 @@ The backend **task** role carries an inline policy (`kdx-router-bedrock-nova-mic
 ## CI/CD
 
 - GitHub Actions with **OIDC** (`token.actions.githubusercontent.com`) — no long-lived AWS keys.
-- Per-env deploy roles: `gha-deploy-<env>`; trust policy scoped to specific repos. `sub` entries for repos created/renamed/transferred after GitHub's immutable-subject cutoff use the immutable format with owner/repo numeric IDs — format, cutoff, and this repo's live values in [[GH]] ([[adr-23-oidc-immutable-subject-claim]]).
-- **Branch → env:** `refs/heads/main` → **dev** deploy; `refs/heads/prod` → **prod** deploy. Release tags `v*` may also trigger prod when defined in workflow. Git rules: [[GH]], [[adr-08-github-and-git]]. For the template's own run the `dev ← main` leg is out of scope — see "Ephemeral reference run" below ([[adr-12-ephemeral-run]]).
+- Per-env deploy roles: `gha-deploy-<env>`; trust policy scoped to specific repos. `sub` entries for repos created/renamed/transferred after GitHub's immutable-subject cutoff use the immutable format with owner/repo numeric IDs — format, cutoff, and this repo's live values in [[GH]] ([[adr-24-oidc-immutable-subject-claim]]).
+- **Branch → env:** `refs/heads/main` → **dev** deploy; `refs/heads/prod` → **prod** deploy. Release tags `v*` may also trigger prod when defined in workflow. Git rules: [[GH]], [[adr-12-github-and-git]]. For the template's own run the `dev ← main` leg is out of scope — see "Ephemeral reference run" below ([[adr-15-ephemeral-run]]).
 - Direct push to `main`/`prod` is `kodexArg` only; CI still runs on those refs after their land.
 - Pipeline: build image → push to ECR → update ECS service.
 
@@ -147,7 +147,7 @@ DB admin access goes through an **EC2 Instance Connect Endpoint bastion** — se
 
 ## Ephemeral reference run
 
-Governs the template's own reference deploy (project `astro-drf-aws`), ruled by [[adr-12-ephemeral-run]]. General multi-project doctrine above is unchanged; this section only narrows it for this run.
+Governs the template's own reference deploy (project `astro-drf-aws`), ruled by [[adr-15-ephemeral-run]]. General multi-project doctrine above is unchanged; this section only narrows it for this run.
 
 - **Cloud scope: prod only.** No dev cloud environment is provisioned for this run; the `dev ← main` pipeline above remains doctrine for real projects but is not exercised here. `prod` is the only branch reaching AWS, and OIDC deploy trust is scoped to `refs/heads/prod` only.
 - **Mandatory tag set** — every resource created for this run carries all three tags:

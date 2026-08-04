@@ -13,7 +13,7 @@ type: prd
 # PRD — astro-drf-aws
 
 > [!important] Always in memory
-> This file and [[API]] are the two documents every agent holds in memory at all times. The ABC gate lives in [[AGENTS]]: follows PRD? complies with ADRs? modifies API?
+> This file and [[API]] are the two documents every agent holds in memory at all times. The ABC gate lives in [[AGENTS]]: follows PRD? complies with the rest of the constitution? complies with ADRs? modifies API?
 
 ## The objective
 
@@ -30,9 +30,9 @@ Two Docker services on Fargate — a Django backend and an Astro frontend — co
 The harness is the support of the objective, not the objective. It rests, in this order, on:
 
 1. **This PRD** — the objective every change is measured against.
-2. **The ADRs** (`docs/adrs/`) — the standing rules; each states what is in force and links the doc that owns the detail.
-3. **[[API]]** — key: the only source of valid endpoints; nothing enters the backend except through a row here.
-4. **The docs** (`docs/`) — one SSOT per topic; every fact is stated once, where it lives, and linked from everywhere else.
+2. **The rest of the constitution** (`docs/constitution/`) — [[REQUIREMENTS]], [[HARNESS]], [[INFRASTRUCTURE]], [[LOCALISATION]], [[CONVENTION]].
+3. **The ADRs** (`docs/adrs/`) — the standing rules; each states what is in force and links the doc that owns the detail.
+4. **The docs** (`docs/`) — one SSOT per topic; every fact is stated once, where it lives, and linked from everywhere else. [[API]] lives in this tier as the only source of valid endpoints; nothing enters the backend except through a row here — it is also the third check of the ABC gate above.
 
 The workflow for agents is highly typified and prepared: [[DEVELOPMENT-LOOP]] carries the exact sequence — and the tool or skill at each step — for adding any new element, from idea to merged PR. Other documents are linked from these four surfaces as the need appears; they do not need to be indexed here.
 
