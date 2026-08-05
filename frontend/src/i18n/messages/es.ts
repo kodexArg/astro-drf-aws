@@ -51,7 +51,7 @@ export const es = {
   appearance_packs: "Colecciones",
   appearance_packs_hint: "Aplica una paleta curada a ambos modos; ajustá y guardá después.",
   appearance_pack_kodexarg: "kodexArg",
-  appearance_pack_jeremias: "Esmeralda",
+  appearance_pack_jeremias: "Jeremías",
   appearance_pack_militar: "Militar",
   appearance_pack_amber: "Ámbar",
   appearance_bg_preset: "Fondo",

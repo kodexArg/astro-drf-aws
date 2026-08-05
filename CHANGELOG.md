@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- group: fix-pack-label
+  priority: low
+  commit: TBD
+  changes:
+    - fix(i18n): render the jeremias pack label as "Jeremías" in src/i18n/messages/es.ts — owner-authored pack name reversed from a prior "Esmeralda" substitution; internal id stays `jeremias` per adr-05 rules 3-4
+
 - group: theme-engine-appearance-card
   priority: high
   commit: 0471447
