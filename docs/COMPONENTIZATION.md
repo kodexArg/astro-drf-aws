@@ -40,7 +40,7 @@ Two more mechanics worth knowing before touching that file. It is the only DOM-b
 src/lib/components/
   primitives/        # PageTitle, SectionTitle, PageHeading, PageCanvas, Surface — .svelte, zero-hydration
   header/            # LayoutHeader, NavBar — the page shell's top edge; a layout fixture, never a page's
-  shell/             # NavDrawer, ChatDrawer, NavItem, NavBadge, NavbarIcon, nav.ts (NAV_ITEMS) — the site nav + assistant drawers and their shared registry
+  shell/             # NavDrawer (docked-rail/floating-drawer modes), ChatDrawer, NavItem, NavLockToggle, NavBadge, NavbarIcon, nav.ts (NAV_ITEMS/NAV_SECTIONS) — the site nav + assistant drawers and their shared registry
   ui/                # shadcn-svelte vendored set (adr-04 r4), incl. table/
   data/              # DataTable, NumericValue, StatusBadge, ChipFilterBar, Pagination, Collapsible, Tree
   dashboard/         # MetricTile, MetricTileStrip, EntityCard, EntityGrid, SummaryCard
@@ -49,7 +49,7 @@ src/lib/components/
   form/              # Select, Combobox, Checkbox, Switch, DatePicker, DateRangePicker, PinInput, TagsInput — Melt builders (adr-04 r8 default)
   nav/               # Tabs, DropdownMenu, ContextMenu, Menubar, TableOfContents — Melt builder(s) + hand-rolled fallbacks
   feedback/          # Toast — Melt builder, module-level `toaster` singleton
-  overlay/           # Dialog, Drawer, Accordion, ConfirmDialog, Tooltip, Popover, HoverCard, ScrollArea — Melt builders (adr-04 r8 default), SOLID open/close primitives
+  overlay/           # Dialog, Drawer, FancyDrawer (Drawer sibling, hover-open floating panel), Accordion, ConfirmDialog, Tooltip, Popover, HoverCard, ScrollArea — Melt builders (adr-04 r8 default), SOLID open/close primitives
   theme/             # ThemeModeToggle, QuickThemeToggle, ThemeCard — Melt-builder theme controls
   showcase/          # AlertDialogDemo, TabsDemo, DropdownMenuDemo, ContextMenuDemo, MenubarDemo, TableOfContentsDemo, TooltipDemo, PopoverDemo, HoverCardDemo, CollapsibleDemo, TreeDemo, ScrollAreaDemo, ToastTriggerDemo, SurfaceDemo — gallery-only demo compositions, not app surface
   views/             # HomeCardsView (over HomeCard), ProfileView, ShowcaseGalleryView, ChatView — one zero-hydration page body per route
@@ -72,12 +72,13 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 | `Surface` | `primitives/` | The named surface layer between the token set ([[DESIGN-SYSTEM]]) and finished components: one `level` prop selects a closed, token-only chrome preset — border, radius, background/foreground pair, padding, shadow. Zero props render an empty default level (adr-22 r1) | Any surfaced component reaches for this before hand-rolling its own border/radius/background string |
 | `LayoutHeader` | `header/` | The `<header>` banner landmark `Base.astro` renders on every page: fixed, out of flow, composing one `NavBar` and authoring no chrome of its own. A layout fixture — no page mounts or hides it | `Base.astro` only |
 | `NavBar` | `header/` | The rounded bar inside `LayoutHeader`: the page's single `<h1>` at the left, an `actions` snippet at the right carrying the session island. Chrome only — surface, radius and inset; the fixed positioning stays the header's. Renders a `<div>`, never a `<nav>` — it carries no navigation, whose links live in `NavDrawer`. Zero props render an empty bar (adr-22 r1) | `LayoutHeader` only |
-| `NavDrawer` | `shell/` | The site's navigation: the `NAV_ITEMS` routes as `NavItem` buttons inside a drawer, docked to the edge the theme field `sidebarSide` names (default left). A layout fixture — `Base.astro` mounts it once, role-gated ([[adr-21-authorization-lobby]]) | `Base.astro` only |
+| `NavDrawer` | `shell/` | The site's navigation over `NAV_SECTIONS`, in two footer-padlock modes: unlocked (default) is a hover-open `overlay/FancyDrawer`; locked is a permanent in-flow rail with no panel fill. Docked to the edge `sidebarSide` names; pin preference persists in localStorage, read on mount (no SSR flash). A layout fixture — `Base.astro` mounts it once, role-gated ([[adr-21-authorization-lobby]]) | `Base.astro` only |
 | `ChatDrawer` | `shell/` | The drawer composition mounting `ChatUI` (`mode="assistant"`) inside `overlay/Drawer` on the opposite edge of `NavDrawer` — a composition, not a widget, and never a second chat component ([[adr-25-page-context-assistant]]) | `Base.astro` only |
-| `NavItem` | `shell/` | One navigation link, rendered as `ui/button` — `secondary` when active, `ghost` otherwise — with its icon, label and optional `NavBadge`. Authors no active-state chrome of its own; the icon comes from the caller, never resolved inside, so `NavItem` keeps knowing nothing about the registry | `NavDrawer`, `HomeCardsView` |
+| `NavItem` | `shell/` | One navigation link, rendered as `ui/button` — `secondary` when active, `ghost`/`bare` otherwise depending on `tone` (`default`\|`inverse`, for a rail sitting directly on the canvas) — with its icon, label and optional `NavBadge`. Authors no active-state chrome of its own; the icon comes from the caller, never resolved inside, so `NavItem` keeps knowing nothing about the registry | `NavDrawer`, `HomeCardsView` |
+| `NavLockToggle` | `shell/` | Icon-only disc flipping `NavDrawer` between its docked-rail and floating-drawer modes; `onclick` defaults to `undefined` so a bare mount performs no action (adr-23 r2) | `NavDrawer` footer only |
 | `NavBadge` | `shell/` | The pending-count numeral beside a nav label; renders nothing at zero or unknown | `NavItem` only |
 | `NavbarIcon` | `shell/` | The shared chrome for every icon control in `NavBar`'s actions cluster — idle/active/hover/focus tokens and a real accessible name. It owns no behaviour and no glyph: the consumer supplies both. Zero props render an inert placeholder button (adr-22 r1-2) | Any icon control added to `NavBar` |
-| `NAV_ITEMS` (`nav.ts`) | `shell/` | Not a component: the single nav registry — every route's path, label, icon and badge key. The only source `NavDrawer`, `HomeCardsView` and the assistant's `page` enum read; a second list anywhere is a second authority that can disagree | Every nav surface |
+| `NAV_ITEMS` / `NAV_SECTIONS` (`nav.ts`) | `shell/` | Not a component: the single nav registry — every route's path, label, icon and badge key, plus an optional titled-section grouping (`NAV_SECTIONS`) `NavDrawer` renders over it. The only source `NavDrawer`, `HomeCardsView` and the assistant's `page` enum read; a second list anywhere is a second authority that can disagree | Every nav surface |
 | `DataTable` | `data/` | Generic sortable/expandable data table | Financial dashboards & reporting (line-item tables, statements) |
 | `NumericValue` | `data/` | Formatted numeric/currency display, sign-aware coloring | Financial dashboards & reporting (amounts, balances) |
 | `StatusBadge` | `data/` | Enum-to-label/variant badge | Financial dashboards & reporting (state indicators); general enum display |
@@ -116,6 +117,7 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 | `Toast` | `feedback/` | Toast notifications, Melt Toaster builder; `toaster` is a module-level singleton | Any feature needing transient confirmation/error feedback |
 | `Dialog` | `overlay/` | Generic (non-alert) modal | Any feature needing a modal |
 | `Drawer` | `overlay/` | Side-panel slide-in | Any feature needing a side panel |
+| `FancyDrawer` | `overlay/` | Sibling of `Drawer` (adr-23 r2 — no fork): a content-hugging, viewport-centered floating panel with hover-open, a 2s leave cooldown, outside-click dismiss and an edge chevron tab, instead of `Drawer`'s full-height edge-anchored slide | `NavDrawer`'s unlocked/floating mode |
 | `Accordion` | `overlay/` | Collapsible section | Any feature needing progressive disclosure |
 | `ConfirmDialog` | `overlay/` | Confirm-labeled alert-dialog wrapper | Destructive/confirm-gated actions |
 | `Tooltip` | `overlay/` | Hover/focus hint, Melt builder | Any feature needing a short contextual hint |

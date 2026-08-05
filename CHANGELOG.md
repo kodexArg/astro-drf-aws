@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+- group: theme-engine-appearance-card
+  priority: high
+  commit: 0471447
+  changes:
+    - feat(frontend): dual-mode theme engine — light/dark palettes stored client-side, 7-token palette set (canvas, dots, foreground, surface, border, ring, muted), computed pack compositions from four curated collections
+    - feat(frontend): Appearance card on /profile/ with theme pack selector, dual 7-row palette editors (swatch + hex + clear per row), radius input, mode toggle, save gate requiring canvas+dots in both modes
+    - feat(frontend): PaletteFields component — reusable palette editor with unset row seed-from-computed-token, adr-23 rule 2 safe (no mutating action on zero-prop invocation)
+    - feat(design-system): theme-packs.ts with four curated OKLCH collections (kodexarg, jeremias, militar, amber) shipped as baseline
+    - feat(backend): User.theme_config holds both light and dark palettes simultaneously, mode-keyed colors; validation rejects flat blobs with 400, legacy-flat READ fallback on render
+    - feat(backend): migration 0007 rewrites stored blobs forward (flat→mode-keyed) and reverse (background→surface rename)
+    - feat(frontend): showcase gallery rows for ThemeCard, PaletteFields
+    - feat(i18n): Spanish localizations for Colecciones, Fondo, palette editor labels in src/i18n/messages/es.ts
+    - feat(tests): frontend/tests/theme.test.ts and backend/apps/users/test_theme.py test suites
+    - feat(api): PATCH /api/me/ theme_config contract updated per adr-07 rule 3 — astro-drf-aws-api guardian verdict: valid
+    - docs(api): theme_config schema and palette-editor documentation
+    - docs(glossary): theme rows (theme_config, palette, canvas, dots, foreground, surface)
+    - docs(bdd): bdd-06-profile-theming updated
+
+- group: nav-rail-pin-mode-footer
+  priority: high
+  commit: pending
+  changes:
+    - feat(frontend): FancyDrawer component — overlay sibling of Drawer.svelte, not a fork per adr-23 rule 2
+    - feat(frontend): nav rail mode (permanent, docked, in-flow, dotted-canvas items) and floating panel mode (content-hugging, edge chevron tab, hover-open, leave cooldown, outside-click dismiss) flipped by padlock disc
+    - feat(frontend): NavLockToggle component — padlock disc control to switch between pinned rail and floating panel
+    - feat(frontend): pin state persistence via localStorage `shell-nav-pinned`, read on mount for flicker-free SSR
+    - feat(shell): nav footer (three discs: pin toggle, profile, theme) inside floating panel
+    - feat(shell): NavSection/NAV_SECTIONS capability for titled-section grouping; template ships 3 existing routes, no invented content
+    - feat(frontend): showcase gallery rows for nav components
+    - feat(tests): shell-nav.test.ts with negative-assertion guard grepping source for feedlot-domain terms (verify non-inclusion)
+    - feat(glossary): NAV_SECTIONS and shell-nav-pinned rows added per adr-05 rule 1
+    - refactor(adr-26): NavDrawer file-header comment trimmed from 12 lines to 3 lines; moved design rationale to bdd-12 per adr-26 rules 1–2
+    - chore(guardian): astro-drf-aws-adr returned violation on batch — defects fixed (comment trim + GLOSSARY rows); footer theme disc client-only cookie write confirmed consistent with QuickThemeToggle precedent; no violations remain
+    - docs(bdd): bdd-12-navigation-shell updated
+
 - group: agnostic-guardian-dispatch
   priority: high
   commit: 2d8ca11

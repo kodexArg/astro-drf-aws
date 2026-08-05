@@ -15,6 +15,9 @@
     active = false,
     count = 0,
     icon = undefined,
+    /** `inverse` drops the ghost hover fill for a rail sitting directly on
+     * the canvas with no panel behind it (docked/pinned NavDrawer). */
+    tone = "default",
     class: className = undefined,
     ...rest
   }: {
@@ -23,17 +26,23 @@
     active?: boolean;
     count?: number;
     icon?: Component<{ class?: string; "aria-hidden"?: string }>;
+    tone?: "default" | "inverse";
     class?: string;
     [key: string]: unknown;
   } = $props();
 
   const Icon = $derived(icon);
+  const inverse = $derived(tone === "inverse");
 </script>
 
 <Button
   {href}
-  variant={active ? "secondary" : "ghost"}
-  class={cn("w-full justify-start gap-3 text-base", className)}
+  variant={active ? "secondary" : inverse ? "bare" : "ghost"}
+  class={cn(
+    "w-full justify-start gap-3 text-base",
+    inverse && !active && "text-foreground/90 hover:bg-foreground/10",
+    className,
+  )}
   aria-current={active ? "page" : undefined}
   {...rest}
 >

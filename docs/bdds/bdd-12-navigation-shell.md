@@ -80,6 +80,48 @@ And the item matching the current pathname carries the active state,
 And no other item is active
 ```
 
+### The nav drawer's two modes, flipped by its own footer padlock
+
+```gherkin
+Given the NavDrawer mounted with no pin preference stored yet
+When the page renders
+Then it renders unlocked: overlay/FancyDrawer, hidden until hovered or its edge tab is used
+And hovering the edge tab opens it; leaving the pointer schedules a 2s-delayed close
+And a click outside the open panel dismisses it immediately
+
+Given the footer padlock is clicked
+When the drawer was unlocked
+Then it locks: a permanent in-flow rail replaces the floating panel, no panel fill behind the items
+And the pin preference is written to localStorage
+And on the next page load the rail renders locked immediately, with no unlocked-then-locked flash
+
+Given the rail is locked
+When the footer padlock is clicked again
+Then it unlocks back to the floating FancyDrawer and the preference is persisted
+```
+
+### The footer holds three action discs
+
+```gherkin
+Given either NavDrawer mode
+When its content renders
+Then a footer row below the nav items holds exactly three discs: pin, profile, theme
+And the pin disc reflects the current locked/unlocked state
+And the profile disc is a plain anchor, inert (href="#") until navigates is set
+And the theme disc flips the cookie-mirrored mode locally, performing no backend PATCH
+```
+
+### Sections group NAV_ITEMS without inventing content
+
+```gherkin
+Given NAV_SECTIONS (frontend/src/lib/components/shell/nav.ts)
+When NavDrawer renders
+Then every section's items render as NavItem entries in order
+And a section carrying no titleKey renders no heading
+And the template ships exactly one section wrapping the three existing NAV_ITEMS —
+  the grouping capability exists with no invented nav content
+```
+
 ## Frontend half
 
 Rung 1 of the interactivity ladder for the canvas, header and links —
@@ -117,22 +159,31 @@ only their open/close state (rung 3, as any click-reactive widget —
 - **The view components** — `HomeCardsView`, `ChatView`, `ProfileView`,
   `ShowcaseGalleryView` — author **no `<main>` and no
   `min-h-screen` of their own**. They become content, not landmarks.
-- **`NavDrawer`** (`shell/`, new — [[GLOSSARY]]) — the site nav drawer,
-  composed once by `Base.astro` on the viewport edge the theme field
-  `sidebarSide` names (default `left`), hidden until its tab is used.
-  Every item is a `NavItem` over the single **`NAV_ITEMS` registry**
+- **`NavDrawer`** (`shell/`, new — [[GLOSSARY]]) — the site nav, composed
+  once by `Base.astro` on the viewport edge the theme field `sidebarSide`
+  names (default `left`), in two footer-padlock modes: unlocked (default)
+  is `overlay/FancyDrawer` (hover-open, 2s leave cooldown, outside-click
+  dismiss, edge chevron tab); locked is a permanent in-flow rail with no
+  panel fill. The pin preference persists in `localStorage`, read
+  `onMount` so SSR always renders the unlocked default with no flash.
+  Every item is a `NavItem` over **`NAV_SECTIONS`**, the optional titled
+  grouping of the single **`NAV_ITEMS` registry**
   (`frontend/src/lib/components/shell/nav.ts`) — `/chatui/`,
   `/showcase/components/`, `/profile/` with their labels, icons and badge
-  keys; a second list anywhere would be a second authority that can
-  disagree. **Active state** is exact match against the page's own
-  pathname after **trailing-slash normalization**; the page passes its
-  pathname in, the component does not read `window`, so it renders
-  identically on the server. `NavItem` renders the project's own
-  `ui/button` — `secondary` when active, `ghost` otherwise — so a nav link
-  inherits the design system's focus, hover and radius tokens for free
-  ([[DESIGN-SYSTEM]]); the icon comes from the caller, never resolved
-  inside the component. `NavBadge` renders nothing when its count is zero
-  or unknown.
+  keys, shipped today as one ungrouped section; a second list anywhere
+  would be a second authority that can disagree. **Active state** is
+  exact match against the page's own pathname after **trailing-slash
+  normalization**; the page passes its pathname in, the component does
+  not read `window`, so it renders identically on the server. `NavItem`
+  renders the project's own `ui/button` — `secondary` when active,
+  `ghost`/`bare` otherwise per its `tone` prop (`default`\|`inverse`, for
+  the rail's no-fill contrast) — so a nav link inherits the design
+  system's focus, hover and radius tokens for free ([[DESIGN-SYSTEM]]);
+  the icon comes from the caller, never resolved inside the component.
+  `NavBadge` renders nothing when its count is zero or unknown. The
+  footer holds three discs — `NavLockToggle` (pin), a profile anchor, a
+  theme-mode toggle — all zero-prop safe, non-mutating by default
+  ([[adr-23-showcase-ready-components]]).
 - **`ChatDrawer`** (`shell/`, new — [[GLOSSARY]]) — the drawer composition
   mounting `ChatUI` with `mode="assistant"` inside `overlay/Drawer` on the
   **opposite edge** of `NavDrawer` — one theme field, two mirrored sides.

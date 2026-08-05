@@ -39,6 +39,17 @@ export const NAV_ITEMS: NavItemSpec[] = [
   },
 ];
 
+export interface NavSection {
+  /** Omitted renders no heading — an ungrouped section. */
+  titleKey?: MessageKey;
+  items: NavItemSpec[];
+}
+
+/** Grouping capability over NAV_ITEMS for NavDrawer's docked/floating panel;
+ * ships one ungrouped section today, ready for a titled split once the
+ * route list grows past it. */
+export const NAV_SECTIONS: NavSection[] = [{ items: NAV_ITEMS }];
+
 /** Exact, not prefix: sibling routes (e.g. `/showcase/` and
  * `/showcase/components/`) would both light under a prefix match. */
 export function isActive(href: string, pathname: string): boolean {

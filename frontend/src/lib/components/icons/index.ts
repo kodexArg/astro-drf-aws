@@ -32,4 +32,6 @@ export {
   DollarSign,
   TriangleAlert,
   Info,
+  Lock,
+  LockOpen,
 } from "@lucide/svelte";
