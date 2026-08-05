@@ -1,0 +1,11 @@
+#!/bin/sh
+# The dispatch safety net's voice at commit time (adr-03-guardians rules 3, 8, 9).
+#
+# Install once per clone (manual — never installed automatically):
+#   ln -s ../../docs/hooks/pre-commit .git/hooks/pre-commit
+#
+# It warns, it does not block: the gate cannot see whether a guardian was
+# already dispatched this batch, so blocking would only teach --no-verify.
+# Name-only form on purpose — no --bundle flood at commit. The owner re-runs
+# with --bundle when dispatching (adr-03-guardians rule 9).
+python3 "$(git rev-parse --show-toplevel)/docs/hooks/guardian-dispatch" --staged || true

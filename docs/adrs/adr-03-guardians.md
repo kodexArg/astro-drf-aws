@@ -2,7 +2,7 @@
 title: adr-03-guardians
 type: adr
 category: harness
-use_case: closing a batch of changes that touched PRD, an ADR, or API.md, defining or dispatching a guardian, editing a guardian's watch list or the dispatch safety net, acting on a guardian verdict
+use_case: closing a batch of changes that touched PRD, an ADR, or API.md, defining or dispatching a guardian, editing a guardian's watch list or the dispatch safety net, acting on a guardian verdict, running dispatch from outside Claude (another agent, CI, or a human at the CLI)
 created: 2026-07-10
 modified: 2026-08-04
 tags: [adr, harness, guardians, agents]
@@ -46,31 +46,54 @@ in its definition under `agents/`.
    the guardian's domain returns its passing verdict in one line,
    immediately — false positives are dismissed fast; depth is spent only on
    plausible concerns.
-8. Watchlists exist in exactly two places — each guardian's Watchlist
-   section and the hook's `WATCHLISTS` — and must stay identical in
-   coverage; a divergence is a defect fixed in the same batch that finds it.
-9. **Fast dispatch payload.** The owner process assembles, for each owed
-   guardian, the hit files, a diff scoped to those hit files, and a live ADR
-   `use_case`/topic index, and pastes that payload into the guardian's
-   prompt rather than leaving it to rediscover the batch alone. When more
-   than one guardian is owed, the owner dispatches them in parallel in one
-   turn.
+8. **A guardian's watchlist has one machine copy: the `watch:` glob list in
+   the frontmatter of its own definition, beside the prose that explains
+   it.** The dispatch safety net — `docs/hooks/guardian-dispatch`, the
+   runtime-agnostic script any harness or a human can call, plus its
+   Claude-native PostToolUse wrapper `.claude/hooks/dispatch_guardians.py`,
+   which delegates to it rather than carrying a duplicate — reads only that
+   key; a watched surface enters or leaves the watchlist by editing the
+   guardian's file, nowhere else. One machine copy cannot drift from itself.
+9. **Fast dispatch via `--bundle`.** The owner process (or `docs/hooks/pre-commit`,
+    name-only, at commit time) runs `docs/hooks/guardian-dispatch --bundle
+    [<ref>|--staged]` to produce the dispatch payload: the owed guardians and
+    their hit files, a unified diff scoped to those hit files, and a live ADR
+    `use_case` index built from each ADR's own frontmatter. The owner pastes
+    that payload into each owed guardian's prompt and dispatches all of them
+    in one turn (rule 3) — the guardian does not rediscover the batch alone;
+    it uses the payload as its working surface, and the index lets its
+    triage step (rule 7) resolve most dispatches without opening an ADR
+    body.
 
 ## REJECTED
 
-- **Guardian rediscovers the batch alone** — the policy this project held
-  before this rewrite (2026-08-04): an owed guardian Globs/greps the change
-  set itself with no payload handed to it. Replaced by rule 9. It would
-  reopen only if the owner process could not assemble the payload before
-  dispatch.
+- **Two-place watchlist** — the policy this project held before this
+  rewrite (2026-08-04, owner ruling): each guardian's Watchlist section
+  in prose PLUS a hand-kept `WATCHLISTS` dict in the dispatch hook, required
+  to stay identical in coverage by a since-retired rule. Replaced by rule 8.
+  It lost because a two-place list can only ever drift from itself — a
+  single machine-read source (the guardian's own frontmatter) removes the
+  possibility structurally instead of policing it by convention. It would
+  reopen only if a runtime existed that could not read a guardian's own
+  frontmatter, which none in scope cannot.
+- **Guardian rediscovers the batch alone** — the policy held before the
+  2026-08-04 rewrite: an owed guardian Globs/greps the change set itself
+  with no payload handed to it. Replaced by rule 9. It would reopen only
+  if the owner process could not assemble the payload before dispatch.
 
 ## RELATED
 
 ### governed paths
 
 - `agents/astro-drf-aws-prd.md`, `agents/astro-drf-aws-adr.md`,
-  `agents/astro-drf-aws-api.md` — this project's three guardians
-- `.claude/hooks/dispatch_guardians.py` — the dispatch safety net (rules 3, 8, 9)
+  `agents/astro-drf-aws-api.md` — this project's three guardians, each
+  carrying its own `watch:` frontmatter list (rule 8)
+- `docs/hooks/guardian-dispatch` — the runtime-agnostic dispatch script
+  (rules 3, 8, 9); `docs/hooks/pre-commit` speaks it at commit time
+  (name-only, manual `ln -s` install, never installed automatically)
+- `.claude/hooks/dispatch_guardians.py` — the Claude-native PostToolUse
+  safety net (rule 3); delegates to `docs/hooks/guardian-dispatch` for the
+  watchlist (rule 8) and carries no duplicate of its own
 
 ### related files
 

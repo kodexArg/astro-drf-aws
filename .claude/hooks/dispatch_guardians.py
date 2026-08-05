@@ -4,69 +4,50 @@
 One prose-only PostToolUse hook, formerly two (dispatch_guardians.py and
 adr_reminder.py, merged for the nudge-dedup issue). It does two jobs in a
 single output block:
-  - maps every written file to the guardian agents watching it (docs/agents/*.md)
-    via WATCHLISTS and nudges a dispatch to verify the change;
+  - maps every written file to the guardians watching it and nudges a
+    dispatch to verify the change; the watchlist is DELEGATED to
+    docs/hooks/guardian-dispatch, which reads it live from each guardian's
+    own frontmatter `watch:` list — the single machine copy (adr-03-guardians
+    rule 8). This hook carries no watchlist of its own;
   - names the ADR(s) to review when a governance-sensitive file is touched
     via RULES — wikilinks and a one-line "why review" only, never rule
     restatement (adr-00 rule 1).
-WATCHLISTS mirrors the Watchlist section of each agent file — keep them in
-sync (adr-03-guardians rule 5: exactly two places, identical in coverage).
 
-Doctrine-tier docs (PRD/REQUIREMENTS/LOCALISATION/INFRASTRUCTURE/HARNESS) can
-move under docs/constitution/ or elsewhere without notice; guardians_for()
-falls back to a docs/-relative basename match for any exact (non-glob)
-"docs/*.md" watchlist entry, so a future doc reshuffle degrades to "still
-matches" rather than "silently no-ops".
+This is the Claude-native safety net adr-03-guardians rule 3 describes; the
+runtime-agnostic mechanism is docs/hooks/guardian-dispatch, callable by any
+harness or a human with no Claude dependency.
 
 Both jobs dedupe per session-scoped batch: each guardian/ADR is named once
 per session, not once per file, via a gitignored seen-set at
 $CLAUDE_PROJECT_DIR/.claude/.nudge-seen-<session_id>. Any internal error
-exits 0; always exits 0.
+exits 0; always exits 0 — this hook never blocks (fail-open).
 """
 
 import fnmatch
+import importlib.machinery
+import importlib.util
 import json
 import os
 import sys
 from pathlib import Path
 
-WATCHLISTS = {
-    "astro-drf-aws-prd": (
-        "docs/constitution/PRD.md",
-        "AGENTS.md",
-        "CLAUDE.md",
-        "README.md",
-        ".github/workflows/*",
-    ),
-    "astro-drf-aws-adr": (
-        "docs/agents/*",
-        ".claude/rules/*",
-        "docs/adrs/*",
-        ".github/workflows/*",
-        "compose.yaml",
-        "docs/constitution/REQUIREMENTS.md",
-        "docs/GLOSSARY.md",
-        "docs/constitution/LOCALISATION.md",
-        "docs/constitution/INFRASTRUCTURE.md",
-        "docs/VARIABLES.md",
-        "docs/INVENTORY.md",
-        "*/pyproject.toml",
-        "pyproject.toml",
-        "*/package.json",
-        "package.json",
-        "*/bun.lock*",
-        "bun.lock*",
-    ),
-    "astro-drf-aws-api": (
-        "docs/API.md",
-        "*/urls.py",
-        "*/views.py",
-        "*/viewsets.py",
-        "*/serializers.py",
-        "*/models.py",
-        "*/templates/*",
-    ),
-}
+
+def _load_guardian_dispatch(root):
+    """Import docs/hooks/guardian-dispatch (no .py extension) as a module,
+    so this hook reads the one live watchlist source instead of carrying a
+    duplicate. Returns None if the script is missing — fail-open."""
+    script = root / "docs" / "hooks" / "guardian-dispatch"
+    if not script.is_file():
+        return None
+    try:
+        loader = importlib.machinery.SourceFileLoader("guardian_dispatch_agnostic", str(script))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        loader.exec_module(module)
+        return module
+    except Exception:
+        return None
+
 
 # (globs, required tool_name or None for any, reminder text)
 RULES = (
@@ -132,9 +113,16 @@ def _matches_watchlist_entry(rel, pattern):
     return False
 
 
-def guardians_for(rel):
+def guardians_for(rel, root):
+    """Reads the live watch: lists from docs/agents/*.md via the agnostic
+    guardian-dispatch script — the single source (adr-03-guardians rule 8).
+    Returns [] if the script cannot be loaded (fail-open, never blocks)."""
+    module = _load_guardian_dispatch(root)
+    if module is None:
+        return []
+    lists = module.watchlists(root / "docs" / "agents")
     hits = []
-    for agent, patterns in WATCHLISTS.items():
+    for agent, patterns in lists.items():
         for pattern in patterns:
             if _matches_watchlist_entry(rel, pattern):
                 hits.append(agent)
@@ -192,7 +180,7 @@ def main():
 
         new_keys = []
         new_guardians = []
-        for name in guardians_for(rel):
+        for name in guardians_for(rel, root):
             key = "guardian:" + name
             if key not in seen:
                 new_keys.append(key)

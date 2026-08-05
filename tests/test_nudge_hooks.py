@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import importlib.machinery
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -10,51 +12,34 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DISPATCH_HOOK = ROOT / ".claude" / "hooks" / "dispatch_guardians.py"
+AGNOSTIC_SCRIPT = ROOT / "docs" / "hooks" / "guardian-dispatch"
+AGENTS_DIR = ROOT / "docs" / "agents"
 API_HOOK = ROOT / ".claude" / "hooks" / "require_api_read.py"
 PR_FLOW_HOOK = ROOT / ".claude" / "hooks" / "require_pr_flow.py"
 
-# Coverage parity: reproduces today's dispatch_guardians.py WATCHLISTS
-# glob-by-glob. adr-03-guardians rule 5 keeps the watchlist in exactly two
-# places (each guardian's Watchlist section + the hook WATCHLISTS); this
-# test guards the hook half against silent drift when the two hooks were
-# merged.
-EXPECTED_WATCHLISTS = {
-    "astro-drf-aws-prd": (
-        "docs/constitution/PRD.md",
-        "AGENTS.md",
-        "CLAUDE.md",
-        "README.md",
-        ".github/workflows/*",
-    ),
-    "astro-drf-aws-adr": (
-        "docs/agents/*",
-        ".claude/rules/*",
-        "docs/adrs/*",
-        ".github/workflows/*",
-        "compose.yaml",
-        "docs/constitution/REQUIREMENTS.md",
-        "docs/GLOSSARY.md",
-        "docs/constitution/LOCALISATION.md",
-        "docs/constitution/INFRASTRUCTURE.md",
-        "docs/VARIABLES.md",
-        "docs/INVENTORY.md",
-        "*/pyproject.toml",
-        "pyproject.toml",
-        "*/package.json",
-        "package.json",
-        "*/bun.lock*",
-        "bun.lock*",
-    ),
-    "astro-drf-aws-api": (
-        "docs/API.md",
-        "*/urls.py",
-        "*/views.py",
-        "*/viewsets.py",
-        "*/serializers.py",
-        "*/models.py",
-        "*/templates/*",
-    ),
-}
+# The single source of truth is now each guardian's own frontmatter `watch:`
+# list, read live by docs/hooks/guardian-dispatch (adr-03-guardians rule 8).
+# There is no second, hand-kept copy anymore — this dict only names which
+# guardian filenames are expected to exist, so a seed helper can copy them
+# into an isolated tempdir project for the tests below.
+GUARDIAN_FILES = (
+    "astro-drf-aws-prd.md",
+    "astro-drf-aws-adr.md",
+    "astro-drf-aws-api.md",
+)
+
+
+def seed_agents(project_dir: Path) -> None:
+    """Copy the real guardian definitions (with their live `watch:`
+    frontmatter) and the agnostic script into an isolated tempdir project,
+    so the delegated hook has a real watchlist source to read."""
+    agents_dst = project_dir / "docs" / "agents"
+    agents_dst.mkdir(parents=True, exist_ok=True)
+    for name in GUARDIAN_FILES:
+        shutil.copy(AGENTS_DIR / name, agents_dst / name)
+    hooks_dst = project_dir / "docs" / "hooks"
+    hooks_dst.mkdir(parents=True, exist_ok=True)
+    shutil.copy(AGNOSTIC_SCRIPT, hooks_dst / "guardian-dispatch")
 
 
 def fail(msg: str) -> None:
@@ -67,6 +52,7 @@ def ok(msg: str) -> None:
 
 
 def run_dispatch(project_dir: Path, rel: str, session: str, tool: str = "Edit"):
+    seed_agents(project_dir)
     payload = json.dumps({
         "tool_name": tool,
         "session_id": session,
@@ -156,34 +142,56 @@ def test_api_gate_fires_on_true_positive() -> None:
     ok("require_api_read fires on 'add an endpoint to the api'")
 
 
-def load_watchlists() -> dict:
-    spec = importlib.util.spec_from_file_location("dispatch_guardians", DISPATCH_HOOK)
+def load_agnostic_script():
+    loader = importlib.machinery.SourceFileLoader("guardian_dispatch_agnostic", str(AGNOSTIC_SCRIPT))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.WATCHLISTS
+    loader.exec_module(module)
+    return module
 
 
-def test_watchlist_coverage_parity() -> None:
-    actual = load_watchlists()
-    problems = []
-    for guardian, globs in EXPECTED_WATCHLISTS.items():
-        if guardian not in actual:
-            problems.append(f"missing guardian key {guardian!r}")
-            continue
-        expected_set = set(globs)
-        actual_set = set(actual[guardian])
-        for dropped in sorted(expected_set - actual_set):
-            problems.append(f"{guardian}: dropped glob {dropped!r}")
-        for added in sorted(actual_set - expected_set):
-            problems.append(f"{guardian}: added glob {added!r}")
-    for guardian in sorted(set(actual) - set(EXPECTED_WATCHLISTS)):
-        problems.append(f"unexpected guardian key {guardian!r}")
-    if problems:
+def test_dispatch_hook_carries_no_watchlist_dict() -> None:
+    """The single source is each guardian's own frontmatter `watch:` list
+    (adr-03-guardians rule 8) — a second, hand-kept WATCHLISTS dict in the
+    Claude-native hook is the retired two-place doctrine (formerly rule 5).
+    Asserting its absence guards against the old duplicate creeping back."""
+    text = DISPATCH_HOOK.read_text(encoding="utf-8")
+    if "WATCHLISTS = {" in text or "WATCHLISTS: dict" in text:
         fail(
-            "merged WATCHLISTS diverged from today's coverage (adr-11 rule 5): "
-            + "; ".join(problems)
+            "dispatch_guardians.py still defines its own WATCHLISTS dict; "
+            "it must delegate to docs/hooks/guardian-dispatch instead"
         )
-    ok("merged WATCHLISTS matches today's coverage file-by-file")
+    ok("dispatch_guardians.py carries no watchlist dict of its own")
+
+
+def test_frontmatter_watch_is_the_single_source() -> None:
+    """The agnostic script reads `watch:` straight from each guardian's own
+    frontmatter, and the Claude-native hook resolves to the exact same
+    guardian set for a representative file per guardian — proving the hook
+    truly delegates rather than re-deriving its own answer."""
+    module = load_agnostic_script()
+    lists = module.watchlists(AGENTS_DIR)
+    for name in ("astro-drf-aws-prd", "astro-drf-aws-adr", "astro-drf-aws-api"):
+        if name not in lists or not lists[name]:
+            fail(f"docs/agents/{name}.md: no watch: frontmatter list found")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        project = Path(tmp)
+        session = "S-source"
+        cases = (
+            ("docs/constitution/PRD.md", "astro-drf-aws-prd"),
+            ("docs/adrs/adr-00-adr-doctrine.md", "astro-drf-aws-adr"),
+            ("docs/API.md", "astro-drf-aws-api"),
+        )
+        for rel, expected in cases:
+            proc = run_dispatch(project, rel, session + expected)
+            ctx = context_of(proc)
+            if expected not in ctx:
+                fail(
+                    f"hook did not resolve {rel!r} to {expected!r} via the "
+                    f"frontmatter watch: list; got stdout={proc.stdout!r}"
+                )
+    ok("frontmatter watch: lists are the single source the hook reads")
 
 
 def test_pr_flow_nudges_on_worktree_remove() -> None:
@@ -232,7 +240,8 @@ def main() -> int:
         test_guardian_named_once_across_eight_file_batch,
         test_api_gate_silent_on_false_positive,
         test_api_gate_fires_on_true_positive,
-        test_watchlist_coverage_parity,
+        test_dispatch_hook_carries_no_watchlist_dict,
+        test_frontmatter_watch_is_the_single_source,
         test_pr_flow_nudges_on_worktree_remove,
         test_pr_flow_silent_on_worktree_list_and_add,
         test_pr_flow_still_nudges_on_commit,

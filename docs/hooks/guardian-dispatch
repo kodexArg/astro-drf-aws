@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+"""guardian-dispatch — the dispatch safety net (adr-03-guardians rules 3, 8, 9).
+
+Maps a batch of changed files against the `watch:` globs each guardian
+declares in the frontmatter of its definition under docs/agents/, and names
+the guardians the owner process must dispatch before the batch closes. The
+`watch:` key is the single machine copy of every watchlist (adr-03-guardians
+rule 8); this script only reads it — it never carries a list of its own.
+
+With `--bundle`, also emits the owner-dispatch payload (adr-03-guardians
+rule 9): hit files, unified diff for those hits, and a live ADR use_case
+index so a guardian's triage step (rule 7) never needs to open ADR bodies
+when the index is sufficient.
+
+Runtime-agnostic on purpose: git + python3 stdlib, nothing else. Any agent
+harness (or human) can call it; docs/hooks/pre-commit speaks it at commit
+time (names only — no bundle flood). `.claude/hooks/dispatch_guardians.py`
+is the Claude-native PostToolUse safety net and delegates to this script.
+
+Usage:
+  guardian-dispatch              batch = working tree vs HEAD, plus untracked
+  guardian-dispatch --staged     batch = staged files only (pre-commit)
+  guardian-dispatch <ref>        batch = files changed since <ref>
+  guardian-dispatch --bundle …   same batch selection, plus dispatch payload
+
+Exit 0: no guardian owed. Exit 1: dispatch owed (named on stdout).
+Globs are fnmatch-style; `*` crosses `/`, so `docs/adrs/*` covers nesting.
+"""
+
+from __future__ import annotations
+
+import subprocess
+import sys
+from fnmatch import fnmatch
+from pathlib import Path
+
+DIFF_SOFT_CAP = 80_000  # bytes; truncate with a note past this
+
+
+def repo_root() -> Path:
+    out = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, check=True,
+    )
+    return Path(out.stdout.strip())
+
+
+def git_lines(*args: str) -> list[str]:
+    out = subprocess.run(
+        ["git", *args], capture_output=True, text=True, check=True,
+    )
+    return [line for line in out.stdout.splitlines() if line.strip()]
+
+
+def git_text(*args: str) -> str:
+    out = subprocess.run(
+        ["git", *args], capture_output=True, text=True, check=False,
+    )
+    return out.stdout
+
+
+def changed_files(argv: list[str]) -> list[str]:
+    if "--staged" in argv:
+        return git_lines("diff", "--name-only", "--cached")
+    refs = [a for a in argv if not a.startswith("-")]
+    if refs:
+        return git_lines("diff", "--name-only", refs[0])
+    tracked = git_lines("diff", "--name-only", "HEAD")
+    untracked = git_lines("ls-files", "--others", "--exclude-standard")
+    return sorted(set(tracked + untracked))
+
+
+def watchlists(agents_dir: Path) -> dict[str, list[str]]:
+    """Parse `watch:` from each guardian definition's frontmatter."""
+    lists: dict[str, list[str]] = {}
+    for path in sorted(agents_dir.glob("*.md")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if not lines or lines[0].strip() != "---":
+            continue
+        globs: list[str] = []
+        in_watch = False
+        for line in lines[1:]:
+            if line.strip() == "---":
+                break
+            if line.startswith("watch:"):
+                in_watch = True
+                continue
+            if in_watch:
+                stripped = line.strip()
+                if stripped.startswith("- "):
+                    globs.append(stripped[2:].strip().strip("'\""))
+                else:
+                    in_watch = False
+        if globs:
+            lists[path.stem] = globs
+    return lists
+
+
+def parse_frontmatter(path: Path) -> dict[str, str]:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0].strip() != "---":
+        return {}
+    fields: dict[str, str] = {}
+    for line in lines[1:]:
+        if line.strip() == "---":
+            break
+        if ":" not in line or line.startswith(" ") or line.startswith("-"):
+            continue
+        key, _, val = line.partition(":")
+        fields[key.strip()] = val.strip().strip("'\"")
+    return fields
+
+
+def adr_use_case_index(adrs_dir: Path) -> list[tuple[str, str, str]]:
+    """Live index: (filename, category, use_case) for every ADR in force."""
+    rows: list[tuple[str, str, str]] = []
+    for path in sorted(adrs_dir.glob("adr-*.md")):
+        fm = parse_frontmatter(path)
+        rows.append((
+            path.name,
+            fm.get("category", ""),
+            fm.get("use_case", ""),
+        ))
+    return rows
+
+
+def hit_diff(root: Path, hits: list[str], argv: list[str]) -> str:
+    """Unified diff for hit paths only (staged / since-ref / worktree)."""
+    if not hits:
+        return ""
+    if "--staged" in argv:
+        return git_text("diff", "--cached", "--", *hits)
+    refs = [a for a in argv if not a.startswith("-")]
+    if refs:
+        return git_text("diff", refs[0], "--", *hits)
+
+    parts: list[str] = []
+    tracked_hits: list[str] = []
+    for f in hits:
+        checked = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", f],
+            cwd=root, capture_output=True, text=True,
+        )
+        if checked.returncode != 0:
+            body = (root / f).read_text(encoding="utf-8", errors="replace")
+            parts.append(
+                f"diff --git a/{f} b/{f}\n"
+                f"--- /dev/null\n+++ b/{f}\n"
+                + "".join(f"+{line}\n" for line in body.splitlines())
+            )
+        else:
+            tracked_hits.append(f)
+    if tracked_hits:
+        parts.append(git_text("diff", "HEAD", "--", *tracked_hits))
+    return "".join(parts)
+
+
+def print_bundle(
+    root: Path,
+    owed: dict[str, list[str]],
+    argv: list[str],
+) -> None:
+    all_hits = sorted({h for hits in owed.values() for h in hits})
+    print("--- bundle (adr-03-guardians rule 9) ---")
+    print("tier: sonnet  # adr-03-guardians rule 6 — all three guardians run sonnet")
+    print("parallel: yes  # when more than one guardian is owed, dispatch in one turn")
+    print()
+    print("## owed")
+    for guardian, hits in sorted(owed.items()):
+        print(f"- {guardian}:")
+        for h in hits:
+            print(f"  - {h}")
+    print()
+    print("## adr_index  # use_case only — open ADR bodies only after triage fails (rule 7)")
+    for name, category, use_case in adr_use_case_index(root / "docs" / "adrs"):
+        print(f"- {name} | {category} | {use_case}")
+    print()
+    print("## diff")
+    diff = hit_diff(root, all_hits, argv)
+    raw = diff.encode("utf-8")
+    if len(raw) > DIFF_SOFT_CAP:
+        print(diff[:DIFF_SOFT_CAP])
+        print(
+            f"\n# [truncated: {len(raw)} bytes > {DIFF_SOFT_CAP}; "
+            f"re-run git diff for full text]"
+        )
+    else:
+        print(diff if diff.strip() else "# (empty diff)")
+    print("--- end bundle ---")
+
+
+def main(argv: list[str]) -> int:
+    root = repo_root()
+    want_bundle = "--bundle" in argv
+    files = changed_files(argv)
+    if not files:
+        print("guardian-dispatch: empty batch — no guardian owed.")
+        return 0
+
+    owed: dict[str, list[str]] = {}
+    for guardian, globs in watchlists(root / "docs" / "agents").items():
+        hits = [f for f in files if any(fnmatch(f, g) for g in globs)]
+        if hits:
+            owed[guardian] = hits
+
+    if not owed:
+        print(f"guardian-dispatch: {len(files)} file(s) in batch — no guardian owed.")
+        return 0
+
+    print(f"guardian-dispatch: {len(owed)} guardian(s) owed for this batch (adr-03-guardians rule 3)")
+    for guardian, hits in sorted(owed.items()):
+        shown = ", ".join(hits[:4]) + (f", +{len(hits) - 4} more" if len(hits) > 4 else "")
+        print(f"  -> {guardian} — {len(hits)} file(s): {shown}")
+    print("Dispatch each before the batch closes; violation/defect/danger blocks (rule 5).")
+    if want_bundle:
+        print()
+        print_bundle(root, owed, argv)
+    else:
+        print("Owner: re-run with --bundle and paste that payload into each guardian prompt (rule 9).")
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
