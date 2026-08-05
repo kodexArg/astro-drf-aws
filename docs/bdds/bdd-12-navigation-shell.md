@@ -83,21 +83,26 @@ And no other item is active
 ### The nav drawer's two modes, flipped by its own footer padlock
 
 ```gherkin
-Given the NavDrawer mounted with no pin preference stored yet
+Given the NavDrawer mounted with no nav_lock cookie stored yet
 When the page renders
-Then it renders unlocked: overlay/FancyDrawer, hidden until hovered or its edge tab is used
+Then it renders unlocked: overlay/FancyDrawer, hidden until hovered, clicked/tapped, or its edge tab is used
 And hovering the edge tab opens it; leaving the pointer schedules a 2s-delayed close
 And a click outside the open panel dismisses it immediately
 
 Given the footer padlock is clicked
 When the drawer was unlocked
-Then it locks: a permanent in-flow rail replaces the floating panel, no panel fill behind the items
-And the pin preference is written to localStorage
+Then it locks: a permanent in-flow, frosted rail replaces the floating panel ([[adr-28-nav-fsm-frosted-rail]])
+And the preference is written to the nav_lock cookie, SSR-readable like the theme cookie
 And on the next page load the rail renders locked immediately, with no unlocked-then-locked flash
 
 Given the rail is locked
 When the footer padlock is clicked again
 Then it unlocks back to the floating FancyDrawer and the preference is persisted
+
+Given the lock preference is "locked"
+When the viewport narrows below the rail minimum width (43.75rem)
+Then the shell presents the floating FancyDrawer even though the preference is still locked
+And the preference persists so the rail returns once the viewport widens past the minimum again
 ```
 
 ### The footer holds three action discs
@@ -161,12 +166,18 @@ only their open/close state (rung 3, as any click-reactive widget —
   `min-h-screen` of their own**. They become content, not landmarks.
 - **`NavDrawer`** (`shell/`, new — [[GLOSSARY]]) — the site nav, composed
   once by `Base.astro` on the viewport edge the theme field `sidebarSide`
-  names (default `left`), in two footer-padlock modes: unlocked (default)
-  is `overlay/FancyDrawer` (hover-open, 2s leave cooldown, outside-click
-  dismiss, edge chevron tab); locked is a permanent in-flow rail with no
-  panel fill. The pin preference persists in `localStorage`, read
-  `onMount` so SSR always renders the unlocked default with no flash.
-  Every item is a `NavItem` over **`NAV_SECTIONS`**, the optional titled
+  names (default `left`), in two footer-padlock modes resolved by
+  **`shell/nav-fsm`** ([[adr-28-nav-fsm-frosted-rail]]): unlocked (default)
+  is `overlay/FancyDrawer` (hover-open, click/tap-toggle, 2s leave cooldown,
+  outside-click dismiss, in-flow edge chevron tab); locked is a permanent
+  in-flow, frosted rail (soft wash + backdrop blur, [[DESIGN-SYSTEM]]) with
+  no panel fill. The lock preference persists in the **`nav_lock` cookie**,
+  read server-side by `Base.astro` so SSR already knows locked vs unlocked
+  before the first byte renders — no flash, and no dependency on `onMount`
+  (the retired `shell-nav-pinned` localStorage key is migrated once,
+  client-side, into the cookie). Below the rail minimum viewport width the
+  drawer presents even while locked. Every item is a `NavItem` over
+  **`NAV_SECTIONS`**, the optional titled
   grouping of the single **`NAV_ITEMS` registry**
   (`frontend/src/lib/components/shell/nav.ts`) — `/chatui/`,
   `/showcase/components/`, `/profile/` with their labels, icons and badge
