@@ -100,6 +100,7 @@ export const GALLERY_REGISTRY: GalleryRegistryEntry[] = [
   { path: "overlay/HoverCard.svelte", category: "overlay", hydration: "visible" },
   { path: "overlay/ScrollArea.svelte", category: "overlay", hydration: "visible" },
   { path: "overlay/Drawer.svelte", category: "overlay", hydration: "visible" },
+  { path: "overlay/FancyDrawer.svelte", category: "overlay", hydration: "visible" },
   { path: "overlay/ConfirmDialog.svelte", category: "overlay", hydration: "none" },
 
   // feedback/
@@ -116,6 +117,7 @@ export const GALLERY_REGISTRY: GalleryRegistryEntry[] = [
   { path: "theme/ThemeModeToggle.svelte", category: "theme", hydration: "visible" },
   { path: "theme/QuickThemeToggle.svelte", category: "theme", hydration: "none" },
   { path: "theme/ThemeCard.svelte", category: "theme", hydration: "load" },
+  { path: "theme/PaletteFields.svelte", category: "theme", hydration: "none" },
 
   // shell/ — the site's navigation chrome. NavItem/NavBadge/NavbarIcon are
   // exhibited inert in the gallery's SSR body (adr-22 rule 2); NavDrawer is
@@ -124,6 +126,7 @@ export const GALLERY_REGISTRY: GalleryRegistryEntry[] = [
   { path: "shell/NavItem.svelte", category: "shell", hydration: "none" },
   { path: "shell/NavBadge.svelte", category: "shell", hydration: "none" },
   { path: "shell/NavbarIcon.svelte", category: "shell", hydration: "none" },
+  { path: "shell/NavLockToggle.svelte", category: "shell", hydration: "none" },
   { path: "shell/NavDrawer.svelte", category: "shell", hydration: "visible" },
   { path: "shell/ChatDrawer.svelte", category: "shell", hydration: "load" },
 

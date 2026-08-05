@@ -46,6 +46,39 @@ export const es = {
   theme_to_dark: "Modo oscuro",
   theme_to_light: "Modo claro",
 
+  // Appearance card — curated collections (theme-packs.ts)
+  appearance_title: "Apariencia",
+  appearance_packs: "Colecciones",
+  appearance_packs_hint: "Aplica una paleta curada a ambos modos; ajustá y guardá después.",
+  appearance_pack_kodexarg: "kodexArg",
+  appearance_pack_jeremias: "Esmeralda",
+  appearance_pack_militar: "Militar",
+  appearance_pack_amber: "Ámbar",
+  appearance_bg_preset: "Fondo",
+  appearance_bg_default: "Default",
+  appearance_bg_melt: "Melt",
+  appearance_sidebar_side: "Lado del menú",
+  appearance_sidebar_left: "Izquierda",
+  appearance_sidebar_right: "Derecha",
+  appearance_mode_light: "Claro",
+  appearance_mode_dark: "Oscuro",
+  appearance_color_canvas: "Canvas",
+  appearance_color_dots: "Puntos",
+  appearance_color_surface: "Superficie",
+  appearance_color_foreground: "Texto",
+  appearance_color_primary: "Primario",
+  appearance_color_secondary: "Secundario",
+  appearance_color_accent: "Acento",
+  appearance_color_clear: "Limpiar color",
+  appearance_radius: "Radio",
+  appearance_reset: "Restablecer",
+  appearance_save: "Guardar",
+  appearance_saving: "Guardando…",
+  appearance_saved: "Apariencia guardada.",
+  appearance_incomplete: "Cada modo necesita al menos Canvas y Puntos antes de guardar.",
+  appearance_save_failed: "No se pudo guardar ({status}).",
+  appearance_save_failed_network: "No se pudo guardar por un problema de red.",
+
   // /chatui/ — router chat surface ([[CHATBOT]], adr-15)
   chatui_router_title: "Router",
   chatui_composer_placeholder: "Escribí un mensaje",
@@ -159,6 +192,8 @@ export const es = {
   shell_nav_showcase: "Showcase",
   shell_nav_profile: "Perfil",
   shell_nav_badge_pending: "pendientes",
+  shell_nav_lock_aria: "Fijar el menú como riel",
+  shell_nav_unlock_aria: "Volver el menú a panel flotante",
 
   // gallery — demo copy and sample-data labels
   demo_dialog_trigger: "Abrir diálogo",
@@ -219,6 +254,11 @@ export const es = {
   drawer_open: "Abrir panel",
   drawer_close: "Cerrar panel",
   drawer_empty: "Sin contenido",
+
+  // FancyDrawer — component defaults (adr-22 zero-prop state)
+  fancy_drawer_open: "Abrir panel",
+  fancy_drawer_close: "Cerrar panel",
+  fancy_drawer_empty: "Sin contenido",
   demo_drawer_note:
     "Los dos drawers están anclados a los bordes de la ventana y arrancan plegados: usá las pestañas de la izquierda y la derecha para deslizarlos.",
   demo_drawer_left_title: "Navegación",

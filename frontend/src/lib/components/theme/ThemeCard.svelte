@@ -1,17 +1,15 @@
 <!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
-     Governed by: [[adr-08-frontend-and-design-system]]
+     Governed by: [[adr-08-frontend-and-design-system]] · [[adr-23-showcase-ready-components]]
      Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[MELT-UI]]
      LIVE-DOC:END -->
 
 <!--
   Rung 3 of the interactivity ladder (docs/bdds/bdd-06-profile-theming.md):
-  five continuously-varying, client-owned controls that must repaint the
-  page's CSS custom properties before any server round trip. Mode uses
-  ThemeModeToggle ([[MELT-UI]]); bgPreset uses a second melt/builders
-  control (RadioGroup) inline below — the same escape-hatch reasoning, a
-  shipped shadcn-svelte toggle-group is not vendored in this template.
+  Colecciones (packs), Fondo, Lado del menú, two dual-mode PaletteFields, and
+  radius — all client-owned, repainting via applyTheme before any PATCH.
 -->
 <script lang="ts">
+  import { onMount } from "svelte";
   import { RadioGroup } from "melt/builders";
   import { Card, CardHeader, CardTitle, CardContent } from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
@@ -19,116 +17,189 @@
   import { Input } from "$lib/components/ui/input";
   import { Alert } from "$lib/components/ui/alert";
   import { cn } from "$lib/utils";
+  import PaletteFields from "$lib/components/theme/PaletteFields.svelte";
   import ThemeModeToggle from "$lib/components/theme/ThemeModeToggle.svelte";
   import { readCsrfTokenFromCookie } from "$lib/csrf";
   import {
     DEFAULTS,
-    COLOR_KEYS,
-    sanitizeColor,
+    MODES,
+    SIDEBAR_SIDES,
     sanitizeRadius,
     sanitizeThemeConfig,
+    resolvePalette,
     applyTheme,
     writeThemeCookie,
+    readThemeCookie,
     type ThemeConfig,
+    type ThemeColors,
     type ThemeMode,
     type ThemeBgPreset,
-    type ThemeColors,
+    type SidebarSide,
   } from "$lib/theme";
+  import {
+    THEME_PACK_IDS,
+    THEME_PACK_LABELS,
+    themeConfigFromPack,
+    type ThemePackId,
+  } from "$lib/theme-packs";
+  import { t } from "../../../i18n";
+  import type { MessageKey } from "../../../i18n";
   import type { Me } from "$lib/types/user";
 
   let {
     me = null,
     publicBackendUrl = "",
   }: {
-    /** `null` is the zero-prop default (adr-22 rule 1): the card falls back to
+    /** `null` is the zero-prop default (adr-23 rule 1): the card falls back to
      * DEFAULTS rather than a saved `theme_config`, and never throws. */
     me?: Me | null;
     publicBackendUrl?: string;
   } = $props();
 
-  type ColorState = Record<keyof ThemeColors, string>;
+  type Draft = {
+    mode: ThemeMode;
+    bgPreset: ThemeBgPreset;
+    sidebarSide: SidebarSide;
+    palettes: Record<ThemeMode, ThemeColors>;
+    radius: string;
+  };
+
   const BG_PRESETS: readonly ThemeBgPreset[] = ["default", "melt"];
 
-  function colorsFromConfig(config: ThemeConfig | undefined): ColorState {
-    return {
-      background: config?.colors?.background ?? "",
-      primary: config?.colors?.primary ?? "",
-      secondary: config?.colors?.secondary ?? "",
-      accent: config?.colors?.accent ?? "",
-    };
-  }
+  const BG_PRESET_LABELS: Record<ThemeBgPreset, MessageKey> = {
+    default: "appearance_bg_default",
+    melt: "appearance_bg_melt",
+  };
 
-  function snapshotFromConfig(config: ThemeConfig | undefined) {
+  const SIDEBAR_SIDE_LABELS: Record<SidebarSide, MessageKey> = {
+    left: "appearance_sidebar_left",
+    right: "appearance_sidebar_right",
+  };
+
+  const MODE_LABELS: Record<ThemeMode, MessageKey> = {
+    light: "appearance_mode_light",
+    dark: "appearance_mode_dark",
+  };
+
+  function draftFrom(config: ThemeConfig | undefined): Draft {
     return {
       mode: config?.mode ?? DEFAULTS.mode,
       bgPreset: config?.bgPreset ?? DEFAULTS.bgPreset,
-      colors: colorsFromConfig(config),
+      sidebarSide: config?.sidebarSide ?? DEFAULTS.sidebarSide,
+      palettes: {
+        light: { ...(config?.colors?.light ?? {}) },
+        dark: { ...(config?.colors?.dark ?? {}) },
+      },
       radius: config?.radius ?? "",
     };
   }
 
-  // Last-confirmed state: seeded from `me.theme_config` (SSR-provided),
-  // updated only after a successful Save. Reset reverts the draft to this.
-  let saved = $state(snapshotFromConfig(me?.theme_config));
+  function blobFrom(source: Draft): ThemeConfig {
+    const blob: ThemeConfig = {
+      mode: source.mode,
+      bgPreset: source.bgPreset,
+      sidebarSide: source.sidebarSide,
+    };
 
-  let mode = $state<ThemeMode>(saved.mode);
-  let bgPreset = $state<ThemeBgPreset>(saved.bgPreset);
-  let colors = $state<ColorState>({ ...saved.colors });
-  let radius = $state(saved.radius);
+    const colors: NonNullable<ThemeConfig["colors"]> = {};
+    for (const mode of MODES) {
+      if (Object.keys(source.palettes[mode]).length > 0) colors[mode] = source.palettes[mode];
+    }
+    if (Object.keys(colors).length > 0) blob.colors = colors;
 
+    const safeRadius = sanitizeRadius(source.radius);
+    if (safeRadius) blob.radius = safeRadius;
+
+    return sanitizeThemeConfig(blob);
+  }
+
+  const initialConfig = sanitizeThemeConfig(me?.theme_config);
+  let saved = $state(draftFrom(initialConfig));
+  let draft = $state(draftFrom(initialConfig));
+
+  let lastApplied: string | null = null;
   let saving = $state(false);
   let error = $state("");
   let success = $state(false);
 
+  onMount(() => {
+    const cookieBlob = readThemeCookie();
+    const seedSource =
+      Object.keys(cookieBlob).length > 0 ? sanitizeThemeConfig(cookieBlob) : initialConfig;
+    const seeded = draftFrom(seedSource);
+    seeded.palettes.light = resolvePalette(seeded.palettes.light);
+    seeded.palettes.dark = resolvePalette(seeded.palettes.dark);
+    draft = seeded;
+    saved = {
+      ...seeded,
+      palettes: {
+        light: { ...seeded.palettes.light },
+        dark: { ...seeded.palettes.dark },
+      },
+    };
+  });
+
   const bgGroup = new RadioGroup({
-    value: () => bgPreset,
+    value: () => draft.bgPreset,
     onValueChange: (value) => {
-      bgPreset = value as ThemeBgPreset;
+      draft.bgPreset = value as ThemeBgPreset;
     },
     orientation: () => "horizontal",
   });
 
-  function buildDraftBlob(): ThemeConfig {
-    const blob: ThemeConfig = { mode, bgPreset };
-    const sanitizedColors: ThemeColors = {};
-    for (const key of COLOR_KEYS) {
-      const safe = sanitizeColor(colors[key]);
-      if (safe) sanitizedColors[key] = safe;
-    }
-    if (Object.keys(sanitizedColors).length > 0) blob.colors = sanitizedColors;
-    const safeRadius = sanitizeRadius(radius);
-    if (safeRadius) blob.radius = safeRadius;
-    return blob;
-  }
+  const sideGroup = new RadioGroup({
+    value: () => draft.sidebarSide,
+    onValueChange: (value) => {
+      draft.sidebarSide = value as SidebarSide;
+    },
+    orientation: () => "horizontal",
+  });
 
-  const draftBlob = $derived.by(buildDraftBlob);
+  const draftBlob = $derived.by(() => blobFrom(draft));
 
-  // Live preview (bdd-06 "Live preview before save"): every control change
-  // repaints the page immediately, client-local — no request fires here.
+  const canSave = $derived(
+    Boolean(draft.palettes.light.canvas && draft.palettes.light.dots) &&
+      Boolean(draft.palettes.dark.canvas && draft.palettes.dark.dots),
+  );
+
   $effect(() => {
+    const key = JSON.stringify(draftBlob);
+    if (key === lastApplied) return;
+    lastApplied = key;
     applyTheme(draftBlob);
   });
 
-  function resetDraft(): void {
-    mode = saved.mode;
-    bgPreset = saved.bgPreset;
-    colors = { ...saved.colors };
-    radius = saved.radius;
+  function applyPack(id: ThemePackId): void {
+    const next = themeConfigFromPack(id, blobFrom(draft));
+    draft = draftFrom(next);
     error = "";
     success = false;
   }
 
-  /** `type="color"` needs a valid 6-digit hex at all times; this is a
-   * display-only fallback swatch for an OKLCH/HSL/RGB or blank draft value —
-   * it never overwrites the actual typed value in the paired text input. */
-  function swatch(value: string): string {
-    return /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#888888";
+  function resetDraft(): void {
+    draft = {
+      mode: saved.mode,
+      bgPreset: saved.bgPreset,
+      sidebarSide: saved.sidebarSide,
+      palettes: {
+        light: { ...saved.palettes.light },
+        dark: { ...saved.palettes.dark },
+      },
+      radius: saved.radius,
+    };
+    error = "";
+    success = false;
   }
 
   async function save(): Promise<void> {
+    if (!canSave) {
+      error = t("appearance_incomplete");
+      return;
+    }
     saving = true;
     error = "";
     success = false;
+    const sideChanged = draft.sidebarSide !== saved.sidebarSide;
     try {
       const res = await fetch(`${publicBackendUrl}/api/me/`, {
         method: "PATCH",
@@ -140,37 +211,52 @@
         body: JSON.stringify({ theme_config: draftBlob }),
       });
       if (!res.ok) {
-        error = `Save failed (${res.status})`;
+        error = t("appearance_save_failed").replace("{status}", String(res.status));
         return;
       }
       const data = (await res.json()) as Me;
       const confirmed = sanitizeThemeConfig(data.theme_config);
-      saved = snapshotFromConfig(confirmed);
-      // Cookie mirror fires only on this confirmed 200 (bdd-06's
-      // error-handling clause) — never speculatively from the live-preview
-      // effect above.
+      saved = draftFrom(confirmed);
+      draft = draftFrom(confirmed);
       writeThemeCookie(confirmed);
       success = true;
+      if (sideChanged && typeof window !== "undefined") {
+        window.location.reload();
+      }
     } catch {
-      error = "Save failed";
+      error = t("appearance_save_failed_network");
     } finally {
       saving = false;
     }
   }
 </script>
 
-<Card class="w-full max-w-md">
-  <CardHeader>
-    <CardTitle>Appearance</CardTitle>
+<Card class="w-full max-w-3xl">
+  <CardHeader class="flex flex-row items-center justify-between gap-4">
+    <CardTitle>{t("appearance_title")}</CardTitle>
+    <ThemeModeToggle bind:mode={draft.mode} disabled={saving} />
   </CardHeader>
   <CardContent class="flex flex-col gap-6">
-    <div class="flex items-center justify-between gap-4">
-      <Label>Mode</Label>
-      <ThemeModeToggle bind:mode disabled={saving} />
+    <div class="flex flex-col gap-2">
+      <Label>{t("appearance_packs")}</Label>
+      <p class="text-sm text-muted-foreground">{t("appearance_packs_hint")}</p>
+      <div class="flex flex-wrap gap-2">
+        {#each THEME_PACK_IDS as packId (packId)}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={saving}
+            onclick={() => applyPack(packId)}
+          >
+            {t(THEME_PACK_LABELS[packId])}
+          </Button>
+        {/each}
+      </div>
     </div>
 
     <div class="flex flex-col gap-2">
-      <Label {...bgGroup.label}>Background preset</Label>
+      <Label {...bgGroup.label}>{t("appearance_bg_preset")}</Label>
       <div {...bgGroup.root} class="inline-flex gap-2">
         {#each BG_PRESETS as preset (preset)}
           {@const item = bgGroup.getItem(preset)}
@@ -180,55 +266,78 @@
             {...item.attrs}
             disabled={saving}
             class={cn(
-              "rounded-md border px-3 py-1.5 text-sm capitalize",
+              "rounded-md border px-3 py-1.5 text-sm",
               item.checked
                 ? "border-primary bg-primary/10 text-foreground"
                 : "border-input bg-background text-muted-foreground hover:bg-accent",
             )}
           >
-            {preset}
+            {t(BG_PRESET_LABELS[preset])}
           </Button>
         {/each}
       </div>
     </div>
 
-    {#each COLOR_KEYS as key (key)}
-      <div class="flex flex-col gap-1.5">
-        <Label for={`theme-${key}`} class="capitalize">{key}</Label>
-        <div class="flex items-center gap-2">
-          <input
-            type="color"
-            aria-label={`Pick a ${key} color`}
-            value={swatch(colors[key])}
-            oninput={(e) => (colors[key] = (e.currentTarget as HTMLInputElement).value)}
+    <div class="flex flex-col gap-2">
+      <Label {...sideGroup.label}>{t("appearance_sidebar_side")}</Label>
+      <div {...sideGroup.root} class="inline-flex gap-2">
+        {#each SIDEBAR_SIDES as side (side)}
+          {@const item = sideGroup.getItem(side)}
+          <Button
+            type="button"
+            variant="bare"
+            {...item.attrs}
             disabled={saving}
-            class="h-9 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-transparent p-1 disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          <Input
-            id={`theme-${key}`}
-            placeholder="oklch(...) / #hex — blank uses the default"
-            bind:value={colors[key]}
+            class={cn(
+              "rounded-md border px-3 py-1.5 text-sm",
+              item.checked
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-input bg-background text-muted-foreground hover:bg-accent",
+            )}
+          >
+            {t(SIDEBAR_SIDE_LABELS[side])}
+          </Button>
+        {/each}
+      </div>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      {#each MODES as mode (mode)}
+        <div class="flex flex-col gap-3 rounded-md border border-border p-3">
+          <h3 class="text-sm font-semibold">{t(MODE_LABELS[mode])}</h3>
+          <PaletteFields
+            bind:palette={draft.palettes[mode]}
             disabled={saving}
+            idPrefix={`appearance-${mode}`}
           />
         </div>
-      </div>
-    {/each}
+      {/each}
+    </div>
 
     <div class="flex flex-col gap-1.5">
-      <Label for="theme-radius">Radius</Label>
-      <Input id="theme-radius" placeholder="0.625rem" bind:value={radius} disabled={saving} />
+      <Label for="theme-radius">{t("appearance_radius")}</Label>
+      <Input
+        id="theme-radius"
+        placeholder="0.625rem"
+        bind:value={draft.radius}
+        disabled={saving}
+      />
     </div>
 
     {#if error}
       <Alert variant="destructive">{error}</Alert>
     {/if}
     {#if success}
-      <Alert>Theme saved.</Alert>
+      <Alert>{t("appearance_saved")}</Alert>
     {/if}
 
     <div class="flex items-center justify-end gap-2">
-      <Button type="button" variant="outline" onclick={resetDraft} disabled={saving}>Reset</Button>
-      <Button type="button" onclick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
+      <Button type="button" variant="outline" onclick={resetDraft} disabled={saving}>
+        {t("appearance_reset")}
+      </Button>
+      <Button type="button" onclick={save} disabled={saving || !canSave}>
+        {saving ? t("appearance_saving") : t("appearance_save")}
+      </Button>
     </div>
   </CardContent>
 </Card>
