@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+- group: nav-fsm-frosted-rail
+  priority: high
+  commit: cd05d08
+  changes:
+    - write: docs/adrs/adr-28-nav-fsm-frosted-rail.md — new ADR, ported from feedlot's adr-54-site-menu-lock-modes, rewritten for NavDrawer/FancyDrawer
+    - fix(frontend): FancyDrawer's closed peek caret was absolute left-full — outside the transformed element's hit box — now in-flow (calc(width + TAB_WIDTH) aside, calc(-100% + TAB_WIDTH) closed offset); toggles on click/tap as well as hover
+    - feat(frontend): shell/nav-fsm.ts — DOM-free FSM (preference x viewport -> presentation, derived never stored) shared by Base.astro (SSR) and NavDrawer (client)
+    - feat(frontend): nav_lock cookie replaces the shell-nav-pinned localStorage key as the lock-preference SSOT — SSR-readable like theme, no-flash; legacy key migrated once client-side, never written again
+    - feat(frontend): below the rail minimum width (43.75rem) the shell forces the floating drawer even when locked; preference persists so the rail returns once the viewport widens
+    - feat(frontend): locked rail gets a soft wash + backdrop blur (bg-background/45 backdrop-blur-[0.35rem]) so the melt dot-grid reads out of focus while labels stay sharp
+    - feat(frontend): Base.astro adds ClientRouter + a 150ms page-content crossfade; NavDrawer mounts with transition:persist so it survives navigation
+    - docs(design-system): rail minimum width, nav_lock cookie mechanics, dual-mount, frosted rail, page crossfade
+    - docs(componentization): NavDrawer/FancyDrawer/nav-fsm rows updated for the new mechanism
+    - docs(glossary): shell-nav-pinned retired to a migration-only pointer; nav_lock cookie and shell/nav-fsm rows added
+    - docs(bdd): bdd-12-navigation-shell's two-mode scenario updated for the cookie and the viewport fallback
+    - feat(tests): frontend/tests/nav-fsm.test.ts ported (presentation derivation, cookie parse/serialize, never-stored presentation); shell-nav.test.ts updated for the cookie mechanism and the in-flow caret
+
 - group: nav-spacing-polish
   priority: low
   commit: 8b174ca7

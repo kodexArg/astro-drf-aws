@@ -1,10 +1,12 @@
 ---
 /* LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
- * Governed by: [[adr-08-frontend-and-design-system]]
- * Docs: [[FRONTEND]]
+ * Governed by: [[adr-08-frontend-and-design-system]] · [[adr-28-nav-fsm-frosted-rail]]
+ * Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]]
  * LIVE-DOC:END */
 import "../styles/app.css";
+import { ClientRouter, fade } from "astro:transitions";
 import { parseThemeConfig, computeThemeSSRAttrs, DEFAULTS } from "$lib/theme";
+import { parseNavLockCookie } from "$lib/components/shell/nav-fsm";
 import { hasRole } from "$lib/auth";
 import { t } from "../i18n";
 import PageTitle from "$lib/components/primitives/titles/PageTitle.svelte";
@@ -14,6 +16,9 @@ import SessionBadge from "$lib/components/auth/SessionBadge.svelte";
 import NavDrawer from "$lib/components/shell/NavDrawer.svelte";
 import ChatDrawer from "$lib/components/shell/ChatDrawer.svelte";
 import type { Me } from "$lib/types/user";
+
+/** Soft page crossfade — short enough to feel calm, not sluggish. */
+const PAGE_FADE = fade({ duration: "150ms" });
 
 interface Props {
   title?: string;
@@ -32,6 +37,10 @@ const themeConfig = parseThemeConfig(Astro.cookies.get("theme")?.value);
 const { htmlClass, dataBgPreset, style } = computeThemeSSRAttrs(themeConfig);
 const navSide = themeConfig.sidebarSide ?? DEFAULTS.sidebarSide;
 const chatSide = navSide === "right" ? "left" : "right";
+
+// Lock preference from `nav_lock` cookie — same no-flash class as `theme`
+// ([[adr-28-nav-fsm-frosted-rail]]). Viewport band is CSS on first paint.
+const navPreference = parseNavLockCookie(Astro.cookies.get("nav_lock")?.value);
 // Assistant context is the current path identity only — never page text (adr-24).
 const pageIdentity = Astro.url.pathname.endsWith("/")
   ? Astro.url.pathname
@@ -45,6 +54,7 @@ const pageIdentity = Astro.url.pathname.endsWith("/")
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <PageTitle title={title} />
+    <ClientRouter />
   </head>
 
   <body>
@@ -64,7 +74,7 @@ const pageIdentity = Astro.url.pathname.endsWith("/")
       </Fragment>
     </LayoutHeader>
 
-    <PageCanvas>
+    <PageCanvas transition:animate={PAGE_FADE}>
       <slot />
     </PageCanvas>
 
@@ -72,7 +82,14 @@ const pageIdentity = Astro.url.pathname.endsWith("/")
       /* Role-gated: a role-less visitor is confined to `/`
          ([[adr-21-authorization-lobby]] rule 1). */
       hasRole(me) && (
-        <NavDrawer client:load pathname={Astro.url.pathname} side={navSide} navigates />
+        <NavDrawer
+          client:load
+          transition:persist="shell-nav"
+          pathname={Astro.url.pathname}
+          side={navSide}
+          preference={navPreference}
+          navigates
+        />
       )
     }
     {

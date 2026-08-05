@@ -130,6 +130,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
 - `frontend/src/lib/components/shell/index.ts`
+- `frontend/src/lib/components/shell/nav-fsm.ts`
 - `frontend/src/lib/components/shell/nav.ts`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`
@@ -386,6 +387,13 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `backend/apps/assistant/urls.py`
 - `backend/apps/assistant/views.py`
 
+## [[adr-28-nav-fsm-frosted-rail]]
+
+- `frontend/src/layouts/Base.astro`
+- `frontend/src/lib/components/overlay/FancyDrawer.svelte`
+- `frontend/src/lib/components/shell/NavDrawer.svelte`
+- `frontend/src/lib/components/shell/nav-fsm.ts`
+
 ## [[API]]
 
 - `backend/apps/assistant/models.py`
@@ -578,6 +586,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/header/LayoutHeader.svelte`
 - `frontend/src/lib/components/header/NavBar.svelte`
 - `frontend/src/lib/components/overlay/Drawer.svelte`
+- `frontend/src/lib/components/overlay/FancyDrawer.svelte`
 - `frontend/src/lib/components/primitives/PageCanvas.svelte`
 - `frontend/src/lib/components/primitives/Surface.svelte`
 - `frontend/src/lib/components/primitives/titles/PageHeading.svelte`
@@ -587,6 +596,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavItem.svelte`
 - `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
+- `frontend/src/lib/components/shell/nav-fsm.ts`
 - `frontend/src/lib/components/showcase/SurfaceDemo.svelte`
 - `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
 - `frontend/src/lib/components/theme/ThemeModeToggle.svelte`
@@ -598,6 +608,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 
 ## [[DESIGN-SYSTEM]]
 
+- `frontend/src/layouts/Base.astro`
 - `frontend/src/lib/components/auth/AuthPanel.svelte`
 - `frontend/src/lib/components/auth/ProfileForm.svelte`
 - `frontend/src/lib/components/auth/SessionBadge.svelte`
@@ -657,6 +668,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavItem.svelte`
 - `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
+- `frontend/src/lib/components/shell/nav-fsm.ts`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`
 - `frontend/src/lib/components/showcase/ContextMenuDemo.svelte`
@@ -818,6 +830,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
 - `frontend/src/lib/components/shell/index.ts`
+- `frontend/src/lib/components/shell/nav-fsm.ts`
 - `frontend/src/lib/components/shell/nav.ts`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`

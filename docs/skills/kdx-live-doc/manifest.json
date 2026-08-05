@@ -51,6 +51,10 @@
     { "glob": "frontend/src/lib/components/theme/ThemeModeToggle.svelte", "links": ["adr-23-showcase-ready-components", "COMPONENTIZATION", "MELT-UI"] },
     { "glob": "frontend/src/lib/components/theme/ThemeCard.svelte", "links": ["MELT-UI"] },
     { "glob": "frontend/src/middleware.ts", "links": ["adr-14-auth", "INFRASTRUCTURE"] },
-    { "glob": "compose.yaml", "links": ["adr-13-docker-compose", "DOCKER"] }
+    { "glob": "compose.yaml", "links": ["adr-13-docker-compose", "DOCKER"] },
+    { "glob": "frontend/src/lib/components/shell/nav-fsm.ts", "links": ["adr-28-nav-fsm-frosted-rail", "DESIGN-SYSTEM", "COMPONENTIZATION"] },
+    { "glob": "frontend/src/lib/components/shell/NavDrawer.svelte", "links": ["adr-28-nav-fsm-frosted-rail", "DESIGN-SYSTEM", "COMPONENTIZATION"] },
+    { "glob": "frontend/src/lib/components/overlay/FancyDrawer.svelte", "links": ["adr-28-nav-fsm-frosted-rail", "DESIGN-SYSTEM", "COMPONENTIZATION"] },
+    { "glob": "frontend/src/layouts/Base.astro", "links": ["adr-28-nav-fsm-frosted-rail", "DESIGN-SYSTEM"] }
   ]
 }
