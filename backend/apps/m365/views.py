@@ -1,10 +1,10 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-03-api-and-backend]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-07-api-and-backend]]
 Docs: [[BACKEND]]
 API: [[API]]
 LIVE-DOC:END"""
 
-"""Views for the m365 app-only Graph capability (adr-13-m365-graph).
+"""Views for the m365 app-only Graph capability (adr-16-m365-graph).
 
 hello/world are deliberately AllowAny with no session — a named, bounded
 owner override (rule 3). Auth is app-only client_credentials (rule 1): no

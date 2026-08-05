@@ -12,13 +12,18 @@ tags: [bdd, profile, theming, design-system]
 
 As a **signed-in user**, when I open `/profile`, I can set my appearance —
 `mode` (`light`/`dark`), a background `bgPreset` (`default` or the amber
-dotted `melt` preset), and custom colors for background/primary/secondary/
-accent plus a border radius — and see the change previewed live before I
-save it. Saving writes the choice to my account (`PATCH /api/me/`,
-`theme_config` — [[API]], [[GLOSSARY]]) and refreshes the `theme` cookie, so
-the same appearance renders server-side, with no flash, on my next visit or
-login. Everything the control panel touches is a CSS custom property —
-never a hard-coded value ([[DESIGN-SYSTEM]]).
+dotted `melt` preset), and **a separate custom palette held per mode** —
+`canvas`, `dots`, `surface`, `foreground`, `primary`, `secondary`, `accent`
+for light AND for dark at once ([[GLOSSARY]]: `theme_config.colors`) — plus
+a border radius, and see the change previewed live before I save it. I can
+also apply one of the four curated **collections** (`Colecciones`,
+[[GLOSSARY]]: theme pack) to fill both palettes in one click, then keep
+tuning individual colors before saving. Saving writes the choice to my
+account (`PATCH /api/me/`, `theme_config` — [[API]], [[GLOSSARY]]) and
+refreshes the `theme` cookie, so the same appearance renders server-side,
+with no flash, on my next visit or login, in whichever mode I'm in.
+Everything the control panel touches is a CSS custom property — never a
+hard-coded value ([[DESIGN-SYSTEM]]).
 
 ## Scenarios
 
@@ -26,14 +31,29 @@ never a hard-coded value ([[DESIGN-SYSTEM]]).
 
 ```gherkin
 Given a signed-in user on `/profile`
-When they choose a `mode`, a `bgPreset`, custom OKLCH colors for background,
-  primary, secondary, and accent, and a radius
+When they choose a `mode`, a `bgPreset`, custom OKLCH colors for canvas,
+  dots, surface, foreground, primary, secondary, and accent in BOTH the
+  light and the dark palette, and a radius
 And they click Save
 Then a `PATCH /api/me/` request is sent with `theme_config` set to
-  `{mode, bgPreset, colors, radius}` ([[API]], [[GLOSSARY]]: `theme_config`)
+  `{mode, bgPreset, colors: {light, dark}, radius}`
+  ([[API]], [[GLOSSARY]]: `theme_config`, `theme_config.colors`)
 And the response updates the same fields `GET /api/me/` would return
 And the `theme` cookie is refreshed to mirror the saved `theme_config`
   ([[DESIGN-SYSTEM]])
+```
+
+### Apply a curated collection
+
+```gherkin
+Given a signed-in user on `/profile` with the Appearance card open
+When they pick one of the four collections in `Colecciones`
+  ([[GLOSSARY]]: theme pack)
+Then both the light and the dark palette fields fill with that collection's
+  curated colors, live-previewed immediately in the active mode
+And no `PATCH /api/me/` request fires yet — applying a collection only
+  updates the unsaved draft, exactly like any other control on this card
+And they can still edit individual color fields before clicking Save
 ```
 
 ### Live preview before save
@@ -86,7 +106,7 @@ And no `theme_config` read or write is attempted
 ## Frontend half
 
 **Theme controls — Svelte island, rung 3 of the interactivity ladder**
-([[adr-04-frontend-and-design-system]] rule 3, [[FRONTEND]]). The panel
+([[adr-08-frontend-and-design-system]] rule 3, [[FRONTEND]]). The panel
 holds four continuously-varying, client-owned inputs (mode toggle, preset
 choice, four color pickers, a radius control) whose every interaction must
 repaint the page's CSS custom properties *before* any server round trip —
@@ -124,14 +144,15 @@ no `PUBLIC_*` addition ([[VARIABLES]]).
 
 Reuses the existing `PATCH /api/me/` / `GET /api/me/` row ([[API]]),
 **widened** to read and write a fourth field, `theme_config` — the JSON
-blob `{mode, bgPreset, colors: {background, primary, secondary, accent},
-radius}` ([[GLOSSARY]]: `theme_config`, `mode`, `bgPreset`;
-[[DESIGN-SYSTEM]]: user-configurable subset). As of this entry, [[API]]'s
+blob `{mode, bgPreset, colors: {light?: {canvas, dots, surface, foreground,
+primary, secondary, accent}, dark?: {...}}, radius}` ([[GLOSSARY]]:
+`theme_config`, `mode`, `bgPreset`; [[DESIGN-SYSTEM]]: user-configurable
+subset). As of this entry, [[API]]'s
 `PATCH /api/me/` contract lists only `nickname` and `avatar_visible` as
 write fields — widening it to `theme_config` is a prerequisite, its own
-reviewable [[API]] row change ([[adr-03-api-and-backend]] rule 3) before any
+reviewable [[API]] row change ([[adr-07-api-and-backend]] rule 3) before any
 [[TDD]] entry for this write path is drafted, per the
-[[adr-07-development-flow]] rule 4 checkpoint: does [[API]] solve the need
+[[adr-11-development-flow]] rule 4 checkpoint: does [[API]] solve the need
 today? No — the row must be added first, then the checkpoint reruns.
 `GET /api/me/`'s `UserSerializer` output needs the same widening so the
 island can prefill saved values on page load.
@@ -155,7 +176,7 @@ reverts to the last-saved theme except the field that failed. The `theme`
 cookie is refreshed only on a `200` from `PATCH /api/me/`, never
 speculatively from the client-side preview. `403` (session expired
 mid-edit) redirects to `/accounts/login/`, matching bdd-05's pattern. All
-authenticated responses are `no-store` ([[CACHE]], [[adr-06-cache]] rule 4).
+authenticated responses are `no-store` ([[CACHE]], [[adr-10-cache]] rule 4).
 
 ## Shadow-test spec
 

@@ -1,12 +1,12 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
 """Tests for the router's silent rate-abuse guard (#371, tdd-04-router-abuse-guard).
 
 State lives entirely in the shared DatabaseCache ([[CACHE]] layer 2) — no
-Redis ([[adr-06-cache]]). These tests exercise the pure cache-backed module
+Redis ([[adr-10-cache]]). These tests exercise the pure cache-backed module
 directly; RouteView wiring is covered in test_route_view.py.
 """
 

@@ -1,5 +1,5 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
@@ -10,7 +10,7 @@ Intent whose group gate is either unset (ungated) or one of the user's
 Django Groups, plus the two reserved outcomes (NO_MATCH, ESCALATE), which
 are always present regardless of registry contents (#104). No degenerate
 case exists: even a fresh Cognito user with zero group memberships gets a
-menu with at least the two reserved members ([[adr-15-chatbot-two-tier]]).
+menu with at least the two reserved members ([[adr-17-chatbot-two-tier]]).
 """
 
 from django.db.models import Q
@@ -21,7 +21,7 @@ from apps.router.models import ESCALATE, NO_MATCH, Intent
 def build_menu(user):
     """Return (menu, by_phrase): the ordered menu visible to `user`, and a
     phrase->Intent map built from the SAME permission-filtered queryset
-    ([[adr-15-chatbot-two-tier]] rules 2/3) — the sole source of truth for
+    ([[adr-17-chatbot-two-tier]] rules 2/3) — the sole source of truth for
     resolving a chosen phrase to its `Intent`; no caller may re-query
     `Intent` by phrase text alone.
 

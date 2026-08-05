@@ -24,6 +24,11 @@ dev = [
     "boto3==1.40.15",
 ]
 
+# Full green run (requires local Postgres 17 up via `docker compose up -d db`
+# from repo root, run from backend/):
+#   DEBUG=true DJANGO_SECRET_KEY=test DB_HOST=127.0.0.1 uv run pytest -q
+# `cognito_live`-marked tests skip cleanly without a live Cognito pool secret;
+# that is an opt-in gate, not a failure.
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py", "*_test.py", "tests.py"]

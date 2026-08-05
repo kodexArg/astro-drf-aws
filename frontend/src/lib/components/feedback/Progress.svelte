@@ -1,5 +1,5 @@
-<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]]
+<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+     Governed by: [[adr-08-frontend-and-design-system]]
      Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]]
      LIVE-DOC:END -->
 
@@ -7,7 +7,7 @@
   Progress bar on the melt/builders Progress ([[MELT-UI]]) — display-only, no
   trigger and no user interaction, so it carries no `onValueChange`: a
   zero-prop call falls back to the builder's own `value=0` default and
-  renders an empty bar, never throwing ([[adr-22-showcase-ready-components]]).
+  renders an empty bar, never throwing ([[adr-23-showcase-ready-components]]).
 -->
 <script lang="ts">
   import { Progress as ProgressBuilder } from "melt/builders";

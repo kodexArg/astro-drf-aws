@@ -22,7 +22,7 @@ Implications from day one of any backend design:
 3. **JSON API and HTML fragments are different contracts** — same domain model may expose a DRF JSON endpoint *and* a fragment endpoint; they are separate [[API]] rows. Never return JSON and expect HTMX to “understand” it without an explicit out-of-band agreement (default: HTML only).
 4. **Session/CSRF for mutations** — POST/PUT/PATCH/DELETE fragments use Django session auth + CSRF (cookie + header). Token-only SPA patterns are not the HTMX default here.
 
-Full backend rules: [[BACKEND]]. Ladder criteria: below. Enforcement: [[adr-05-htmx]].
+Full backend rules: [[BACKEND]]. Ladder criteria: below. Enforcement: [[adr-09-htmx]].
 
 ## Split of responsibilities
 
@@ -35,10 +35,10 @@ Full backend rules: [[BACKEND]]. Ladder criteria: below. Enforcement: [[adr-05-h
 
 ## Rules
 
-1. **No shadow routes** ([[adr-05-htmx]]): every fragment path is a row in [[API]]. A path that exists only inside an `hx-get` / `hx-post` string is invalid.
+1. **No shadow routes** ([[adr-09-htmx]]): every fragment path is a row in [[API]]. A path that exists only inside an `hx-get` / `hx-post` string is invalid.
 2. **Version pin** lives only in [[REQUIREMENTS]] (`htmx.org` **2.0.10**). Do not restate the number elsewhere as a second SSOT.
 3. **Adoption per feature** via [[BDD]] — HTMX is available; each feature still chooses ladder rung 2 vs 3.
-4. Fragment bodies are **HTML** (`text/html`), English identifiers/paths ([[LOCALIZATION]]); user-visible copy may localize at render time.
+4. Fragment bodies are **HTML** (`text/html`), English identifiers/paths ([[LOCALISATION]]); user-visible copy may localize at render time.
 5. Caching of fragments follows [[CACHE]]; authenticated fragments default `Cache-Control: no-store`.
 6. Prefer **dedicated fragment views** (or explicit branch on `HX-Request`) designed for partial HTML — do not bolt fragments onto a JSON viewset as an afterthought without an [[API]] row and tests.
 

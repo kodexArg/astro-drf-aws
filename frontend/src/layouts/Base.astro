@@ -1,6 +1,6 @@
 ---
-/* LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
- * Governed by: [[adr-04-frontend-and-design-system]]
+/* LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+ * Governed by: [[adr-08-frontend-and-design-system]]
  * Docs: [[FRONTEND]]
  * LIVE-DOC:END */
 import "../styles/app.css";
@@ -70,7 +70,7 @@ const pageIdentity = Astro.url.pathname.endsWith("/")
 
     {
       /* Role-gated: a role-less visitor is confined to `/`
-         ([[adr-20-authorization-lobby]] rule 1). */
+         ([[adr-21-authorization-lobby]] rule 1). */
       hasRole(me) && (
         <NavDrawer client:load pathname={Astro.url.pathname} side={navSide} navigates />
       )

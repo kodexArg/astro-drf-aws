@@ -2,7 +2,7 @@
 """markdown-vault MCP freshness guard (SessionStart).
 
 The markdown-vault-docs MCP is the first source of truth for docs/ content
-([[adr-18-markdown-vault-mcp]], [[AGENTS]]). A stale index answers confidently
+([[adr-20-markdown-vault-mcp]], [[AGENTS]]). A stale index answers confidently
 about prose that no longer matches, so this hook compares the newest docs/*.md
 mtime against the project-local index and warns when the vault has drifted — and
 tells the agent to bootstrap when the project-local venv/index does not exist yet.

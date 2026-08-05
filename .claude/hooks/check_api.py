@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """API contract hook (PostToolUse on Write|Edit).
 
-Enforces adr-03-api-and-backend rule 1 on every urls.py written: each route
+Enforces adr-07-api-and-backend rule 1 on every urls.py written: each route
 literal (path/re_path/router.register) must correspond to an endpoint row in
 docs/API.md. urls.py declares relative segments, so a route matches only when
 its full ordered sequence of literal segments appears — in order — within a
@@ -78,7 +78,7 @@ def check(path):
                 f"{path.name}: route '{route}' is not declared in docs/API.md — "
                 "its full segment sequence appears in no endpoint row; an endpoint "
                 "is valid if and only if it is declared there "
-                "(adr-03-api-and-backend). Add the row first, then the route."
+                "(adr-07-api-and-backend). Add the row first, then the route."
             )
     return problems
 

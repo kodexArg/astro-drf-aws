@@ -31,7 +31,7 @@ def test_required_docs_and_compose() -> None:
         ROOT / "compose.yaml",
         ROOT / ".env.example",
         ROOT / "docs" / "DOCKER.md",
-        ROOT / ".claude" / "rules" / "adr-09-docker-compose.md",
+        ROOT / ".claude" / "rules" / "adr-13-docker-compose.md",
     ):
         if not path.exists():
             fail(f"missing {path.relative_to(ROOT)}")
@@ -66,7 +66,7 @@ def test_no_per_app_compose() -> None:
 
 def test_docs_reserve_app_paths() -> None:
     docker = read(ROOT / "docs" / "DOCKER.md")
-    adr = read(ROOT / ".claude" / "rules" / "adr-09-docker-compose.md")
+    adr = read(ROOT / ".claude" / "rules" / "adr-13-docker-compose.md")
     for blob, label in ((docker, "DOCKER.md"), (adr, "adr-09")):
         if "backend/" not in blob or "frontend/" not in blob:
             fail(f"{label} must reserve backend/ and frontend/ paths")

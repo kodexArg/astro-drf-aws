@@ -1,5 +1,5 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
@@ -8,7 +8,7 @@ LIVE-DOC:END"""
 Creates (idempotently) a single demo user in the `ai_operators` group so a
 local/dev environment can exercise the RBAC gate without manual `/admin/`
 setup. This never touches the bootstrap superuser exception
-([[adr-10-auth]] rule 8) and never seeds a real human account — Operator
+([[adr-14-auth]] rule 8) and never seeds a real human account — Operator
 onboarding for real users stays manual group assignment in `/admin/`.
 """
 

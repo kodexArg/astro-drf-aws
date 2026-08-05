@@ -1,12 +1,12 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-24-page-context-assistant]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-25-page-context-assistant]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
 """Server-side validation of assistant link suggestions against the nav registry.
 
 A target outside the closed page set is dropped — never repaired, never parsed
-from prose ([[adr-24-page-context-assistant]] rule 4).
+from prose ([[adr-25-page-context-assistant]] rule 4).
 """
 
 from apps.users.serializers import DEFAULT_PAGE_CHOICES

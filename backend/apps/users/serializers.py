@@ -1,5 +1,5 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-10-auth]] · [[adr-03-api-and-backend]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-14-auth]] · [[adr-07-api-and-backend]]
 Docs: [[BACKEND]] · [[AUTH]]
 API: [[API]]
 LIVE-DOC:END"""
@@ -13,7 +13,7 @@ from apps.users.models import User
 READ_ONLY_FIELDS = ["sub", "email", "given_name", "family_name", "picture", "groups"]
 
 THEME_TOP_LEVEL_KEYS = {"mode", "bgPreset", "sidebarSide", "colors", "radius"}
-THEME_COLOR_KEYS = {"background", "primary", "secondary", "accent"}
+THEME_COLOR_KEYS = {"canvas", "dots", "surface", "foreground", "primary", "secondary", "accent"}
 THEME_MODE_CHOICES = {"light", "dark"}
 THEME_BG_PRESET_CHOICES = {"default", "melt"}
 THEME_SIDEBAR_SIDE_CHOICES = {"left", "right"}
@@ -28,7 +28,7 @@ _RADIUS_RE = re.compile(r"^[0-9]*\.?[0-9]+(px|rem|em|%|vh|vw|ch)$")
 
 # Mirrors the frontend shell's NAV_ITEMS hrefs (the closed nav registry,
 # [[API]] — POST /api/assistant/ask/), plus the empty default — the server is
-# the boundary, not the frontend's own routing ([[adr-24-page-context-assistant]]).
+# the boundary, not the frontend's own routing ([[adr-25-page-context-assistant]]).
 DEFAULT_PAGE_CHOICES = {
     "",
     "/",
@@ -71,12 +71,24 @@ class UserSerializer(serializers.ModelSerializer):
             colors = value["colors"]
             if not isinstance(colors, dict):
                 raise serializers.ValidationError("colors must be an object.")
-            unknown_colors = set(colors) - THEME_COLOR_KEYS
-            if unknown_colors:
-                raise serializers.ValidationError(f"Unknown colors key(s): {sorted(unknown_colors)}.")
-            for key, color in colors.items():
-                if not _is_valid_color(color):
-                    raise serializers.ValidationError(f"colors.{key} is not a valid color value.")
+            unknown_modes = set(colors) - THEME_MODE_CHOICES
+            if unknown_modes:
+                raise serializers.ValidationError(
+                    f"colors must be keyed by mode (light/dark); unknown key(s): {sorted(unknown_modes)}."
+                )
+            for mode, palette in colors.items():
+                if not isinstance(palette, dict):
+                    raise serializers.ValidationError(f"colors.{mode} must be an object.")
+                unknown_colors = set(palette) - THEME_COLOR_KEYS
+                if unknown_colors:
+                    raise serializers.ValidationError(
+                        f"Unknown colors.{mode} key(s): {sorted(unknown_colors)}."
+                    )
+                for key, color in palette.items():
+                    if not _is_valid_color(color):
+                        raise serializers.ValidationError(
+                            f"colors.{mode}.{key} is not a valid color value."
+                        )
         if "radius" in value:
             radius = value["radius"]
             if not isinstance(radius, str) or not _RADIUS_RE.match(radius):

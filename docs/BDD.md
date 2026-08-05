@@ -9,7 +9,7 @@ tags: [harness, bdd]
 # BDD — instruction manual for `docs/bdds/`
 
 > [!note] Active
-> Every user-facing feature enters here, wherever its subject exists ([[adr-07-development-flow]] r6). The template ships no `bdd-NN` entries; a project creates its own under `docs/bdds/`.
+> Every user-facing feature enters here, wherever its subject exists ([[adr-11-development-flow]] r6). The template ships no `bdd-NN` entries; a project creates its own under `docs/bdds/`.
 
 ## Purpose
 
@@ -53,4 +53,4 @@ Every entry follows the frontmatter contract and two-track flow above, ending in
 
 ## Naming
 
-Sequential `NN`, kebab-case slug, English — per [[LOCALIZATION]] and [[GLOSSARY]].
+Sequential `NN`, kebab-case slug, English — per [[LOCALISATION]] and [[GLOSSARY]].

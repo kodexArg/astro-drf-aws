@@ -8,17 +8,17 @@ tags: [harness, auth, cognito, backend]
 
 # AUTH
 
-Authentication doctrine for the template. Ruled by [[adr-10-auth]]. Authorization/RBAC design lives in [[BACKEND]]; the user table keys on the Cognito `sub` claim per [[BD]] and [[GLOSSARY]]; session storage follows [[CACHE]]; the `/accounts/` routing is owned by [[INFRASTRUCTURE]]; env/secret names are owned by [[VARIABLES]].
+Authentication doctrine for the template. Ruled by [[adr-14-auth]]. Authorization/RBAC design lives in [[BACKEND]]; the user table keys on the Cognito `sub` claim per [[BD]] and [[GLOSSARY]]; session storage follows [[CACHE]]; the `/accounts/` routing is owned by [[INFRASTRUCTURE]]; env/secret names are owned by [[VARIABLES]].
 
 > [!important] The one-line split
 > **Cognito answers "who are you?" — Django answers "what may you do?".** Identity is Cognito's only job. Every role, group, and permission decision is Django's, always. The two never trade places.
 
 ## Provider: Cognito, authentication only
 
-AWS Cognito (a user pool per project, region us-east-1) is the sole authentication provider. There is no second IdP and no home-grown password store in production ([[adr-10-auth]] rule 1). Cognito verifies credentials and issues OIDC tokens; nothing more is delegated to it.
+AWS Cognito (a user pool per project, region us-east-1) is the sole authentication provider. There is no second IdP and no home-grown password store in production ([[adr-14-auth]] rule 1). Cognito verifies credentials and issues OIDC tokens; nothing more is delegated to it.
 
 > [!warning] Cognito RBAC is prohibited
-> Cognito **groups**, `cognito:groups`, and any **custom-claim-as-role** are banned ([[adr-10-auth]] rule 2). Roles are **Django Groups** checked by **DRF permission classes** ([[BACKEND]]). A permission decision that reads a Cognito claim is a defect, even if it "works". The only claims Django trusts from a token are **identity** claims (`sub`, `email`, and the standard profile attributes it mirrors), never authority.
+> Cognito **groups**, `cognito:groups`, and any **custom-claim-as-role** are banned ([[adr-14-auth]] rule 2). Roles are **Django Groups** checked by **DRF permission classes** ([[BACKEND]]). A permission decision that reads a Cognito claim is a defect, even if it "works". The only claims Django trusts from a token are **identity** claims (`sub`, `email`, and the standard profile attributes it mirrors), never authority.
 
 ## The real flow — OIDC authorization code
 
@@ -37,11 +37,11 @@ The browser talks to Cognito; Django brokers the exchange and then owns the sess
 7. **`POST /accounts/logout/`** (CSRF-protected; logout is a state change, so never GET) flushes the Django session and redirects through the Cognito logout endpoint so the hosted-UI session is cleared too.
 
 > [!note] Why a Django session, not bearer tokens
-> HTMX submits from the browser and relies on Django session auth + CSRF ([[HTMX]] rule 4). A token-only SPA pattern would break the hypermedia path. So the token is consumed once, at callback, and thereafter the session is the source of truth ([[adr-10-auth]] rule 3). Sessions use Django's DB-backed machinery — **no Redis** ([[CACHE]]).
+> HTMX submits from the browser and relies on Django session auth + CSRF ([[HTMX]] rule 4). A token-only SPA pattern would break the hypermedia path. So the token is consumed once, at callback, and thereafter the session is the source of truth ([[adr-14-auth]] rule 3). Sessions use Django's DB-backed machinery — **no Redis** ([[CACHE]]).
 
 ### Endpoints (declared in [[API]] at stage 3)
 
-These routes are **declared in [[API]]** (added there at step A3) but **not yet implemented in code**. Project construction (stage 3) writes the code against those existing rows — the row precedes the code ([[adr-03-api-and-backend]], no shadow routes). The surface, all under the ALB-routed `/accounts/` prefix ([[INFRASTRUCTURE]]):
+These routes are **declared in [[API]]** (added there at step A3) but **not yet implemented in code**. Project construction (stage 3) writes the code against those existing rows — the row precedes the code ([[adr-07-api-and-backend]], no shadow routes). The surface, all under the ALB-routed `/accounts/` prefix ([[INFRASTRUCTURE]]):
 
 | Route | Role |
 |---|---|
@@ -68,7 +68,7 @@ Testing auth must not require a live Cognito pool. The template defines a **DEBU
 
 ## The split-origin cookie bridge
 
-The Astro origin calls the API with the session cookie ([[adr-10-auth]] rule 3), which fixes three settings decisions:
+The Astro origin calls the API with the session cookie ([[adr-14-auth]] rule 3), which fixes three settings decisions:
 
 - **`CORS_ALLOW_CREDENTIALS = True` is a constant in code, never env** — a structural consequence of session auth: a whitelisted origin still cannot send or receive cookies without it. Which origins are allowed stays env-driven (`CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS`, [[VARIABLES]]).
 - **Cookies keep Django's `SameSite=Lax` default.** Locally `localhost:4321 → localhost:8000` is same-site (browsers ignore ports for site comparison), and in cloud both services sit behind the one ALB-routed domain ([[INFRASTRUCTURE]]), so `Lax` holds in both layouts; `SameSite=None` would only become necessary if the frontend ever moved to a different registrable domain, and that would be its own decision here.
@@ -86,18 +86,18 @@ The user row and its profile fields are shaped so Cognito claims and DRF seriali
 | `family_name` | `family_name` | Mirrors the Cognito standard attribute |
 
 - Both the real callback (step 5) and dev login run the **same** `get_or_create(sub=…)` + attribute copy — the only difference is where the claims come from.
-- Authorization data (**Django Groups**, DRF permissions) is assigned and stored **in Django**, never derived from a claim ([[adr-10-auth]] rule 2).
+- Authorization data (**Django Groups**, DRF permissions) is assigned and stored **in Django**, never derived from a claim ([[adr-14-auth]] rule 2).
 
 ## Variables and secrets
 
 All Cognito configuration is declared in [[VARIABLES]] (rows added before this doc referenced them) and sourced only from Secrets Manager `alvs/<env>/<project>/cognito` ([[INFRASTRUCTURE]] Secrets): `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID`, `COGNITO_CLIENT_SECRET`, `COGNITO_DOMAIN`, `COGNITO_REGION`, plus the local `AUTH_DEV_MODE` switch.
 
 > [!warning] Zero Cognito on the frontend
-> The Astro task receives **no** Cognito variable and **no** secret of any kind ([[adr-10-auth]] rule 7, [[VARIABLES]]). The frontend only follows Django's redirects and carries the session cookie; it never sees a client secret, a token, or a pool ID.
+> The Astro task receives **no** Cognito variable and **no** secret of any kind ([[adr-14-auth]] rule 7, [[VARIABLES]]). The frontend only follows Django's redirects and carries the session cookie; it never sees a client secret, a token, or a pool ID.
 
 ## Authorization lobby
 
-Ruled by [[adr-20-authorization-lobby]]. A Cognito login opens a Django session, but a session alone is not enough to reach the app: every route requires the session AND membership in at least one Django Group, except `/` — the lobby ([[GLOSSARY]]: lobby) — which alone admits both an anonymous visitor and a role-less authenticated session.
+Ruled by [[adr-21-authorization-lobby]]. A Cognito login opens a Django session, but a session alone is not enough to reach the app: every route requires the session AND membership in at least one Django Group, except `/` — the lobby ([[GLOSSARY]]: lobby) — which alone admits both an anonymous visitor and a role-less authenticated session.
 
 ### The `AccessRequest` model
 
@@ -105,12 +105,12 @@ Ruled by [[adr-20-authorization-lobby]]. A Cognito login opens a Django session,
 
 ### From a grant to a Group membership
 
-A `post_save` signal on `AccessRequest` mirrors a non-null `role` write into `user.groups`, adding the user to the granted `Group`. The signal is the only path from an `AccessRequest` row to actual authority — the row grants nothing on its own. Enforcement reads Group membership, exactly as the rest of RBAC does ([[adr-10-auth]] rule 2); `AccessRequest` never becomes a second, parallel source of authority.
+A `post_save` signal on `AccessRequest` mirrors a non-null `role` write into `user.groups`, adding the user to the granted `Group`. The signal is the only path from an `AccessRequest` row to actual authority — the row grants nothing on its own. Enforcement reads Group membership, exactly as the rest of RBAC does ([[adr-14-auth]] rule 2); `AccessRequest` never becomes a second, parallel source of authority.
 
 ### The bootstrap allowlist
 
-Ruled by [[adr-21-bootstrap-allowlist-grant]]. `AUTH_BOOTSTRAP_ALLOWLIST` ([[GLOSSARY]], [[VARIABLES]]) holds comma-separated `email:group` pairs (group omitted → `admins`); `settings.py` parses it into an email→group map, empty when unset. In the shared provisioning path both login routes run — `upsert_user_from_claims`, the same `get_or_create` the real callback and dev-login share — an allowlisted email whose `AccessRequest.role` is still null gets that `role` filled, and the ordinary [[adr-20-authorization-lobby]] signal mirrors it into `user.groups`. The account escapes the lobby on its first request after first login, with no admin step and no re-login; the check re-runs on every login, so an entry added later grants on the next login. A non-null `role` is never touched (the admin stays authoritative), matching is case-insensitive on the email, and a pair naming a missing Group logs a warning and skips — a typo never breaks login and never creates a Group.
+Ruled by [[adr-22-bootstrap-allowlist-grant]]. `AUTH_BOOTSTRAP_ALLOWLIST` ([[GLOSSARY]], [[VARIABLES]]) holds comma-separated `email:group` pairs (group omitted → `admins`); `settings.py` parses it into an email→group map, empty when unset. In the shared provisioning path both login routes run — `upsert_user_from_claims`, the same `get_or_create` the real callback and dev-login share — an allowlisted email whose `AccessRequest.role` is still null gets that `role` filled, and the ordinary [[adr-21-authorization-lobby]] signal mirrors it into `user.groups`. The account escapes the lobby on its first request after first login, with no admin step and no re-login; the check re-runs on every login, so an entry added later grants on the next login. A non-null `role` is never touched (the admin stays authoritative), matching is case-insensitive on the email, and a pair naming a missing Group logs a warning and skips — a typo never breaks login and never creates a Group.
 
 ### The lobby, `/`
 
-A role-less authenticated session sees the pending-authorization legend on `/`, rendered from the `lobby_pending` message key ([[GLOSSARY]], [[LOCALIZATION]]) — the key is English; its Spanish rendered value belongs to the i18n layer, not to this document. Re-evaluation is per-request over the existing Django session: once an admin grants a role, the very next request — a plain refresh — carries the new Group membership and every other route opens normally. No token is re-minted and no cache sits between the grant and its enforcement ([[adr-06-cache]]).
+A role-less authenticated session sees the pending-authorization legend on `/`, rendered from the `lobby_pending` message key ([[GLOSSARY]], [[LOCALISATION]]) — the key is English; its Spanish rendered value belongs to the i18n layer, not to this document. Re-evaluation is per-request over the existing Django session: once an admin grants a role, the very next request — a plain refresh — carries the new Group membership and every other route opens normally. No token is re-minted and no cache sits between the grant and its enforcement ([[adr-10-cache]]).

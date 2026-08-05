@@ -1,9 +1,9 @@
-/* LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
- * Governed by: [[adr-04-frontend-and-design-system]]
+/* LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+ * Governed by: [[adr-08-frontend-and-design-system]]
  * Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[MELT-UI]]
  * LIVE-DOC:END */
 
-// Theme contract v1 — the SSOT for the `theme_config` blob shape, its
+// Theme contract v2 — the SSOT for the `theme_config` blob shape, its
 // sanitization rules, and the cookie mirror, matching docs/API.md's
 // `PATCH /api/me/` `theme_config` validation exactly and
 // docs/DESIGN-SYSTEM.md's user-configurable token subset. Kept DOM-free
@@ -16,17 +16,28 @@ export type ThemeBgPreset = "default" | "melt";
 export type SidebarSide = "left" | "right";
 
 export interface ThemeColors {
-  background?: string;
+  /** Page field — the `melt` preset's base, the large dark/light expanse. */
+  canvas?: string;
+  /** The dots drawn over the field. */
+  dots?: string;
+  /** Control and card fill — what `bg-background` resolves to. */
+  surface?: string;
+  /** Text over the surface. */
+  foreground?: string;
   primary?: string;
   secondary?: string;
   accent?: string;
 }
 
+/** One palette per mode. A mode absent from the blob simply has no
+ * overrides — `app.css` answers for it. */
+export type ThemePalettes = Partial<Record<ThemeMode, ThemeColors>>;
+
 export interface ThemeConfig {
   mode?: ThemeMode;
   bgPreset?: ThemeBgPreset;
   sidebarSide?: SidebarSide;
-  colors?: ThemeColors;
+  colors?: ThemePalettes;
   radius?: string;
 }
 
@@ -39,11 +50,29 @@ export const DEFAULTS: { mode: ThemeMode; bgPreset: ThemeBgPreset; sidebarSide: 
 export const SIDEBAR_SIDES: readonly SidebarSide[] = ["left", "right"];
 
 export const COLOR_KEYS: readonly (keyof ThemeColors)[] = [
-  "background",
+  "canvas",
+  "dots",
+  "surface",
+  "foreground",
   "primary",
   "secondary",
   "accent",
 ];
+
+export const MODES: readonly ThemeMode[] = ["light", "dark"];
+
+/** Which CSS custom property each editable color drives. `canvas` and `dots`
+ * are the two the page actually shows; `surface` is the control fill the
+ * retired `background` key used to write. */
+export const COLOR_VARS: Record<keyof ThemeColors, string> = {
+  canvas: "--canvas",
+  dots: "--melt-dots-color",
+  surface: "--background",
+  foreground: "--foreground",
+  primary: "--primary",
+  secondary: "--secondary",
+  accent: "--accent",
+};
 
 const COOKIE_NAME = "theme";
 
@@ -94,6 +123,15 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function sanitizePalette(value: Record<string, unknown>): ThemeColors {
+  const palette: ThemeColors = {};
+  for (const key of COLOR_KEYS) {
+    const safe = sanitizeColor(value[key] as string | undefined);
+    if (safe) palette[key] = safe;
+  }
+  return palette;
+}
+
 /** Narrows an arbitrary parsed value (cookie or `me.theme_config`) down to
  * the closed `ThemeConfig` shape, dropping unknown keys and any
  * enum/color/radius value that fails sanitization. Never throws. */
@@ -106,12 +144,24 @@ export function sanitizeThemeConfig(value: unknown): ThemeConfig {
   if (isSidebarSide(value.sidebarSide)) blob.sidebarSide = value.sidebarSide;
 
   if (isPlainObject(value.colors)) {
-    const colors: ThemeColors = {};
-    for (const key of COLOR_KEYS) {
-      const safe = sanitizeColor(value.colors[key] as string | undefined);
-      if (safe) colors[key] = safe;
+    const palettes: ThemePalettes = {};
+
+    // Pre-per-mode shape was one flat palette shared by both modes, with
+    // `background` where `surface` now is. Read as the palette of the mode
+    // the same blob declares; the other mode stays unset.
+    const legacy = sanitizePalette({
+      ...value.colors,
+      surface: value.colors.surface ?? value.colors.background,
+    });
+    if (Object.keys(legacy).length > 0) palettes[blob.mode ?? DEFAULTS.mode] = legacy;
+
+    for (const mode of MODES) {
+      if (!isPlainObject(value.colors[mode])) continue;
+      const palette = sanitizePalette(value.colors[mode]);
+      if (Object.keys(palette).length > 0) palettes[mode] = palette;
     }
-    if (Object.keys(colors).length > 0) blob.colors = colors;
+
+    if (Object.keys(palettes).length > 0) blob.colors = palettes;
   }
 
   const safeRadius = sanitizeRadius(value.radius as string | undefined);
@@ -158,10 +208,11 @@ export function computeThemeSSRAttrs(blob: ThemeConfig | null | undefined): Them
   const mode: ThemeMode = blob?.mode ?? DEFAULTS.mode;
   const bgPreset: ThemeBgPreset = blob?.bgPreset ?? DEFAULTS.bgPreset;
 
+  const palette = blob?.colors?.[mode] ?? {};
   const styleParts: string[] = [];
   for (const key of COLOR_KEYS) {
-    const safe = sanitizeColor(blob?.colors?.[key]);
-    if (safe) styleParts.push(`--${key}: ${safe}`);
+    const safe = sanitizeColor(palette[key]);
+    if (safe) styleParts.push(`${COLOR_VARS[key]}: ${safe}`);
   }
   const safeRadius = sanitizeRadius(blob?.radius);
   if (safeRadius) styleParts.push(`--radius: ${safeRadius}`);
@@ -175,7 +226,7 @@ export function computeThemeSSRAttrs(blob: ThemeConfig | null | undefined): Them
 
 /** Client-only: applies a theme blob to `root` (default
  * `document.documentElement`) for the live-preview path — every control
- * change in ThemeCard calls this before any `PATCH /api/me/` fires. */
+ * change in AppearanceCard calls this before any `PATCH /api/me/` fires. */
 export function applyTheme(
   blob: ThemeConfig | null | undefined,
   root: HTMLElement = document.documentElement,
@@ -184,9 +235,10 @@ export function applyTheme(
   root.classList.toggle("dark", attrs.htmlClass === "dark");
   root.setAttribute("data-bg-preset", attrs.dataBgPreset);
 
+  const palette = blob?.colors?.[blob?.mode ?? DEFAULTS.mode] ?? {};
   for (const key of COLOR_KEYS) {
-    const safe = sanitizeColor(blob?.colors?.[key]);
-    const varName = `--${key}`;
+    const safe = sanitizeColor(palette[key]);
+    const varName = COLOR_VARS[key];
     if (safe) root.style.setProperty(varName, safe);
     else root.style.removeProperty(varName);
   }
@@ -214,4 +266,62 @@ export function writeThemeCookie(blob: ThemeConfig): void {
   if (typeof document === "undefined") return;
   const value = encodeURIComponent(JSON.stringify(blob));
   document.cookie = `${COOKIE_NAME}=${value}; Path=/; Max-Age=31536000; SameSite=Lax`;
+}
+
+/** Normalizes any CSS color the token set may hold — `oklch()`, `hsl()`,
+ * `rgb()` — into hex: `#rrggbb`, or `#rrggbbaa` when the color is
+ * translucent. Returns `undefined` for a value the browser cannot parse.
+ *
+ * Rasterizing is the only reliable conversion: paint one pixel and read
+ * bytes (clamps wide-gamut tokens to sRGB — correct for a swatch). */
+export function toHexColor(value: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  const probe = document.createElement("span");
+  probe.style.color = "#000000";
+  probe.style.color = trimmed;
+  if (probe.style.color === "") {
+    probe.style.color = "#ffffff";
+    probe.style.color = trimmed;
+    if (probe.style.color === "") return undefined;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return undefined;
+  ctx.fillStyle = "#000000";
+  ctx.fillStyle = trimmed;
+  if (ctx.fillStyle === "#000000" && !/^#?0+$/i.test(trimmed.replace(/\s/g, ""))) {
+    // Ambiguous — try a second sentinel
+    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = trimmed;
+    if (ctx.fillStyle === "#ffffff") return undefined;
+  }
+  ctx.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+  const hex = (n: number) => n.toString(16).padStart(2, "0");
+  if (a < 255) return `#${hex(r)}${hex(g)}${hex(b)}${hex(a)}`;
+  return `#${hex(r)}${hex(g)}${hex(b)}`;
+}
+
+/** Seeds unset palette keys from the live computed stylesheet so a control
+ * the user has never set opens on the color that token actually paints. */
+export function resolvePalette(
+  existing: ThemeColors | undefined,
+  root: HTMLElement = document.documentElement,
+): ThemeColors {
+  const resolved: ThemeColors = { ...(existing ?? {}) };
+  const styles = getComputedStyle(root);
+  for (const key of COLOR_KEYS) {
+    if (resolved[key]) continue;
+    const raw = styles.getPropertyValue(COLOR_VARS[key]).trim();
+    if (!raw) continue;
+    const hex = toHexColor(raw);
+    if (hex) resolved[key] = hex;
+  }
+  return resolved;
 }

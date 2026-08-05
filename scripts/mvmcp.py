@@ -33,7 +33,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Operational pin; the version policy is owned by docs/REQUIREMENTS.md.
+# Operational pin; the version policy is owned by docs/constitution/REQUIREMENTS.md.
 VERSION = "3.0.4"
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -85,7 +85,7 @@ def server_env():
             "MARKDOWN_VAULT_MCP_READ_ONLY": "false",
             "MARKDOWN_VAULT_MCP_INDEX_PATH": str(DATA / "index.db"),
             "MARKDOWN_VAULT_MCP_STATE_PATH": str(DATA / "state.json"),
-            "MARKDOWN_VAULT_MCP_EXCLUDE": ".obsidian/**,.vscode/**",
+            "MARKDOWN_VAULT_MCP_EXCLUDE": ".obsidian/**,.vscode/**,skills/**,hooks/**,agents/**",
             "MARKDOWN_VAULT_MCP_INDEXED_FIELDS": "title,type,status,tags,created",
         }
     )

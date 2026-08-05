@@ -1,5 +1,5 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-02-initial-stack]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-06-initial-stack]]
 Docs: [[BACKEND]]
 LIVE-DOC:END"""
 

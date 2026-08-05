@@ -2,6 +2,130 @@
 
 ## [Unreleased]
 
+- group: fix-pack-label
+  priority: low
+  commit: b1c7d56
+  changes:
+    - fix(i18n): render the jeremias pack label as "Jeremías" in src/i18n/messages/es.ts — owner-authored pack name reversed from a prior "Esmeralda" substitution; internal id stays `jeremias` per adr-05 rules 3-4
+
+- group: theme-engine-appearance-card
+  priority: high
+  commit: 0471447
+  changes:
+    - feat(frontend): dual-mode theme engine — light/dark palettes stored client-side, 7-token palette set (canvas, dots, foreground, surface, border, ring, muted), computed pack compositions from four curated collections
+    - feat(frontend): Appearance card on /profile/ with theme pack selector, dual 7-row palette editors (swatch + hex + clear per row), radius input, mode toggle, save gate requiring canvas+dots in both modes
+    - feat(frontend): PaletteFields component — reusable palette editor with unset row seed-from-computed-token, adr-23 rule 2 safe (no mutating action on zero-prop invocation)
+    - feat(design-system): theme-packs.ts with four curated OKLCH collections (kodexarg, jeremias, militar, amber) shipped as baseline
+    - feat(backend): User.theme_config holds both light and dark palettes simultaneously, mode-keyed colors; validation rejects flat blobs with 400, legacy-flat READ fallback on render
+    - feat(backend): migration 0007 rewrites stored blobs forward (flat→mode-keyed) and reverse (background→surface rename)
+    - feat(frontend): showcase gallery rows for ThemeCard, PaletteFields
+    - feat(i18n): Spanish localizations for Colecciones, Fondo, palette editor labels in src/i18n/messages/es.ts
+    - feat(tests): frontend/tests/theme.test.ts and backend/apps/users/test_theme.py test suites
+    - feat(api): PATCH /api/me/ theme_config contract updated per adr-07 rule 3 — astro-drf-aws-api guardian verdict: valid
+    - docs(api): theme_config schema and palette-editor documentation
+    - docs(glossary): theme rows (theme_config, palette, canvas, dots, foreground, surface)
+    - docs(bdd): bdd-06-profile-theming updated
+
+- group: nav-rail-pin-mode-footer
+  priority: high
+  commit: 416a078
+  changes:
+    - feat(frontend): FancyDrawer component — overlay sibling of Drawer.svelte, not a fork per adr-23 rule 2
+    - feat(frontend): nav rail mode (permanent, docked, in-flow, dotted-canvas items) and floating panel mode (content-hugging, edge chevron tab, hover-open, leave cooldown, outside-click dismiss) flipped by padlock disc
+    - feat(frontend): NavLockToggle component — padlock disc control to switch between pinned rail and floating panel
+    - feat(frontend): pin state persistence via localStorage `shell-nav-pinned`, read on mount for flicker-free SSR
+    - feat(shell): nav footer (three discs: pin toggle, profile, theme) inside floating panel
+    - feat(shell): NavSection/NAV_SECTIONS capability for titled-section grouping; template ships 3 existing routes, no invented content
+    - feat(frontend): showcase gallery rows for nav components
+    - feat(tests): shell-nav.test.ts with negative-assertion guard grepping source for feedlot-domain terms (verify non-inclusion)
+    - feat(glossary): NAV_SECTIONS and shell-nav-pinned rows added per adr-05 rule 1
+    - refactor(adr-26): NavDrawer file-header comment trimmed from 12 lines to 3 lines; moved design rationale to bdd-12 per adr-26 rules 1–2
+    - chore(guardian): astro-drf-aws-adr returned violation on batch — defects fixed (comment trim + GLOSSARY rows); footer theme disc client-only cookie write confirmed consistent with QuickThemeToggle precedent; no violations remain
+    - docs(bdd): bdd-12-navigation-shell updated
+
+- group: agnostic-guardian-dispatch
+  priority: high
+  commit: 2d8ca11
+  changes:
+    - feat(harness): guardian dispatch moved to docs/hooks/ — runtime-agnostic (python3-stdlib + git), runnable standalone by any agent/human/CI step; computes batch, matches watchlists, names owed guardians, exits 1 when owed and 0 when none
+    - feat(harness): --bundle emits dispatch payload (owed guardians, hit files, scoped diff, live ADR use_case index built from frontmatter)
+    - feat(harness): docs/hooks/pre-commit speaks guardian-dispatch at commit time (warn-only, manual `ln -s` install, never auto-installed)
+    - refactor(adr): adr-03-guardians edited in place — two-place watchlist requirement moved to REJECTED with reason it lost (single machine-readable source vs. two writable copies); rule 8 (machine-copy source) and rule 9 (--bundle payload) added
+    - refactor(agents): guardians astro-drf-aws-{prd,adr,api} frontmatter consolidated to single `watch:` glob list — no duplicate lists, no drift
+    - refactor(harness): .claude/hooks/dispatch_guardians.py survives as Claude PostToolUse safety net but now delegates to docs/hooks/guardian-dispatch; carries no watchlist dict, verified by test
+    - test(harness): tests/test_nudge_hooks.py and tests/test_guardian_identity_triangle.py verified green (8/8, 3/3)
+
+- group: issue-delivery-cast
+  priority: high
+  commit: 451be1a
+  changes:
+    - feat(harness): the kwf-* cast (18 agents + 18 souls) — the canonical, runtime-agnostic SSOT for the party shape under adr-04 rule 7
+    - feat(harness): triage-and-fix playbook (SKILL.md, bin/kwf-deps, references/, extras/, tests/) — the manual for issue delivery cast mechanics, node contracts, phases, tiers
+    - feat(harness): bin/kwf-deps (python3 stdlib + gh) implements requires:<N>/deferred PR-requirement labels and defer cascade (31/31 tests green)
+    - feat(harness): docs/RUNTIMES.md new — runtime mapping for dispatch across Claude Code, Kimi Code CLI, Cursor/Grok; states honestly where each runtime loses a capability
+    - refactor(adr): adr-04-issue-delivery gained rules 7 (the cast as canonical SSOT, pre-existing kdx-wf-triage-and-fix as Claude rendering, neither supersedes) and 8 (PR-requirement labels and bin/kwf-deps spec) with no REJECTED entry (no prior cast policy existed to retire)
+
+- group: assertion-review-integrity-gate
+  priority: high
+  commit: a866b7c
+  changes:
+    - feat(harness): assertion-review skill new — reviewer for assertions family; interprets each law, resolves RELATED links, confirms proving tests pass via docs/TDD.md method, stamps verified only when tests pass
+    - feat(harness): scripts/check_harness_integrity.py new — deterministic stdlib gate over docs/skills/ and docs/agents/ (frontmatter validity, name==dirname, referenced files exist, agent model allowlist, HARNESS.md inventory matching disk bidirectionally); reports and never fixes; tests prove both clean pass and synthetic violations
+    - fix(harness): four git-tracked files with unparseable YAML frontmatter repaired (unquoted `: ` inside plain-scalar description — tolerated by Claude's loader but fatal to stricter parsers, breaking cross-runtime reach docs/RUNTIMES.md promises)
+    - fix(agents): docs/agents/wf-mage.md repaired — `model: fable` outside allowlist, contrary to orchestrator doctrine; changed to valid model
+    - refactor(docs): HARNESS.md and GLOSSARY.md rows added for triage-and-fix, assertion-review, kwf-* cast, souls, guardian-dispatch, RUNTIMES per adr-05 rule 1
+    - test(harness): all 84 skill/agent/soul frontmatters now parse under strict yaml.safe_load; harness integrity 5/5 green; nudge hooks 8/8, guardian triangle 3/3 verified; guardian-adr confirmed compliant on in-place ADR edits
+
+- group: harness-relocation-to-docs
+  priority: high
+  commit: 51871d4
+  changes:
+    - refactor(harness): skills (20) and agents (26) relocated to docs/ as single real copies; .claude/skills, .claude/agents, .agents/agents, root skills/ become symlinks to their docs/ homes per harness-default layout (replaces two-real-copy vendored model)
+    - refactor(adr): adr-02-harness edited in place — two-copy policy moved to REJECTED section with reason it lost (single real + links vs multiple writable copies); inventory corrected to 20 skills / 26 agents
+    - refactor(harness): vault excludes skills/hooks/agents from prose index (scripts/mvmcp.py) — skill SKILL.md names collide with basename-uniqueness in live-doc resolver
+    - chore(hooks): all nine Claude-lifecycle hooks remain under .claude/hooks/ (docs/hooks/ reserved empty for future host-agnostic hooks per constitution)
+    - docs: docs/constitution/HARNESS.md + CONVENTION.md updated; AGENTS.md reference updates
+
+- group: assertions-family
+  priority: normal
+  commit: 14df183
+  changes:
+    - feat(constitution): docs/assertions/ tier added with four entries — discipline plus three proven assertions (zero-props / group-gated-rbac / explicit-cache-control), each linked to a test demonstrating it
+    - refactor(adr): adr-01-constitution edited in place to name assertions as numbered knowledge family; rule 7 added — assertions are owner-reserved laws, and on conflict the assertion is the source of truth; they stay few
+    - refactor(docs): docs/TDD.md absorbed tests-first assertion method rather than spawning second prose file on naming collision
+    - chore(backend): backend/pyproject.toml documents verified green-suite command — 244 passed / 3 skipped / 0 failed / 0 errors; frontend 817/817, compose 6/6, nudge hooks 7/7, guardian triangle 2/2
+
+- group: constitution-tier-migration
+  priority: high
+  commit: c6a685a
+  changes:
+    - refactor(constitution): docs/ reorganized to docs/constitution/ tier; PRD.md, REQUIREMENTS.md, HARNESS.md, INFRASTRUCTURE.md (first five as git renames)
+    - docs(localization): LOCALIZATION renamed to LOCALISATION (harness-default spelling)
+    - refactor(agents): AGENTS.md ABC gate rewritten to four-step authority order — PRD > constitution tier > ADRs > docs; Structure section updated; PRD.md reconciled to same four-layer order with API named as endpoint SSOT and third ABC check
+    - chore(state): new tracked state/ root directory (contents gitignored)
+
+- group: adr-corpus-migration
+  priority: high
+  commit: b448c70
+  changes:
+    - refactor(adrs): entire corpus migrated to harness-default shape — 7-field frontmatter (title/type/category/use_case/created/modified/tags) and five L2 sections (CONTEXT/ASSERTIONS/FORBIDDEN/REJECTED/RELATED)
+    - refactor(adrs): `status` field, supersession, `defered`, and docs/obsolete/ retired; in-place editing now universal
+    - refactor(adrs): adr-00..adr-04 became doctrine files; former adr-11-guardians, adr-14-harness, adr-19-issue-worktree-pr absorbed as named additions
+    - refactor(adrs): 21 product ADRs renumbered to 05-25 with every rule's force preserved
+    - feat(adrs): two new ADRs — adr-26-comment-brevity (with docs/CODE-COMMENTS.md) and adr-27-derived-project-deploy-identity (closes fork deploy-account footgun)
+    - chore(harness): check_adr.py rewritten to enforce new frontmatter and section shape
+
+- group: relink-sweep
+  priority: normal
+  commit: b00237e
+  changes:
+    - refactor(docs): 328 old-numbered ADR wikilinks repointed across 38 documents
+    - refactor(live-doc): 249 file live-doc blocks regenerated by kdx-live-doc linker after manifest renumber (blocks never hand-authored per adr-19)
+    - docs: docs/CODEMAP.md regenerated as inverse index
+    - refactor(harness): load_ssot.py made path-resistant (basename resolution prevents silent breakage on doc moves); dispatch_guardians.py repointed with basename fallback
+    - refactor(agents): four guardian/worker definitions corrected; -adr guardian rewritten from supersession ritual to in-place/REJECTED model; watchlists synchronized with hook
+    - test(verif): frontend 817/817, compose 6/6, backend 74 pass; linker drift:0; ADR corpus compliant, API surface valid, PRD drift closed
+
 - group: oidc-immutable-sub
   priority: high
   commit: pending

@@ -1,6 +1,6 @@
 ---
-/* LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
- * Governed by: [[adr-04-frontend-and-design-system]]
+/* LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+ * Governed by: [[adr-08-frontend-and-design-system]]
  * Docs: [[FRONTEND]]
  * LIVE-DOC:END */
 import Base from "../layouts/Base.astro";
@@ -13,7 +13,7 @@ import { t } from "../i18n";
 const me = await loadSession(Astro.request);
 // A role-less session bounced off a gated page arrives with `?denied=1`
 // (requireRole, $lib/authGate) — surface a visible reason, not a silent
-// redirect ([[adr-20-authorization-lobby]]).
+// redirect ([[adr-21-authorization-lobby]]).
 const denied = Astro.url.searchParams.get(DENIED_QUERY) === "1";
 // Signed-in with zero groups = lobby pending (adr-20); anonymous sees shell only.
 const pending = me !== null && !hasRole(me);

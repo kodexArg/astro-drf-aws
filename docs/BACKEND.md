@@ -17,15 +17,15 @@ Rules for the Django/DRF service — one of the two Fargate services ([[INFRASTR
 - The service runs an ASGI server on port 8000, websockets-capable (`/ws/` prefix — routing in [[INFRASTRUCTURE]]). The server choice is pinned in [[REQUIREMENTS]].
 - Git follows [[GH]]: feature work merges to `main`; production is `prod`.
 
-## Async ([[adr-16-async-mandatory]])
+## Async ([[adr-18-async-mandatory]])
 
 - **Async is the default for new views**, not a stopgap wrapped around sync code. The owner's reason: results are meant to reach the browser as they arrive, not after the whole response is built.
 - **Server-Sent Events is the default streaming mechanism**: an `async def` view returning `StreamingHttpResponse` over an async generator. No Django Channels, no channel layer, no new infrastructure — it rides the existing ASGI server and crosses the ALB like any other HTTP response.
-- **WebSockets are a reserved escalation** at the `/ws/` prefix, for a need SSE genuinely cannot meet (bidirectional push). They are not adopted by default, and only ever in a shape that needs no cross-process channel layer — Django Channels' production channel layer is Redis-backed, and Redis is prohibited outright ([[CACHE]], [[adr-06-cache]]). A WebSocket design that would require fan-out across Fargate tasks is not buildable in this stack.
+- **WebSockets are a reserved escalation** at the `/ws/` prefix, for a need SSE genuinely cannot meet (bidirectional push). They are not adopted by default, and only ever in a shape that needs no cross-process channel layer — Django Channels' production channel layer is Redis-backed, and Redis is prohibited outright ([[CACHE]], [[adr-10-cache]]). A WebSocket design that would require fan-out across Fargate tasks is not buildable in this stack.
 - A sync view is still permitted where a stated reason applies (e.g. a library with no async path); it is the exception now, not the norm.
 - **Bedrock calls (the router's inference client) use `boto3` wrapped in `asgiref.sync_to_async`, not `aiobotocore`.** boto3 is already the project's one AWS SDK dependency ([[REQUIREMENTS]]); an async view calling it through `sync_to_async` gets the async signature without adding and maintaining a second, less mainstream AWS SDK. Revisit only if measured latency proves the thread-pool wrap is a real bottleneck — never assumed up front.
 
-Once the base template is finished, ALL backend code is produced through the TDD flow ([[TDD]] → `docs/tdds/`), never written directly; a backend diff without a corresponding TDD entry is invalid ([[adr-07-development-flow]]).
+Once the base template is finished, ALL backend code is produced through the TDD flow ([[TDD]] → `docs/tdds/`), never written directly; a backend diff without a corresponding TDD entry is invalid ([[adr-11-development-flow]]).
 
 ## Settings philosophy
 
@@ -35,7 +35,7 @@ Once the base template is finished, ALL backend code is produced through the TDD
 
 ## Cross-cutting rules (owners linked)
 
-- Code is English without exception — identifiers, comments, docstrings, commit messages ([[LOCALIZATION]]).
+- Code is English without exception — identifiers, comments, docstrings, commit messages ([[LOCALISATION]]).
 - Naming authority is [[GLOSSARY]]: new domain nouns are registered there before they appear in code.
 - Caching follows [[CACHE]]. **Redis is prohibited** — do not add it, do not depend on packages that require it.
 - Database rules (engine, migrations, data conventions) are owned by [[BD]].
@@ -62,9 +62,9 @@ Once the base template is finished, ALL backend code is produced through the TDD
 
 `bootstrap_admin` (management command, `apps/users/management/commands/bootstrap_admin.py`) idempotently creates or updates a `django.contrib.admin` superuser row from `DJANGO_SUPERUSER_EMAIL` / `DJANGO_SUPERUSER_PASSWORD` ([[VARIABLES]]), read directly via `os.environ`. It runs on every container boot ([[DOCKER]]'s equivalent in `backend/Dockerfile`, before the ASGI server starts) — safe to re-run: absent vars skip cleanly, present vars upsert the row and rotate its password.
 
-This is orthogonal to `AUTH_DEV_MODE` and [[adr-10-auth]] rule 6: that rule bounds the DEBUG-only session/OIDC dev-login path, not a `django.contrib.admin` superuser row. A superuser is expected to exist in prod, so no deploy-time system check rejects this command's presence or output.
+This is orthogonal to `AUTH_DEV_MODE` and [[adr-14-auth]] rule 6: that rule bounds the DEBUG-only session/OIDC dev-login path, not a `django.contrib.admin` superuser row. A superuser is expected to exist in prod, so no deploy-time system check rejects this command's presence or output.
 
-**The `/admin/` login field is `sub`, not email.** `User.USERNAME_FIELD = "sub"` ([[adr-10-auth]] rule 5), so the bootstrap row is keyed on the fixed constant `sub="bootstrap-admin"` — that constant, not `DJANGO_SUPERUSER_EMAIL`'s value, is what goes in the login form's first field. `DJANGO_SUPERUSER_EMAIL` only sets the row's `email` column for display/audit; it authenticates nothing.
+**The `/admin/` login field is `sub`, not email.** `User.USERNAME_FIELD = "sub"` ([[adr-14-auth]] rule 5), so the bootstrap row is keyed on the fixed constant `sub="bootstrap-admin"` — that constant, not `DJANGO_SUPERUSER_EMAIL`'s value, is what goes in the login form's first field. `DJANGO_SUPERUSER_EMAIL` only sets the row's `email` column for display/audit; it authenticates nothing.
 
 On local Compose, `DJANGO_SUPERUSER_PASSWORD` in `.env` needs its literal `$` doubled (Compose's own `$$`→`$` interpolation applies to `.env` values) — a password containing `$$$` must be written as `$$$$$$` in `.env` or it silently truncates.
 

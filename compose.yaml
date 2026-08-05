@@ -1,5 +1,5 @@
-# LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-# Governed by: [[adr-09-docker-compose]]
+# LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+# Governed by: [[adr-13-docker-compose]]
 # Docs: [[DOCKER]]
 # LIVE-DOC:END
 

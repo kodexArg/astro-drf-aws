@@ -1,13 +1,13 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
 """The router's silent rate-abuse guard (#371, tdd-04-router-abuse-guard).
 
-Enforcement only — never authorization ([[adr-15-chatbot-two-tier]] rule 3).
+Enforcement only — never authorization ([[adr-17-chatbot-two-tier]] rule 3).
 All state lives in the shared `DatabaseCache` ([[CACHE]] layer 2); no Redis
-([[adr-06-cache]]). Two cache keys per user:
+([[adr-10-cache]]). Two cache keys per user:
 
 - a "streak" (start/count/last) tracking a contiguous run of router activity,
   reset whenever the gap since the last touch exceeds
@@ -17,7 +17,7 @@ All state lives in the shared `DatabaseCache` ([[CACHE]] layer 2); no Redis
   TTL of `ROUTER_RATE_BLOCK_SECONDS`.
 
 Callers: `RouteView` checks `is_rate_blocked` before doing any work, and
-fires `evaluate_rate_abuse` (via `sync_to_async`, [[adr-16-async-mandatory]])
+fires `evaluate_rate_abuse` (via `sync_to_async`, [[adr-18-async-mandatory]])
 once a request has actually reached inference.
 """
 

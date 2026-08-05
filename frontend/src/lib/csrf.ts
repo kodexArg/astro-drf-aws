@@ -1,5 +1,5 @@
-/* LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
- * Governed by: [[adr-04-frontend-and-design-system]] · [[adr-10-auth]] · [[adr-05-htmx]]
+/* LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+ * Governed by: [[adr-08-frontend-and-design-system]] · [[adr-14-auth]] · [[adr-09-htmx]]
  * Docs: [[FRONTEND]]
  * LIVE-DOC:END */
 

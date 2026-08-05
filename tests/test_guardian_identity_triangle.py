@@ -1,14 +1,16 @@
 
 from __future__ import annotations
 
-import ast
+import importlib.machinery
+import importlib.util
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-AGENTS_DIR = ROOT / "agents"
+AGENTS_DIR = ROOT / "docs" / "agents"
 DISPATCH_HOOK = ROOT / ".claude" / "hooks" / "dispatch_guardians.py"
+AGNOSTIC_SCRIPT = ROOT / "docs" / "hooks" / "guardian-dispatch"
 
 # A guardian def is discovered by shape, never by a hardcoded project name
 # (issue #130): its frontmatter `description:` names it a guardian.
@@ -48,7 +50,7 @@ def parse_frontmatter(text: str, label: str) -> dict[str, str]:
 
 
 def discover_guardian_defs() -> dict[str, dict[str, str]]:
-    """filename stem -> frontmatter, for every agents/*.md whose
+    """filename stem -> frontmatter, for every docs/agents/*.md whose
     frontmatter description names it a guardian. Generic: no literal
     project-specific guardian name is ever hardcoded here."""
     found: dict[str, dict[str, str]] = {}
@@ -60,35 +62,48 @@ def discover_guardian_defs() -> dict[str, dict[str, str]]:
 
 
 def extract_watchlist_keys() -> list[str]:
-    """Statically pull WATCHLISTS' dict keys via AST — never import the
-    hook module, which may carry PostToolUse side effects."""
-    if not DISPATCH_HOOK.is_file():
-        fail(f"missing {DISPATCH_HOOK.relative_to(ROOT)}")
-    tree = ast.parse(DISPATCH_HOOK.read_text(encoding="utf-8"), filename=str(DISPATCH_HOOK))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Dict):
-            target_names = [t.id for t in node.targets if isinstance(t, ast.Name)]
-            if "WATCHLISTS" not in target_names:
-                continue
-            keys: list[str] = []
-            for k in node.value.keys:
-                if isinstance(k, ast.Constant) and isinstance(k.value, str):
-                    keys.append(k.value)
-                else:
-                    fail(
-                        "WATCHLISTS has a non-string-literal key; cannot "
-                        "statically verify it via AST"
-                    )
-            return keys
-    fail(f"no WATCHLISTS dict assignment found in {DISPATCH_HOOK.relative_to(ROOT)}")
-    return []  # unreachable — fail() raises
+    """The single source is each guardian's own frontmatter `watch:` list
+    (adr-03-guardians rule 8), read live by docs/hooks/guardian-dispatch —
+    no hand-kept WATCHLISTS dict exists anymore. This loads that agnostic
+    script (never the Claude PostToolUse hook, which may carry side
+    effects) and returns the guardian names it discovered a watch: list
+    for."""
+    if not AGNOSTIC_SCRIPT.is_file():
+        fail(f"missing {AGNOSTIC_SCRIPT.relative_to(ROOT)}")
+    loader = importlib.machinery.SourceFileLoader(
+        "guardian_dispatch_agnostic", str(AGNOSTIC_SCRIPT)
+    )
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    lists = module.watchlists(AGENTS_DIR)
+    if not lists:
+        fail(
+            f"{AGNOSTIC_SCRIPT.relative_to(ROOT)}: watchlists() found no "
+            "guardian with a frontmatter watch: list"
+        )
+    return list(lists.keys())
+
+
+def test_dispatch_hook_has_no_own_watchlist() -> None:
+    """dispatch_guardians.py must delegate to the agnostic script rather
+    than carry a second, hand-kept watchlist dict (the retired two-place
+    doctrine, formerly adr-03-guardians rule 5)."""
+    text = DISPATCH_HOOK.read_text(encoding="utf-8")
+    if "WATCHLISTS = {" in text or "WATCHLISTS: dict" in text:
+        fail(
+            f"{DISPATCH_HOOK.relative_to(ROOT)} still defines its own "
+            "WATCHLISTS dict; it must delegate to "
+            f"{AGNOSTIC_SCRIPT.relative_to(ROOT)} instead"
+        )
+    ok("dispatch_guardians.py carries no watchlist dict of its own")
 
 
 def test_identity_triangle() -> None:
     guardians = discover_guardian_defs()
     if not guardians:
         fail(
-            "no guardian definition found under agents/*.md — the "
+            "no guardian definition found under docs/agents/*.md — the "
             "discovery rule (frontmatter description containing the word "
             "'guardian') is broken or the harness shipped with zero guardians"
         )
@@ -103,25 +118,25 @@ def test_identity_triangle() -> None:
     for stem, fm in guardians.items():
         name = fm.get("name")
         if not name:
-            fail(f"agents/{stem}.md: frontmatter has no name: field")
+            fail(f"docs/agents/{stem}.md: frontmatter has no name: field")
         names.add(name)
         if name != stem:
             fail(
-                f"agents/{stem}.md: filename stem {stem!r} != frontmatter "
+                f"docs/agents/{stem}.md: filename stem {stem!r} != frontmatter "
                 f"name {name!r}"
             )
         if name not in watchlist_set:
             fail(
-                f"agents/{stem}.md: name {name!r} has no matching key in "
-                f"WATCHLISTS ({DISPATCH_HOOK.relative_to(ROOT)}) — the "
+                f"docs/agents/{stem}.md: name {name!r} has no frontmatter "
+                f"watch: list ({AGNOSTIC_SCRIPT.relative_to(ROOT)}) — the "
                 "dispatch hook will never nudge this guardian"
             )
 
     extra = watchlist_set - stems
     if extra:
         fail(
-            "WATCHLISTS has key(s) with no matching guardian def under "
-            f"agents/: {sorted(extra)} — the dispatch hook nudges a "
+            "a frontmatter watch: list exists with no matching guardian def "
+            f"under docs/agents/: {sorted(extra)} — the dispatch hook nudges a "
             "subagent_type that resolves to nothing"
         )
 
@@ -144,10 +159,10 @@ def test_notify_prose_resolves() -> None:
         for target in NOTIFY_LINE.findall(text):
             checked += 1
             if target == stem:
-                fail(f"agents/{stem}.md: notify prose lists itself ({target!r})")
+                fail(f"docs/agents/{stem}.md: notify prose lists itself ({target!r})")
             if target not in stems:
                 fail(
-                    f"agents/{stem}.md: notify prose references {target!r}, "
+                    f"docs/agents/{stem}.md: notify prose references {target!r}, "
                     "which is not an existing guardian filename/frontmatter name"
                 )
     if checked == 0:
@@ -160,7 +175,11 @@ def test_notify_prose_resolves() -> None:
 
 
 def main() -> int:
-    tests = [test_identity_triangle, test_notify_prose_resolves]
+    tests = [
+        test_identity_triangle,
+        test_notify_prose_resolves,
+        test_dispatch_hook_has_no_own_watchlist,
+    ]
     failed = 0
     for fn in tests:
         try:

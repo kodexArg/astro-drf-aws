@@ -1,5 +1,5 @@
-<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-22-showcase-ready-components]]
+<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+     Governed by: [[adr-08-frontend-and-design-system]] · [[adr-23-showcase-ready-components]]
      Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]] · [[MELT-UI]]
      LIVE-DOC:END -->
 

@@ -1,9 +1,9 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-24-page-context-assistant]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-25-page-context-assistant]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
-"""Server-side page-context assembly for the assistant ([[adr-24-page-context-assistant]] rule 3).
+"""Server-side page-context assembly for the assistant ([[adr-25-page-context-assistant]] rule 3).
 
 The request carries a page identity only. v1 returns that path plus the
 caller's Django group names — never client page text. Page-specific

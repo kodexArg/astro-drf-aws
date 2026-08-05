@@ -31,7 +31,7 @@ Then both requests succeed and no abuse evaluation ever runs a threshold check (
 ```gherkin
 Given the user keeps posting inside the idle window continuously
 When their average messages-per-minute crosses `ROUTER_RATE_THRESHOLD_PER_MINUTE` (default 20)
-Then the async rate-abuse evaluation ([[adr-16-async-mandatory]]) marks the user blocked for `ROUTER_RATE_BLOCK_SECONDS` (default 300)
+Then the async rate-abuse evaluation ([[adr-18-async-mandatory]]) marks the user blocked for `ROUTER_RATE_BLOCK_SECONDS` (default 300)
 And every request from that user during the block returns a generic `429` with no distinguishing detail — never a message naming the rule, the threshold, or the remaining time
 ```
 
@@ -49,7 +49,7 @@ None visible by design — this is a backend-only enforcement layer. The ChatUI 
 
 ## Backend half
 
-Feeds a new [[TDD]] entry covering `POST /api/router/route/` ([[API]]): the lowered `THROTTLE_COOLDOWN_SECONDS` default, and a new async, DB-cache-backed (no Redis, [[adr-06-cache]]) rate-abuse evaluation fired at the end of the existing async `RouteView` handler ([[adr-16-async-mandatory]]). No new endpoint row — the same `POST /api/router/route/` row gains a documented `429` branch.
+Feeds a new [[TDD]] entry covering `POST /api/router/route/` ([[API]]): the lowered `THROTTLE_COOLDOWN_SECONDS` default, and a new async, DB-cache-backed (no Redis, [[adr-10-cache]]) rate-abuse evaluation fired at the end of the existing async `RouteView` handler ([[adr-18-async-mandatory]]). No new endpoint row — the same `POST /api/router/route/` row gains a documented `429` branch.
 
 ## Error handling
 

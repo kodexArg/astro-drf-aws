@@ -8,7 +8,7 @@ tags: [infrastructure, aws, inventory, ephemeral]
 
 # INVENTORY
 
-The committed resource inventory for the `astro-drf-aws` stage-3 run. Every AWS resource this run touches has a row here, updated **in the same batch** as its creation ([[adr-12-ephemeral-run]] Article III). Phase E teardown executes from the `ephemeral` rows and verifies against the Resource Groups Tagging API; `shared` rows are never destroyed.
+The committed resource inventory for the `astro-drf-aws` stage-3 run. Every AWS resource this run touches has a row here, updated **in the same batch** as its creation ([[adr-15-ephemeral-run]] Article III). Phase E teardown executes from the `ephemeral` rows and verifies against the Resource Groups Tagging API; `shared` rows are never destroyed.
 
 - Account `789650504128`, region `us-east-1`, profile `kodex` ([[INFRASTRUCTURE]]).
 - `shared` = pre-existing ALVS resource, never mutated beyond this project's own attachments; `ephemeral` = created by this run, carries the mandatory tag set (`project=astro-drf-aws`, `env=prod`, `lifecycle=ephemeral`) and dies in Phase E.
@@ -41,7 +41,7 @@ Used priorities on the `:443` listener: **9, 10** (`kcbd-api.grupoalvs.com`), **
 
 ### Shared attachments this run will add and later remove (never the shared resource itself)
 
-- Repo entry for this repo scoped to `refs/heads/prod` in the `gha-deploy-prod` trust policy (B2.6 → removed in E). **2026-07-19 mutation**: rewritten in place from the name-only form to the immutable subject `repo:kodexArg@47777332/astro-drf-aws@1305504992:ref:refs/heads/prod` — required after the v1 history reset recreated the repo past GitHub's immutable-subject cutoff ([[GH]], [[adr-23-oidc-immutable-subject-claim]], issue #1).
+- Repo entry for this repo scoped to `refs/heads/prod` in the `gha-deploy-prod` trust policy (B2.6 → removed in E). **2026-07-19 mutation**: rewritten in place from the name-only form to the immutable subject `repo:kodexArg@47777332/astro-drf-aws@1305504992:ref:refs/heads/prod` — required after the v1 history reset recreated the repo past GitHub's immutable-subject cutoff ([[GH]], [[adr-24-oidc-immutable-subject-claim]], issue #1).
 - Statement `BedrockGateNovaMicroInvoke` in the `gha-deploy-prod` inline policy `gha-deploy-prod-policy` (2026-07-19 → removed in E): `bedrock:InvokeModel` on the same four Nova Micro resources as the backend task role's `kdx-router-bedrock-nova-micro` (issue #97), nothing wider. Required by the workflow's `bedrock-live` connectivity gate, which invokes Bedrock as the deploy role before every prod deploy; the grant was missing since the gate landed and no prod push had run green since, so the gap only surfaced on the post-reset deploy (issue #1).
 - Host rule + target groups on the shared ALB for `astro-drf-aws.grupoalvs.com` (B2.8 → removed in E).
 - Route 53 records under `grupoalvs.com` (B2.7 → removed in E).
@@ -80,7 +80,7 @@ Filled at B2, one row per resource in the same batch as its creation; each carri
 | Security group `alvs-prod-bedrock-vpce-sg` | not yet created — see note below | **planned** | issue #95 (2026-07-14) — ingress tcp/443 from `sg-027b8d1f3fe41007a` (`alvs-prod-task-sg`) only |
 
 > [!warning] Not provisioned live — owner action required (issue #95)
-> This worker's AWS credentials resolve to account `393022986836` (`arn:aws:iam::393022986836:user/pykodex`), not the reference run's account `789650504128`. Per [[adr-12-ephemeral-run]] rule 2 ("born dead", never faked), the endpoint and its SG are **prepared, not created**. Run `scripts/provision_bedrock_endpoint.sh` with credentials for account `789650504128` (profile `kodex`, per this file's header) to create both resources; then flip these two rows from `planned` to `ephemeral` with the returned `vpce-*`/`sg-*` IDs, in the same batch as creation, per adr-12 rule 5.
+> This worker's AWS credentials resolve to account `393022986836` (`arn:aws:iam::393022986836:user/pykodex`), not the reference run's account `789650504128`. Per [[adr-15-ephemeral-run]] rule 2 ("born dead", never faked), the endpoint and its SG are **prepared, not created**. Run `scripts/provision_bedrock_endpoint.sh` with credentials for account `789650504128` (profile `kodex`, per this file's header) to create both resources; then flip these two rows from `planned` to `ephemeral` with the returned `vpce-*`/`sg-*` IDs, in the same batch as creation, per adr-12 rule 5.
 
 > [!note] Permanent no-CDN routing (issue #33, resolved)
 > Issue #33 is resolved as a permanent architecture decision, not an interim workaround: this template ships without CloudFront (adr-02 r5 / adr-12). `astro-drf-aws.grupoalvs.com` A-aliases directly to `alvs-prod-alb` (rows above), HTTPS terminated at the ALB with the existing ACM cert, rule prio 110/111 routing to the backend/frontend target groups. Media stays private S3 with Django-issued presigned URLs; the CloudFront OAC created during B2.7 was deleted, and the unused origin host + its Route 53 records were removed. Verified 2026-07-12: DNS resolves, `http` → 301 `https`, `https /` and `/api/health/` → 503 `awselb` (expected — target groups are empty until the ECS services deploy). No reversal is planned.

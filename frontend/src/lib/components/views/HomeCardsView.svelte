@@ -1,12 +1,12 @@
-<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-     Governed by: [[adr-04-frontend-and-design-system]] · [[adr-22-showcase-ready-components]]
+<!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+     Governed by: [[adr-08-frontend-and-design-system]] · [[adr-23-showcase-ready-components]]
      Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]]
      LIVE-DOC:END -->
 
 <!--
   The home ("/") body — a single-column list of HomeCard links onto the
   site's routes, one per NAV_ITEMS row (shell/nav.ts). Keeps the lobby's
-  pending/denied states intact ([[adr-20-authorization-lobby]]): a role-less
+  pending/denied states intact ([[adr-21-authorization-lobby]]): a role-less
   session still sees only the pending card, never the route links, since
   every card's target route bounces it back to `/` with `?denied=1` anyway.
   `items` arrives already localized — this component imports no i18n of its

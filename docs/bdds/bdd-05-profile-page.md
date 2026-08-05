@@ -18,7 +18,7 @@ Both changes are confirmed and persisted through `PATCH /api/me/` ([[API]]).
 ## Frontend half
 
 **Nickname edit — Svelte island, rung 3 of the interactivity ladder**
-([[adr-04-frontend-and-design-system]] rule 3). A textbox plus an icon-only
+([[adr-08-frontend-and-design-system]] rule 3). A textbox plus an icon-only
 confirm button, guarded by a reusable `ConfirmDialog.svelte` wrapping
 shadcn-svelte's `AlertDialog` (accept/cancel; escape/backdrop behaves as
 cancel). The draft text, dirty flag, and the confirm modal's open/closed state
@@ -30,14 +30,14 @@ justified, not a rung skip.
 
 **Avatar visibility — same single Svelte island, not a separate HTMX
 fragment.** A dedicated HTMX fragment route for one boolean toggle would need
-its own [[API]] row per [[adr-05-htmx]] rule 3 ("no shadow routes"), and
+its own [[API]] row per [[adr-09-htmx]] rule 3 ("no shadow routes"), and
 this feature is scoped YAGNI-minimal — no new route beyond the existing
 `PATCH /api/me/`. Both controls are therefore
 delivered as one island so the toggle can call the same `PATCH /api/me/`
 client-side that the nickname confirm already calls, with no additional
 backend surface. This is the interactivity-ladder decision owed by
-[[adr-07-development-flow]] rule 1, recorded here per
-[[adr-04-frontend-and-design-system]] rule 3.
+[[adr-11-development-flow]] rule 1, recorded here per
+[[adr-08-frontend-and-design-system]] rule 3.
 
 Design system: per [[DESIGN-SYSTEM]]. `Avatar` /
 `AvatarImage` / `AvatarFallback` render the picture when `avatar_visible` is

@@ -1,5 +1,5 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-17-live-doc-backlinks]]
-Governed by: [[adr-15-chatbot-two-tier]] · [[adr-16-async-mandatory]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""
 
@@ -81,7 +81,7 @@ def test_phrase_collision_rejected_at_write_time():
     """SECURITY #266: the phrase collision that could resolve `by_phrase` to a
     gated row is now structurally impossible — `Intent.phrase` is unique, so a
     second row sharing a phrase is rejected DB-side at data-entry time instead
-    of silently first-winning at read time ([[adr-15-chatbot-two-tier]] rule 2)."""
+    of silently first-winning at read time ([[adr-17-chatbot-two-tier]] rule 2)."""
     gated_group, _ = Group.objects.get_or_create(name="collision-gated-group")
     Intent.objects.create(phrase="log out", target="/accounts/logout/", order=1)
     with transaction.atomic():
@@ -95,7 +95,7 @@ def test_phrase_collision_rejected_at_write_time():
 def test_reserved_outcome_phrase_rejected(reserved):
     """An `Intent.phrase` equal to a reserved outcome is rejected both by the
     admin-surfacing validation path (`full_clean`) and DB-side, so `by_phrase`
-    can never hold a reserved-outcome key ([[adr-15-chatbot-two-tier]] rule 2)."""
+    can never hold a reserved-outcome key ([[adr-17-chatbot-two-tier]] rule 2)."""
     with pytest.raises(ValidationError):
         Intent(phrase=reserved, target="/x/").full_clean()
 
