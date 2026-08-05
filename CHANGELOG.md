@@ -22,7 +22,7 @@
 
 - group: nav-rail-pin-mode-footer
   priority: high
-  commit: pending
+  commit: 416a078
   changes:
     - feat(frontend): FancyDrawer component — overlay sibling of Drawer.svelte, not a fork per adr-23 rule 2
     - feat(frontend): nav rail mode (permanent, docked, in-flow, dotted-canvas items) and floating panel mode (content-hugging, edge chevron tab, hover-open, leave cooldown, outside-click dismiss) flipped by padlock disc
