@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- group: nav-spacing-polish
+  priority: low
+  commit: 8b174ca7
+  changes:
+    - style(frontend): widen nav item spacing to gap-2.5 in NavDrawer.svelte section-item wrapper — ported from feedlot's tuned nav, padding change (pt-20) excluded as feedlot-specific overlay clearance
+
 - group: fix-pack-label
   priority: low
   commit: b1c7d56

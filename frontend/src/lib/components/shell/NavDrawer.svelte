@@ -119,7 +119,7 @@
     class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto"
   >
     {#each NAV_SECTIONS as section, index (section.titleKey ?? index)}
-      <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-2.5">
         {#if section.titleKey}
           <div
             class="px-2 pb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
