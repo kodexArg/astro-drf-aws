@@ -1,6 +1,6 @@
 ---
 name: wf-hound
-description: triage-and-fix scout — searches code only (never the web) and returns candidate file references with honest confidence. Runs twice per run, at two different model tiers: sonnet as forest scout, this file's haiku as the mage's familiar. Not for general use.
+description: "triage-and-fix scout — searches code only (never the web) and returns candidate file references with honest confidence. Runs twice per run, at two different model tiers: sonnet as forest scout, this file's haiku as the mage's familiar. Not for general use."
 model: haiku
 color: cyan
 tools:

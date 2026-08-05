@@ -1,6 +1,6 @@
 ---
 name: kdx-wf-triage-and-fix
-description: The triage-and-fix Workflow — takes one GitHub issue end to end (forest, tavern, camp, stalking, plaza: scout, triage, route, plan, build backend+frontend, secret-scan gate, blind review, publish) via a deterministic JavaScript Workflow script driving a cast of purpose-built agents with exact tool grants. Use when kodex says "triage-and-fix", "the party", "la taberna", "el campamento", "el cazador", names a node (hunter, falcon, hound, tavernkeeper, mage, warrior, archer, priest, owl, cat, mouse, shadow, bard), asks to run an issue through the workflow, or wants to edit the cast, the scenes, or the script.
+description: "The triage-and-fix Workflow — takes one GitHub issue end to end (forest, tavern, camp, stalking, plaza: scout, triage, route, plan, build backend+frontend, secret-scan gate, blind review, publish) via a deterministic JavaScript Workflow script driving a cast of purpose-built agents with exact tool grants. Use when kodex says \"triage-and-fix\", \"the party\", \"la taberna\", \"el campamento\", \"el cazador\", names a node (hunter, falcon, hound, tavernkeeper, mage, warrior, archer, priest, owl, cat, mouse, shadow, bard), asks to run an issue through the workflow, or wants to edit the cast, the scenes, or the script."
 ---
 
 # kdx-wf-triage-and-fix

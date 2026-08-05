@@ -1,7 +1,7 @@
 ---
 name: wf-mage
 description: triage-and-fix planner — turns the task into an explicit plan. Cannot write code and cannot search the web; sends familiars (owl, cat, hound, mouse) for anything it must look up. Not for general use.
-model: fable
+model: opus
 color: magenta
 tools:
   - Read
