@@ -1,13 +1,15 @@
 <!-- LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
-     Governed by: [[adr-08-frontend-and-design-system]]
-     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]]
+     Governed by: [[adr-08-frontend-and-design-system]] · [[adr-28-nav-fsm-frosted-rail]]
+     Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]]
      LIVE-DOC:END -->
 
 <!--
   Sibling of overlay/Drawer.svelte (adr-23 rule 2 — no fork): a
   content-hugging, viewport-centered floating panel with hover-open, a 2s
   leave cooldown, outside-click dismiss, and an edge chevron tab, instead of
-  Drawer's full-height edge-anchored slide. Zero-prop safe (adr-23 rule 1).
+  Drawer's full-height edge-anchored slide. The peek tab stays in-flow inside
+  the aside's box so closed-state hit-testing works ([[adr-28-nav-fsm-frosted-rail]]).
+  Zero-prop safe (adr-23 rule 1).
 -->
 <script lang="ts">
   import { onDestroy } from "svelte";
@@ -18,6 +20,9 @@
 
   const CLOSE_DELAY_MS = 2000;
   const DEFAULT_WIDTH = "12rem";
+
+  /** Peek-tab width (`w-7`); must match the closed translate inset. */
+  const TAB_WIDTH = "1.75rem";
 
   let {
     open = $bindable(false),
@@ -41,15 +46,17 @@
 
   const showTitle = $derived(title.trim().length > 0);
   const isLeft = $derived(side === "left");
-  const slideClass = $derived(
-    open
-      ? "-translate-y-1/2"
-      : isLeft
-        ? "-translate-x-full -translate-y-1/2"
-        : "translate-x-full -translate-y-1/2",
-  );
   const Glyph = $derived(
     isLeft ? (open ? ChevronLeft : ChevronRight) : open ? ChevronRight : ChevronLeft,
+  );
+
+  /** X offset: open = flush; closed = leave only the in-flow tab on-screen. */
+  const offsetX = $derived(
+    open
+      ? "0"
+      : isLeft
+        ? `calc(-100% + ${TAB_WIDTH})`
+        : `calc(100% - ${TAB_WIDTH})`,
   );
 
   let rootEl: HTMLElement | undefined = $state();
@@ -125,11 +132,22 @@
   class={cn(
     "fixed top-1/2 z-40 flex h-fit max-h-[calc(100vh-3rem)] transition-transform duration-300 ease-out motion-reduce:transition-none",
     isLeft ? "left-0" : "right-0",
-    slideClass,
     className,
   )}
-  style={`width: ${width}`}
+  style={`width: calc(${width} + ${TAB_WIDTH}); transform: translate(${offsetX}, -50%)`}
 >
+  {#if !isLeft}
+    <button
+      type="button"
+      onclick={onTabClick}
+      aria-label={open ? closeLabel : openLabel}
+      aria-expanded={open}
+      class="flex h-12 w-7 shrink-0 items-center justify-center self-center rounded-l-2xl border border-r-0 border-border bg-background text-muted-foreground shadow-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    >
+      <Glyph class="size-4" aria-hidden="true" />
+    </button>
+  {/if}
+
   <div
     inert={!open}
     aria-hidden={!open}
@@ -139,6 +157,7 @@
         ? "rounded-r-2xl border border-l-0 border-border"
         : "rounded-l-2xl border border-r-0 border-border",
     )}
+    style={`width: ${width}`}
   >
     <div class="flex flex-col gap-0 px-3 py-4">
       {#if showTitle}
@@ -154,18 +173,15 @@
     </div>
   </div>
 
-  <button
-    type="button"
-    onclick={onTabClick}
-    aria-label={open ? closeLabel : openLabel}
-    aria-expanded={open}
-    class={cn(
-      "absolute top-1/2 flex h-12 w-7 -translate-y-1/2 items-center justify-center bg-background text-muted-foreground shadow-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-      isLeft
-        ? "left-full rounded-r-2xl border border-l-0 border-border"
-        : "right-full rounded-l-2xl border border-r-0 border-border",
-    )}
-  >
-    <Glyph class="size-4" aria-hidden="true" />
-  </button>
+  {#if isLeft}
+    <button
+      type="button"
+      onclick={onTabClick}
+      aria-label={open ? closeLabel : openLabel}
+      aria-expanded={open}
+      class="flex h-12 w-7 shrink-0 items-center justify-center self-center rounded-r-2xl border border-l-0 border-border bg-background text-muted-foreground shadow-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    >
+      <Glyph class="size-4" aria-hidden="true" />
+    </button>
+  {/if}
 </aside>

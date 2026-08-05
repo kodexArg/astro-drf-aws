@@ -71,19 +71,37 @@ describe("FancyDrawer — hover-open floating panel, sibling of Drawer (adr-23 r
     const source = await read(FANCY_DRAWER);
     expect(source).toMatch(/open\s*=\s*\$bindable\(false\)/);
   });
-});
 
-describe("NavDrawer — pin persistence and non-mutating footer defaults", () => {
-  test("the pin preference is read on mount, before any user click (no SSR flash)", async () => {
-    const source = await read(NAV_DRAWER);
-    expect(source).toContain("onMount");
-    expect(source).toMatch(/localStorage\.getItem\(PIN_KEY\)/);
+  test("the peek tab is in-flow inside the aside's box, not absolute left-full (adr-28)", async () => {
+    const source = await read(FANCY_DRAWER);
+    expect(source).not.toContain("left-full");
+    expect(source).not.toContain("right-full");
+    expect(source).not.toContain("absolute top-1/2");
+    expect(source).toContain("TAB_WIDTH");
   });
 
-  test("locking persists to localStorage under a generic, non-feedlot key", async () => {
+  test("the tab toggles on click, not only hover", async () => {
+    const source = await read(FANCY_DRAWER);
+    expect(source).toContain("onclick={onTabClick}");
+  });
+});
+
+describe("NavDrawer — nav_lock cookie preference and non-mutating footer defaults", () => {
+  test("preference comes from a prop (SSR), not from onMount/localStorage alone", async () => {
     const source = await read(NAV_DRAWER);
-    expect(source).toContain('PIN_KEY = "shell-nav-pinned"');
-    expect(source).toContain("localStorage.setItem(PIN_KEY");
+    expect(source).toMatch(/preference:\s*preferenceProp/);
+    expect(source).not.toMatch(/localStorage\.getItem\(PIN_KEY\)/);
+  });
+
+  test("locking persists via writeNavLockCookie, not localStorage", async () => {
+    const source = await read(NAV_DRAWER);
+    expect(source).toContain("writeNavLockCookie(next)");
+  });
+
+  test("the legacy shell-nav-pinned key is migrated once, never written again", async () => {
+    const source = await read(NAV_DRAWER);
+    expect(source).toContain("migrateLegacyNavLock()");
+    expect(source).not.toContain("localStorage.setItem");
   });
 
   test("the profile disc is inert unless navigates is set (adr-22 r2)", async () => {
@@ -99,7 +117,7 @@ describe("NavDrawer — pin persistence and non-mutating footer defaults", () =>
 
   test("defaults to the unlocked (floating) mode", async () => {
     const source = await read(NAV_DRAWER);
-    expect(source).toMatch(/pinned\s*=\s*\$state\(false\)/);
+    expect(source).toMatch(/preferenceProp\s*=\s*"unlocked"/);
   });
 
   test("carries no feedlot business content", async () => {
