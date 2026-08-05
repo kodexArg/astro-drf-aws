@@ -111,6 +111,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/overlay/ConfirmDialog.svelte`
 - `frontend/src/lib/components/overlay/Dialog.svelte`
 - `frontend/src/lib/components/overlay/Drawer.svelte`
+- `frontend/src/lib/components/overlay/FancyDrawer.svelte`
 - `frontend/src/lib/components/overlay/HoverCard.svelte`
 - `frontend/src/lib/components/overlay/Popover.svelte`
 - `frontend/src/lib/components/overlay/ScrollArea.svelte`
@@ -126,6 +127,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavBadge.svelte`
 - `frontend/src/lib/components/shell/NavDrawer.svelte`
 - `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
 - `frontend/src/lib/components/shell/index.ts`
 - `frontend/src/lib/components/shell/nav.ts`
@@ -152,6 +154,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/showcase/TreeDemo.svelte`
 - `frontend/src/lib/components/showcase/galleryRegistry.ts`
 - `frontend/src/lib/components/showcase/index.ts`
+- `frontend/src/lib/components/theme/PaletteFields.svelte`
 - `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
 - `frontend/src/lib/components/theme/ThemeCard.svelte`
 - `frontend/src/lib/components/theme/ThemeModeToggle.svelte`
@@ -210,6 +213,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/display-name.ts`
 - `frontend/src/lib/optimistic-toggle.ts`
 - `frontend/src/lib/router-client.ts`
+- `frontend/src/lib/theme-packs.ts`
 - `frontend/src/lib/theme.ts`
 - `frontend/src/lib/types/user.ts`
 - `frontend/src/lib/typewriter-placeholder.ts`
@@ -354,6 +358,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavBadge.svelte`
 - `frontend/src/lib/components/shell/NavDrawer.svelte`
 - `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
 - `frontend/src/lib/components/showcase/SurfaceDemo.svelte`
 - `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
@@ -580,6 +585,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavBadge.svelte`
 - `frontend/src/lib/components/shell/NavDrawer.svelte`
 - `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
 - `frontend/src/lib/components/showcase/SurfaceDemo.svelte`
 - `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
@@ -635,6 +641,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/overlay/ConfirmDialog.svelte`
 - `frontend/src/lib/components/overlay/Dialog.svelte`
 - `frontend/src/lib/components/overlay/Drawer.svelte`
+- `frontend/src/lib/components/overlay/FancyDrawer.svelte`
 - `frontend/src/lib/components/overlay/HoverCard.svelte`
 - `frontend/src/lib/components/overlay/Popover.svelte`
 - `frontend/src/lib/components/overlay/ScrollArea.svelte`
@@ -648,6 +655,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavBadge.svelte`
 - `frontend/src/lib/components/shell/NavDrawer.svelte`
 - `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`
@@ -670,6 +678,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/showcase/ToggleGroupDemo.svelte`
 - `frontend/src/lib/components/showcase/TooltipDemo.svelte`
 - `frontend/src/lib/components/showcase/TreeDemo.svelte`
+- `frontend/src/lib/components/theme/PaletteFields.svelte`
 - `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
 - `frontend/src/lib/components/theme/ThemeCard.svelte`
 - `frontend/src/lib/components/theme/ThemeModeToggle.svelte`
@@ -790,6 +799,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/overlay/ConfirmDialog.svelte`
 - `frontend/src/lib/components/overlay/Dialog.svelte`
 - `frontend/src/lib/components/overlay/Drawer.svelte`
+- `frontend/src/lib/components/overlay/FancyDrawer.svelte`
 - `frontend/src/lib/components/overlay/HoverCard.svelte`
 - `frontend/src/lib/components/overlay/Popover.svelte`
 - `frontend/src/lib/components/overlay/ScrollArea.svelte`
@@ -805,6 +815,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavBadge.svelte`
 - `frontend/src/lib/components/shell/NavDrawer.svelte`
 - `frontend/src/lib/components/shell/NavItem.svelte`
+- `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
 - `frontend/src/lib/components/shell/index.ts`
 - `frontend/src/lib/components/shell/nav.ts`
@@ -831,6 +842,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/showcase/TreeDemo.svelte`
 - `frontend/src/lib/components/showcase/galleryRegistry.ts`
 - `frontend/src/lib/components/showcase/index.ts`
+- `frontend/src/lib/components/theme/PaletteFields.svelte`
 - `frontend/src/lib/components/theme/QuickThemeToggle.svelte`
 - `frontend/src/lib/components/theme/ThemeCard.svelte`
 - `frontend/src/lib/components/theme/ThemeModeToggle.svelte`
@@ -889,6 +901,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/display-name.ts`
 - `frontend/src/lib/optimistic-toggle.ts`
 - `frontend/src/lib/router-client.ts`
+- `frontend/src/lib/theme-packs.ts`
 - `frontend/src/lib/theme.ts`
 - `frontend/src/lib/types/user.ts`
 - `frontend/src/lib/typewriter-placeholder.ts`
