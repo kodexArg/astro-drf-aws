@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+- group: agnostic-guardian-dispatch
+  priority: high
+  commit: 2d8ca11
+  changes:
+    - feat(harness): guardian dispatch moved to docs/hooks/ — runtime-agnostic (python3-stdlib + git), runnable standalone by any agent/human/CI step; computes batch, matches watchlists, names owed guardians, exits 1 when owed and 0 when none
+    - feat(harness): --bundle emits dispatch payload (owed guardians, hit files, scoped diff, live ADR use_case index built from frontmatter)
+    - feat(harness): docs/hooks/pre-commit speaks guardian-dispatch at commit time (warn-only, manual `ln -s` install, never auto-installed)
+    - refactor(adr): adr-03-guardians edited in place — two-place watchlist requirement moved to REJECTED with reason it lost (single machine-readable source vs. two writable copies); rule 8 (machine-copy source) and rule 9 (--bundle payload) added
+    - refactor(agents): guardians astro-drf-aws-{prd,adr,api} frontmatter consolidated to single `watch:` glob list — no duplicate lists, no drift
+    - refactor(harness): .claude/hooks/dispatch_guardians.py survives as Claude PostToolUse safety net but now delegates to docs/hooks/guardian-dispatch; carries no watchlist dict, verified by test
+    - test(harness): tests/test_nudge_hooks.py and tests/test_guardian_identity_triangle.py verified green (8/8, 3/3)
+
+- group: issue-delivery-cast
+  priority: high
+  commit: 451be1a
+  changes:
+    - feat(harness): the kwf-* cast (18 agents + 18 souls) — the canonical, runtime-agnostic SSOT for the party shape under adr-04 rule 7
+    - feat(harness): triage-and-fix playbook (SKILL.md, bin/kwf-deps, references/, extras/, tests/) — the manual for issue delivery cast mechanics, node contracts, phases, tiers
+    - feat(harness): bin/kwf-deps (python3 stdlib + gh) implements requires:<N>/deferred PR-requirement labels and defer cascade (31/31 tests green)
+    - feat(harness): docs/RUNTIMES.md new — runtime mapping for dispatch across Claude Code, Kimi Code CLI, Cursor/Grok; states honestly where each runtime loses a capability
+    - refactor(adr): adr-04-issue-delivery gained rules 7 (the cast as canonical SSOT, pre-existing kdx-wf-triage-and-fix as Claude rendering, neither supersedes) and 8 (PR-requirement labels and bin/kwf-deps spec) with no REJECTED entry (no prior cast policy existed to retire)
+
+- group: assertion-review-integrity-gate
+  priority: high
+  commit: a866b7c
+  changes:
+    - feat(harness): assertion-review skill new — reviewer for assertions family; interprets each law, resolves RELATED links, confirms proving tests pass via docs/TDD.md method, stamps verified only when tests pass
+    - feat(harness): scripts/check_harness_integrity.py new — deterministic stdlib gate over docs/skills/ and docs/agents/ (frontmatter validity, name==dirname, referenced files exist, agent model allowlist, HARNESS.md inventory matching disk bidirectionally); reports and never fixes; tests prove both clean pass and synthetic violations
+    - fix(harness): four git-tracked files with unparseable YAML frontmatter repaired (unquoted `: ` inside plain-scalar description — tolerated by Claude's loader but fatal to stricter parsers, breaking cross-runtime reach docs/RUNTIMES.md promises)
+    - fix(agents): docs/agents/wf-mage.md repaired — `model: fable` outside allowlist, contrary to orchestrator doctrine; changed to valid model
+    - refactor(docs): HARNESS.md and GLOSSARY.md rows added for triage-and-fix, assertion-review, kwf-* cast, souls, guardian-dispatch, RUNTIMES per adr-05 rule 1
+    - test(harness): all 84 skill/agent/soul frontmatters now parse under strict yaml.safe_load; harness integrity 5/5 green; nudge hooks 8/8, guardian triangle 3/3 verified; guardian-adr confirmed compliant on in-place ADR edits
+
 - group: harness-relocation-to-docs
   priority: high
   commit: 51871d4
