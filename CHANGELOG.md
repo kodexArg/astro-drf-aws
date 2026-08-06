@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+- group: shared-rds-migration
+  priority: high
+  issue: 14
+  changes:
+    - infra(aws): prod data moved from the dedicated `alvs-prod-astro-drf-aws-pg` to database `astro_drf_aws` / role `astro_drf_aws_user` on the shared `alvs-prod-pg`; 15 tables, 49 indexes, 111 constraints restored with full parity, cutover verified live (xact_commit moved on the new database, flat on the old) before deletion
+    - infra(aws): `alvs-prod-astro-drf-aws-pg` and its subnet group destroyed (`--skip-final-snapshot --delete-automated-backups`) — one `db.t4g.micro` off the standing bill
+    - infra(aws): `alvs/prod/astro-drf-aws/db` rotated to the new host/dbname/username and a fresh password; the `DB_*` env contract is unchanged, so no task-definition revision was needed
+    - docs(adr-15): rule 4's dedicated-instance policy replaced in place — the run now takes a database on the shared instance and destroys no instance at teardown; the retired policy recorded under a new `REJECTED` section
+    - docs(bd): derived-naming rule (database = slug with `-`→`_`, role = `<database>_user`) so a spawned project inherits the shape not the name; ephemeral-run section rewritten; admin-access recipe added
+    - docs(bd,infrastructure): DB admin path corrected to SSM port-forwarding via `monitor-prod-rds` — an EICE endpoint accepts only ports 22/3389 and cannot tunnel 5432; teardown order now drops the database and role instead of an instance
+    - docs(inventory): dedicated instance + subnet group marked destroyed; `alvs-prod-pg` and `monitor-prod-rds` recorded as shared; the database/role recorded as a removable shared-attachment
+    - docs(glossary): RDS instance row now names the shared instance; database name `app` → `astro_drf_aws`; new database-role row
+    - test(infra): `test_rds_spec` asserts the shared instance and that no dedicated per-project instance exists; both dedicated-resource tag-audit rows dropped
+
 - group: nav-fsm-frosted-rail
   priority: high
   commit: cd05d08

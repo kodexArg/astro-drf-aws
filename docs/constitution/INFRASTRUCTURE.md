@@ -143,7 +143,7 @@ Chain, strictly one-directional:
 2. `alvs-<env>-task-sg` — ingress from the ALB SG only. When frontend and backend tasks share one task SG (as in the reference run, [[INVENTORY]]), the SSR-to-backend Cloud Map call ([[Service discovery]] above) additionally needs a self-referencing ingress rule (task SG → itself, tcp/8000) — the ALB-only rule alone does not cover task-to-task traffic.
 3. `alvs-<env>-rds-sg` — 5432 from the task SG only.
 
-DB admin access goes through an **EC2 Instance Connect Endpoint bastion** — see [[BD]].
+DB admin access goes through **SSM port-forwarding via the `monitor-prod-rds` box**, not the EICE bastion — an EICE endpoint accepts only ports 22/3389 as the remote port and cannot tunnel 5432 directly. Recipe: [[BD]].
 
 ## Ephemeral reference run
 
@@ -160,4 +160,4 @@ Governs the template's own reference deploy (project `astro-drf-aws`), ruled by 
 
 - **Inventory:** `docs/INVENTORY.md` is the committed record — columns: name, ARN, `shared` \| `ephemeral`, creating step. It is updated **in the same batch** as each resource's creation. Teardown executes from it and verifies against the Resource Groups Tagging API.
 - **Shared pre-existing ALVS resources are never destroyed** — VPC, ECS cluster, shared ALB, Route 53 zone, the GitHub OIDC provider, `gha-deploy-prod`, the EICE bastion. Only this project's attachments are removed (host rule, target groups, DNS records, the trust-policy repo entry).
-- **Teardown order** (`lifecycle=ephemeral` rows only): ECS services → ALB host rule + target groups → Cloud Map namespace → Route 53 records + ACM cert → ECR repos → log groups + alarms → IAM roles + this repo's `gha-deploy-prod` trust entry → Cognito hosted-UI domain + user pool → RDS (skip final snapshot, backups removed) → S3 buckets → **secrets last**, `delete-secret --force-delete-without-recovery`. Verified empty when the Tagging API query `project=astro-drf-aws ∧ lifecycle=ephemeral` returns the empty set.
+- **Teardown order** (`lifecycle=ephemeral` rows only): ECS services → ALB host rule + target groups → Cloud Map namespace → Route 53 records + ACM cert → ECR repos → log groups + alarms → IAM roles + this repo's `gha-deploy-prod` trust entry → Cognito hosted-UI domain + user pool → the project's database and login role on the shared `alvs-prod-pg` (`DROP DATABASE` then `DROP ROLE` — the instance is shared and is never deleted, [[BD]]) → S3 buckets → **secrets last**, `delete-secret --force-delete-without-recovery`. Verified empty when the Tagging API query `project=astro-drf-aws ∧ lifecycle=ephemeral` returns the empty set.
