@@ -141,7 +141,7 @@ const roleHolding = hasRole(me);
       // Docked state from sentinel visibility (not scroll math). Re-bind on
       // every `astro:page-load` so ClientRouter swaps keep the observer on the
       // live header/sentinel pair — a one-shot bind dies after the first swap.
-      let navDockObserver = null;
+      let navDockObserver: IntersectionObserver | null = null;
       function bindNavDock() {
         const sentinel = document.querySelector("[data-nav-sentinel]");
         const header = document.querySelector("[data-nav-header]");

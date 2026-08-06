@@ -132,6 +132,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/index.ts`
 - `frontend/src/lib/components/shell/nav-fsm.ts`
 - `frontend/src/lib/components/shell/nav.ts`
+- `frontend/src/lib/components/shell/shell-sizes.ts`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`
 - `frontend/src/lib/components/showcase/ContextMenuDemo.svelte`
@@ -345,6 +346,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 
 ## [[adr-23-showcase-ready-components]]
 
+- `frontend/src/lib/components/auth/AuthPanel.svelte`
 - `frontend/src/lib/components/auth/SessionBadge.svelte`
 - `frontend/src/lib/components/chat/ChatComposer.svelte`
 - `frontend/src/lib/components/chat/ChatMessageList.svelte`
@@ -393,6 +395,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/overlay/FancyDrawer.svelte`
 - `frontend/src/lib/components/shell/NavDrawer.svelte`
 - `frontend/src/lib/components/shell/nav-fsm.ts`
+- `frontend/src/lib/components/shell/shell-sizes.ts`
 
 ## [[API]]
 
@@ -579,6 +582,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 
 ## [[COMPONENTIZATION]]
 
+- `frontend/src/lib/components/auth/AuthPanel.svelte`
 - `frontend/src/lib/components/auth/SessionBadge.svelte`
 - `frontend/src/lib/components/chat/ChatComposer.svelte`
 - `frontend/src/lib/components/chat/ChatMessageList.svelte`
@@ -669,6 +673,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/NavLockToggle.svelte`
 - `frontend/src/lib/components/shell/NavbarIcon.svelte`
 - `frontend/src/lib/components/shell/nav-fsm.ts`
+- `frontend/src/lib/components/shell/shell-sizes.ts`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`
 - `frontend/src/lib/components/showcase/ContextMenuDemo.svelte`
@@ -832,6 +837,7 @@ Each heading is a live-doc SSOT; the list is every code file that declares itsel
 - `frontend/src/lib/components/shell/index.ts`
 - `frontend/src/lib/components/shell/nav-fsm.ts`
 - `frontend/src/lib/components/shell/nav.ts`
+- `frontend/src/lib/components/shell/shell-sizes.ts`
 - `frontend/src/lib/components/showcase/CalendarDemo.svelte`
 - `frontend/src/lib/components/showcase/CollapsibleDemo.svelte`
 - `frontend/src/lib/components/showcase/ContextMenuDemo.svelte`
