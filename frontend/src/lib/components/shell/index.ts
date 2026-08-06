@@ -27,3 +27,6 @@ export type {
   NavPresentation,
   NavFsmState,
 } from "./nav-fsm";
+
+export { ASIDE_SIZE_VAR, DRAWER_SIZE_VAR } from "./shell-sizes";
+export type { AsideSize, DrawerSize } from "./shell-sizes";

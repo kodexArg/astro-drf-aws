@@ -4,9 +4,9 @@
      LIVE-DOC:END -->
 
 <!--
-  Inline single-month grid for a from/to range selection — the inline-view
-  sibling of form/DateRangePicker's popover-native-input approach. Melt 0.44
-  ships no RangeCalendar builder ([[MELT-UI]] — same absence recorded for
+  Inline single-month grid for a from/to range selection — also the grid
+  embedded by form/DateRangePicker's Melt Popover. Melt 0.44 ships no
+  RangeCalendar builder ([[MELT-UI]] — same absence recorded for
   form/Calendar above), so the two-click from/then/to selection, the
   in-between highlight, and the prev/next nav are hand-rolled here rather
   than delegated. from/to/onRangeChange default to a safe "nothing selected,

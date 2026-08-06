@@ -140,7 +140,7 @@
 </script>
 
 <div
-  class={`mx-auto flex min-h-0 w-full min-w-0 max-w-2xl flex-1 flex-col gap-4 overflow-x-hidden px-4 py-8 ${className ?? ""}`}
+  class={`mx-auto flex h-full min-h-0 w-full min-w-0 max-w-2xl flex-1 flex-col gap-4 overflow-x-hidden px-4 py-8 ${className ?? ""}`}
   data-chat-mode={mode}
 >
   <div
@@ -155,7 +155,7 @@
       />
     {/if}
   </div>
-  <div class="flex shrink-0 flex-col gap-2">
+  <div class="shrink-0 pt-1">
     <ChatComposer
       {pending}
       onsubmit={handleSubmit}

@@ -53,6 +53,7 @@ def test_me_returns_current_user(client):
         "groups": [],
         "nickname": "",
         "avatar_visible": True,
+        "chat_drawer_enabled": False,
         "theme_config": {},
     }
 
@@ -99,6 +100,17 @@ def test_me_patch_updates_avatar_visible(client):
     assert response.json()["avatar_visible"] is False
     user.refresh_from_db()
     assert user.avatar_visible is False
+
+
+def test_me_patch_updates_chat_drawer_enabled(client):
+    user = _user(sub="sub-patch-chat-drawer")
+    client.force_login(user)
+    assert user.chat_drawer_enabled is False
+    response = client.patch(ME, {"chat_drawer_enabled": True}, content_type="application/json")
+    assert response.status_code == 200
+    assert response.json()["chat_drawer_enabled"] is True
+    user.refresh_from_db()
+    assert user.chat_drawer_enabled is True
 
 
 def test_me_patch_rejects_mismatched_read_only_field(client):

@@ -9,7 +9,7 @@ export { default as NumericValue, formatNumber } from "./NumericValue.svelte";
 export { default as StatusBadge, DEFAULT_STATUS_MAP } from "./StatusBadge.svelte";
 export type { StatusEntry } from "./StatusBadge.svelte";
 export { default as ChipFilterBar } from "./ChipFilterBar.svelte";
-export type { ChipItem } from "./ChipFilterBar.svelte";
+export type { ChipItem, ChipTone } from "./ChipFilterBar.svelte";
 export { default as Pagination } from "./Pagination.svelte";
 export { default as Collapsible } from "./Collapsible.svelte";
 export { default as Tree } from "./Tree.svelte";

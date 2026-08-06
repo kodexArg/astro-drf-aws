@@ -203,6 +203,7 @@ describe("issue #373 regression — SessionBadge popover never carries an uncond
           groups: [],
           nickname: "",
           avatar_visible: true,
+          chat_drawer_enabled: false,
         },
       },
     });

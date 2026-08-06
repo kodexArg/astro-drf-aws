@@ -52,7 +52,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = READ_ONLY_FIELDS + ["nickname", "avatar_visible", "theme_config"]
+        fields = READ_ONLY_FIELDS + [
+            "nickname",
+            "avatar_visible",
+            "chat_drawer_enabled",
+            "theme_config",
+        ]
         read_only_fields = ["sub", "email", "given_name", "family_name", "picture"]
 
     def validate_theme_config(self, value):

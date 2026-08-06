@@ -62,6 +62,16 @@ button:disabled,
      track LayoutHeader's `px-6 sm:px-10` — a fillet narrower than the gutter
      leaves the docked bar's top edge short of the page edge. */
   --nav-dock-gutter: 1.5rem;
+  /* Shell panel widths (aside L/M/S; drawer XL/L/M/S). Baselines from the
+     former 14rem locked rail: L ≈ enlarge, M ≈ 80%, S ≈ 60% (rounded rem).
+     Drawer M/S alias aside M/S so medium/small match exactly. */
+  --shell-aside-l: 15rem;
+  --shell-aside-m: 11rem;
+  --shell-aside-s: 9rem;
+  --shell-drawer-xl: 22rem;
+  --shell-drawer-l: 18rem;
+  --shell-drawer-m: var(--shell-aside-m);
+  --shell-drawer-s: var(--shell-aside-s);
   --background: oklch(0.985 0.004 60);
   --foreground: oklch(0.18 0.015 50);
   --card: oklch(0.995 0.002 60);
@@ -166,6 +176,9 @@ button:disabled,
   --radius-md: calc(var(--radius) - 0.125rem);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 0.25rem);
+  /* Tailwind's default `--radius-2xl` is a fixed 1rem — peek tabs and other
+     `rounded-2xl` chrome would ignore Appearance's `--radius` without this. */
+  --radius-2xl: calc(var(--radius) + 0.375rem);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -203,10 +216,11 @@ button:disabled,
 
 /* Docked NavBar: swaps the floating pill for a flush, flared bar once the
    sentinel above the header leaves the viewport (toggled by Base.astro's
-   IntersectionObserver, never rendered server-side). */
+   IntersectionObserver, never rendered server-side). Keep the sunken inset
+   shadow — docked is still an embedded bar, not a flat strip. */
 header[data-docked] > .nav-pill {
   border-radius: 0 0 var(--nav-dock-radius) var(--nav-dock-radius);
-  box-shadow: none;
+  box-shadow: var(--sunken-shadow);
   background: var(--sunken);
 }
 
@@ -274,8 +288,9 @@ header[data-docked] > .nav-pill::after {
 }
 
 body {
-  /* App-shell column: the in-flow sticky header stack takes its share and
-     `main` (PageCanvas, `flex-1`) fills exactly what is left — so a
+  /* App-shell column: `.app-shell` (Base.astro) is the flex-1 row that holds
+     the locked nav rail beside header+main; `main` (PageCanvas, `flex-1`
+     inside the content column) fills exactly what the header leaves — so a
      one-viewport page (the chat) fits with no phantom scroll. */
   display: flex;
   flex-direction: column;
@@ -290,6 +305,15 @@ body {
     linear-gradient(to bottom, transparent 0%, transparent 58%, var(--spotlight-shadow) 100%);
   background-attachment: fixed;
   color: var(--foreground);
+}
+
+/* Astro islands default to inline custom elements; `contents` lets the locked
+   rail's in-flow width spacer participate in `.app-shell`'s row (the visible
+   <aside> is position:fixed + h-dvh), and keeps fixed FancyDrawer / ChatDrawer
+   roots from becoming phantom flex items. */
+.app-shell > astro-island,
+body > astro-island {
+  display: contents;
 }
 
 [data-bg-preset="melt"] {

@@ -29,6 +29,7 @@
     type NavLockPreference,
     type NavViewport,
   } from "./nav-fsm";
+  import { ASIDE_SIZE_VAR, type AsideSize } from "./shell-sizes";
   import { t } from "../../../i18n";
   import {
     DEFAULTS,
@@ -41,8 +42,6 @@
   import { Sun, Moon, User } from "$lib/components/icons";
   import { cn } from "$lib/utils";
 
-  const RAIL_WIDTH = "14rem";
-
   let {
     pathname = "",
     side = "right",
@@ -50,6 +49,11 @@
     open = $bindable(false),
     /** SSR lock preference from the `nav_lock` cookie ([[adr-28-nav-fsm-frosted-rail]]). */
     preference: preferenceProp = "unlocked" as NavLockPreference,
+    /**
+     * Locked-rail / shell FancyDrawer width: L (15rem) | M (11rem, default) | S (9rem).
+     * Tokens: `--shell-aside-*` in `app.css` ([[DESIGN-SYSTEM]] rem-over-px).
+     */
+    asideSize = "M" as AsideSize,
   }: {
     /**
      * The current path, supplied by the page. Read from a prop rather than from
@@ -63,7 +67,11 @@
     navigates?: boolean;
     open?: boolean;
     preference?: NavLockPreference;
+    asideSize?: AsideSize;
   } = $props();
+
+  const railWidth = $derived(ASIDE_SIZE_VAR[asideSize]);
+  const dense = $derived(asideSize === "S");
 
   let localPreference = $state<NavLockPreference | null>(null);
   let viewport = $state<NavViewport>("desk");
@@ -120,7 +128,12 @@
 
 {#snippet footer()}
   <div
-    class="mt-6 flex shrink-0 items-center justify-center gap-2.5 border-t border-border pt-4"
+    class={cn(
+      /* Gap after the last nav item before the divider + chrome (FancyDrawer
+         is h-fit so mt-auto collapses to 0 — use a fixed margin). */
+      "mt-6 flex shrink-0 items-center justify-center border-t border-border pt-4",
+      dense ? "gap-1.5" : "gap-2.5",
+    )}
     role="group"
     aria-label={t("shell_nav_label")}
   >
@@ -151,10 +164,13 @@
 {#snippet body(tone: "default" | "inverse")}
   <nav
     aria-label={t("shell_nav_label")}
-    class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto"
+    class={cn(
+      "flex min-h-0 flex-1 flex-col overflow-y-auto",
+      dense ? "gap-4" : "gap-6",
+    )}
   >
     {#each NAV_SECTIONS as section, index (section.titleKey ?? index)}
-      <div class="flex flex-col gap-2.5">
+      <div class={cn("flex flex-col", dense ? "gap-1.5" : "gap-2.5")}>
         {#if section.titleKey}
           <div
             class="px-2 pb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
@@ -169,6 +185,7 @@
             icon={item.icon}
             active={isActive(item.href, pathname)}
             {tone}
+            {dense}
           />
         {/each}
       </div>
@@ -178,14 +195,29 @@
 {/snippet}
 
 {#snippet rail()}
+  <!-- Width reserve in the flex row; the visible rail is viewport-fixed so it
+       stays screen-tall (h-dvh), not page-tall when <main> grows. -->
+  <div
+    class="shrink-0"
+    style={`width: ${railWidth}`}
+    aria-hidden="true"
+    data-aside-spacer
+  ></div>
   <aside
     class={cn(
-      "flex min-h-0 shrink-0 flex-col overflow-y-auto border-border px-3 py-4",
+      /* Viewport-fixed: inset-y-0 + h-dvh — not self-stretch to document height.
+         pt-24 clears the content-column header range; pb-6 pins footer margin. */
+      "fixed inset-y-0 z-30 flex h-dvh max-h-dvh flex-col overflow-y-auto pt-24 pb-6",
+      dense ? "px-2" : "px-3",
       /* Soft wash + backdrop blur: a dotted theme background reads out of focus; labels stay sharp. */
       "bg-background/45 backdrop-blur-[0.35rem] supports-[backdrop-filter]:bg-background/35",
-      isLeft ? "border-r" : "order-last border-l",
+      /* Soft edge toward content via --border (no hard hairline); mirror when docked right. */
+      isLeft
+        ? "left-0 [box-shadow:0.0625rem_0_0.875rem_-0.25rem_color-mix(in_oklch,var(--border)_55%,transparent)]"
+        : "right-0 [box-shadow:-0.0625rem_0_0.875rem_-0.25rem_color-mix(in_oklch,var(--border)_55%,transparent)]",
     )}
-    style={`width: ${RAIL_WIDTH}`}
+    data-aside-size={asideSize}
+    style={`width: ${railWidth}`}
   >
     {@render body("inverse")}
   </aside>
@@ -195,7 +227,7 @@
   <FancyDrawer
     bind:open
     {side}
-    width={RAIL_WIDTH}
+    width={railWidth}
     title=""
     openLabel={t("shell_nav_label")}
     closeLabel={t("fancy_drawer_close")}

@@ -3,6 +3,10 @@
      Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]]
      LIVE-DOC:END -->
 
+<!--
+  Nav capsule: circular icon disc is the left cap; active/hover fill
+  projects right as a pill (feedlot NavItem pattern, token-adapted).
+-->
 <script lang="ts">
   import { Button } from "$lib/components/ui/button";
   import { cn } from "$lib/utils";
@@ -18,6 +22,8 @@
     /** `inverse` drops the ghost hover fill for a rail sitting directly on
      * the canvas with no panel behind it (docked/pinned NavDrawer). */
     tone = "default",
+    /** Tighter gap/padding for asideSize S (icon + short label). */
+    dense = false,
     class: className = undefined,
     ...rest
   }: {
@@ -27,6 +33,7 @@
     count?: number;
     icon?: Component<{ class?: string; "aria-hidden"?: string }>;
     tone?: "default" | "inverse";
+    dense?: boolean;
     class?: string;
     [key: string]: unknown;
   } = $props();
@@ -37,18 +44,38 @@
 
 <Button
   {href}
-  variant={active ? "secondary" : inverse ? "bare" : "ghost"}
+  variant="bare"
   class={cn(
-    "w-full justify-start gap-3 text-base",
-    inverse && !active && "text-foreground/90 hover:bg-foreground/10",
+    "group flex h-8 w-full items-center rounded-full py-0 pl-0 text-left text-sm font-medium leading-tight transition-colors",
+    dense ? "gap-1.5 pr-2" : "gap-2 pr-3",
+    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+    inverse
+      ? active
+        ? "bg-foreground/15 text-foreground"
+        : "text-foreground/90 hover:bg-foreground/10"
+      : active
+        ? "bg-accent/45 text-foreground"
+        : "text-foreground hover:bg-accent/30",
     className,
   )}
   aria-current={active ? "page" : undefined}
   {...rest}
 >
   {#if Icon}
-    <Icon class="size-5 shrink-0" aria-hidden="true" />
+    <span
+      class={cn(
+        "grid size-8 shrink-0 place-items-center rounded-full border transition-colors",
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : inverse
+            ? "border-border bg-foreground/5 text-foreground/80 group-hover:bg-foreground/10 group-hover:text-foreground"
+            : "border-border bg-muted text-muted-foreground group-hover:bg-background group-hover:text-foreground",
+      )}
+      aria-hidden="true"
+    >
+      <Icon class="size-3.5" aria-hidden="true" />
+    </span>
   {/if}
-  <span class="truncate">{label}</span>
+  <span class="min-w-0 flex-1 truncate">{label}</span>
   <NavBadge {count} />
 </Button>

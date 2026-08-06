@@ -67,6 +67,7 @@ Format: Term | Canonical form | Applies to | Forbidden forms.
 | RBAC group | `admins` | Django Group for the elevated role ([[AUTH]], [[adr-14-auth]]); RBAC is Django Groups, never Cognito | singular `admin` (collides with Django's `/admin/`), `superusers`, any Cognito group |
 | model field (users) | `nickname` | optional user-chosen display name, shown in place of the Cognito-derived given/family name when set ([[API]] `PATCH /api/me/`, [[adr-14-auth]] rule 5) | `display_name`, `alias`, `handle` |
 | model field (users) | `avatar_visible` | boolean; when false, the frontend renders two-letter initials instead of `picture` ([[API]]) | `show_avatar` (inverted polarity reads worse at the call site), `hide_avatar` |
+| model field (users) | `chat_drawer_enabled` | boolean; default `false`; when true, `Base.astro` mounts `ChatDrawer` (page-context assistant) for role-holding sessions ([[API]], [[COMPONENTIZATION]]) | `assistant_enabled`, `chatui_drawer`, `show_chat_drawer` |
 | endpoint segment (me) | `me` — `/api/me/` | current-session identity endpoint ([[API]]) | `profile`, `self`, `current-user` |
 | endpoint segment (restricted) | `restricted` — `/api/restricted/` | RBAC probe endpoint, group-gated ([[API]]) | `admin-only`, `protected`, `secure` |
 | endpoint segment (login) | `login` — `/accounts/login/` | OIDC login kickoff endpoint ([[AUTH]], [[API]]) | `signin`, `log-in`, `auth` |

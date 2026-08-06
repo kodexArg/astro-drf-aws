@@ -14,14 +14,15 @@
   import { Card, CardHeader, CardTitle, CardContent } from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
   import { Label } from "$lib/components/ui/label";
-  import { Input } from "$lib/components/ui/input";
   import { Alert } from "$lib/components/ui/alert";
+  import { Save } from "$lib/components/icons";
   import { cn } from "$lib/utils";
   import PaletteFields from "$lib/components/theme/PaletteFields.svelte";
   import ThemeModeToggle from "$lib/components/theme/ThemeModeToggle.svelte";
   import { readCsrfTokenFromCookie } from "$lib/csrf";
   import {
     DEFAULTS,
+    DEFAULT_RADIUS,
     MODES,
     SIDEBAR_SIDES,
     sanitizeRadius,
@@ -90,7 +91,7 @@
         light: { ...(config?.colors?.light ?? {}) },
         dark: { ...(config?.colors?.dark ?? {}) },
       },
-      radius: config?.radius ?? "",
+      radius: sanitizeRadius(config?.radius) ?? DEFAULT_RADIUS,
     };
   }
 
@@ -231,10 +232,23 @@
   }
 </script>
 
-<Card class="w-full max-w-3xl">
+<Card class="w-full">
   <CardHeader class="flex flex-row items-center justify-between gap-4">
     <CardTitle>{t("appearance_title")}</CardTitle>
-    <ThemeModeToggle bind:mode={draft.mode} disabled={saving} />
+    <div class="flex items-center gap-2">
+      <ThemeModeToggle bind:mode={draft.mode} disabled={saving} />
+      <Button
+        type="button"
+        size="sm"
+        onclick={save}
+        disabled={saving || !canSave}
+        aria-label={saving ? t("appearance_saving") : t("appearance_save")}
+        title={saving ? t("appearance_saving") : t("appearance_save")}
+      >
+        <Save class="size-4" aria-hidden="true" />
+        {saving ? t("appearance_saving") : t("appearance_save")}
+      </Button>
+    </div>
   </CardHeader>
   <CardContent class="flex flex-col gap-6">
     <div class="flex flex-col gap-2">
@@ -301,26 +315,40 @@
       </div>
     </div>
 
-    <div class="grid gap-6 md:grid-cols-2">
-      {#each MODES as mode (mode)}
-        <div class="flex flex-col gap-3 rounded-md border border-border p-3">
-          <h3 class="text-sm font-semibold">{t(MODE_LABELS[mode])}</h3>
-          <PaletteFields
-            bind:palette={draft.palettes[mode]}
-            disabled={saving}
-            idPrefix={`appearance-${mode}`}
-          />
-        </div>
-      {/each}
+    <!-- Container query: viewport `md` is wrong inside a ~333px drawer/card —
+         stack Claro/Oscuro until this section itself is wide enough for two hex rows. -->
+    <div class="@container w-full min-w-0">
+      <div class="grid grid-cols-1 gap-6 @min-[30rem]:grid-cols-2">
+        {#each MODES as mode (mode)}
+          <div class="flex min-w-0 flex-col gap-3 rounded-md border border-border p-3">
+            <h3 class="text-sm font-semibold">{t(MODE_LABELS[mode])}</h3>
+            <PaletteFields
+              bind:palette={draft.palettes[mode]}
+              disabled={saving}
+              idPrefix={`appearance-${mode}`}
+            />
+          </div>
+        {/each}
+      </div>
     </div>
 
     <div class="flex flex-col gap-1.5">
-      <Label for="theme-radius">{t("appearance_radius")}</Label>
-      <Input
+      <div class="flex items-center justify-between gap-3">
+        <Label for="theme-radius">{t("appearance_radius")}</Label>
+        <span class="text-sm tabular-nums text-muted-foreground">{draft.radius}</span>
+      </div>
+      <input
         id="theme-radius"
-        placeholder="0.625rem"
-        bind:value={draft.radius}
+        type="range"
+        min="0"
+        max="1.5"
+        step="0.125"
+        class="h-9 w-full accent-primary disabled:cursor-not-allowed disabled:opacity-50"
+        value={Number.parseFloat(draft.radius) || Number.parseFloat(DEFAULT_RADIUS)}
         disabled={saving}
+        oninput={(event) => {
+          draft.radius = `${event.currentTarget.value}rem`;
+        }}
       />
     </div>
 
@@ -334,9 +362,6 @@
     <div class="flex items-center justify-end gap-2">
       <Button type="button" variant="outline" onclick={resetDraft} disabled={saving}>
         {t("appearance_reset")}
-      </Button>
-      <Button type="button" onclick={save} disabled={saving || !canSave}>
-        {saving ? t("appearance_saving") : t("appearance_save")}
       </Button>
     </div>
   </CardContent>
