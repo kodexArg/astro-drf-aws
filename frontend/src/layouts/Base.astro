@@ -45,6 +45,8 @@ const navPreference = parseNavLockCookie(Astro.cookies.get("nav_lock")?.value);
 const pageIdentity = Astro.url.pathname.endsWith("/")
   ? Astro.url.pathname
   : `${Astro.url.pathname}/`;
+
+const roleHolding = hasRole(me);
 ---
 
 <!doctype html>
@@ -58,43 +60,55 @@ const pageIdentity = Astro.url.pathname.endsWith("/")
   </head>
 
   <body>
-    <LayoutHeader {title}>
-      <Fragment slot="session">
-        <SessionBadge
-          client:load
-          me={me}
-          pending={me !== null && !hasRole(me)}
-          publicBackendUrl={publicBackendUrl}
-          loginHref={`${publicBackendUrl}/accounts/login/`}
-          logoutAction={`${publicBackendUrl}/accounts/logout/`}
-          panelHref="/profile/"
-          loginLabel={t("auth_login")}
-          logoutLabel={t("auth_logout")}
-        />
-      </Fragment>
-    </LayoutHeader>
+    {/*
+      Row shell: locked rail reserves width via an in-flow spacer; the visible
+      <aside> is position:fixed + h-dvh (viewport-tall, not page-tall). Header
+      + main stay a column on the remaining side (bdd-12 / bdd-26). Unlocked
+      FancyDrawer is fixed and takes no row space.
+    */}
+    <div class="app-shell flex min-h-0 w-full flex-1 flex-row">
+      {
+        /* Role-gated: a role-less visitor is confined to `/`
+           ([[adr-21-authorization-lobby]] rule 1). */
+        roleHolding && (
+          <NavDrawer
+            client:load
+            transition:persist="shell-nav"
+            pathname={Astro.url.pathname}
+            side={navSide}
+            preference={navPreference}
+            navigates
+          />
+        )
+      }
 
-    <PageCanvas transition:animate={PAGE_FADE}>
-      <slot />
-    </PageCanvas>
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+        <LayoutHeader {title}>
+          <Fragment slot="session">
+            <SessionBadge
+              client:load
+              me={me}
+              pending={me !== null && !hasRole(me)}
+              publicBackendUrl={publicBackendUrl}
+              loginHref={`${publicBackendUrl}/accounts/login/`}
+              logoutAction={`${publicBackendUrl}/accounts/logout/`}
+              panelHref="/profile/"
+              loginLabel={t("auth_login")}
+              logoutLabel={t("auth_logout")}
+            />
+          </Fragment>
+        </LayoutHeader>
+
+        <PageCanvas transition:animate={PAGE_FADE}>
+          <slot />
+        </PageCanvas>
+      </div>
+    </div>
 
     {
-      /* Role-gated: a role-less visitor is confined to `/`
-         ([[adr-21-authorization-lobby]] rule 1). */
-      hasRole(me) && (
-        <NavDrawer
-          client:load
-          transition:persist="shell-nav"
-          pathname={Astro.url.pathname}
-          side={navSide}
-          preference={navPreference}
-          navigates
-        />
-      )
-    }
-    {
-      /* Opposite edge of the nav drawer; same role gate (adr-24 page-context). */
-      hasRole(me) && (
+      /* Opposite edge of the nav drawer; role gate + opt-in preference
+         (chat_drawer_enabled defaults false — [[API]] / bdd-05). */
+      roleHolding && me?.chat_drawer_enabled && (
         <ChatDrawer
           client:load
           side={chatSide}
@@ -124,18 +138,27 @@ const pageIdentity = Astro.url.pathname.endsWith("/")
     </script>
 
     <script>
-      // Docked state is derived from the sentinel's own visibility, not scroll
-      // math, so it stays correct across resize/zoom.
-      const sentinel = document.querySelector("[data-nav-sentinel]");
-      const header = document.querySelector("[data-nav-header]");
-      if (sentinel && header) {
-        new IntersectionObserver(
+      // Docked state from sentinel visibility (not scroll math). Re-bind on
+      // every `astro:page-load` so ClientRouter swaps keep the observer on the
+      // live header/sentinel pair — a one-shot bind dies after the first swap.
+      let navDockObserver = null;
+      function bindNavDock() {
+        const sentinel = document.querySelector("[data-nav-sentinel]");
+        const header = document.querySelector("[data-nav-header]");
+        if (navDockObserver) {
+          navDockObserver.disconnect();
+          navDockObserver = null;
+        }
+        if (!sentinel || !header) return;
+        navDockObserver = new IntersectionObserver(
           ([entry]) => {
             header.toggleAttribute("data-docked", !entry.isIntersecting);
           },
           { threshold: 0 },
-        ).observe(sentinel);
+        );
+        navDockObserver.observe(sentinel);
       }
+      document.addEventListener("astro:page-load", bindNavDock);
     </script>
   </body>
 </html>

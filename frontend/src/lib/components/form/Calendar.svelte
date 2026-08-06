@@ -4,12 +4,12 @@
      LIVE-DOC:END -->
 
 <!--
-  Inline single-month grid for a single-date selection — the inline-view
-  sibling of form/DatePicker's popover-native-input approach. Melt 0.44 ships
-  no Calendar builder ([[MELT-UI]] — same absence recorded for Pagination and
-  Dropdown Menu above), so the month grid, weekday header, and prev/next nav
-  are hand-rolled here rather than delegated. value/onValueChange default to
-  a safe "nothing selected, current month" state and a no-op callback so a
+  Inline single-month grid for a single-date selection — also the grid
+  embedded by form/DatePicker's Melt Popover. Melt 0.44 ships no Calendar
+  builder ([[MELT-UI]] — same absence recorded for Pagination and Dropdown
+  Menu above), so the month grid, weekday header, and prev/next nav are
+  hand-rolled here rather than delegated. value/onValueChange default to a
+  safe "nothing selected, current month" state and a no-op callback so a
   zero-prop invocation renders without throwing and fires no mutating call
   (adr-22 r1/r2). Color-scheme theming rides the app-wide `:root`/`.dark`
   rule (issue #174) — this component holds no native form control needing an

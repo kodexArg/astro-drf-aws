@@ -36,6 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     picture = models.URLField(blank=True)
     nickname = models.CharField(max_length=120, blank=True, default="")
     avatar_visible = models.BooleanField(default=True)
+    chat_drawer_enabled = models.BooleanField(default=False)
     theme_config = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

@@ -9,10 +9,12 @@
   import { Label } from "$lib/components/ui/label";
   import { Avatar, AvatarImage, AvatarFallback } from "$lib/components/ui/avatar";
   import ConfirmDialog from "$lib/components/overlay/ConfirmDialog.svelte";
+  import { Switch } from "$lib/components/form";
   import { Check } from "$lib/components/icons";
   import { readCsrfTokenFromCookie } from "$lib/csrf";
   import { resolveDisplayName, resolveInitials } from "$lib/display-name";
   import { optimisticToggle } from "$lib/optimistic-toggle";
+  import { t } from "../../../i18n";
   import type { Me } from "$lib/types/user";
 
   let {
@@ -27,6 +29,7 @@
 
   let nickname = $state(me?.nickname ?? "");
   let avatarVisible = $state(me?.avatar_visible ?? false);
+  let chatDrawerEnabled = $state(me?.chat_drawer_enabled ?? false);
   let saving = $state(false);
   let error = $state("");
 
@@ -74,9 +77,24 @@
       (next) => patchMe({ avatar_visible: next }),
     );
   }
+
+  async function persistChatDrawer(next: boolean): Promise<void> {
+    const previous = !next;
+    chatDrawerEnabled = next;
+    const ok = await patchMe({ chat_drawer_enabled: next });
+    if (!ok) {
+      chatDrawerEnabled = previous;
+      return;
+    }
+    if (typeof window !== "undefined") {
+      // Base.astro mounts ChatDrawer from SSR `me` — reload so the edge
+      // tab appears or disappears without a second client channel.
+      window.location.reload();
+    }
+  }
 </script>
 
-<div class="flex w-full max-w-md flex-col gap-6">
+<div class="mx-auto flex w-full max-w-md flex-col gap-6">
   <div class="flex flex-col items-center gap-2">
     <Avatar class="size-16">
       {#if avatarVisible && picture}
@@ -111,5 +129,18 @@
     {#if error}
       <p class="text-sm text-destructive">{error}</p>
     {/if}
+  </div>
+
+  <div class="flex flex-col gap-1.5">
+    <Switch
+      bind:checked={chatDrawerEnabled}
+      disabled={saving}
+      label={t("profile_chat_drawer")}
+      class="w-full justify-between"
+      onCheckedChange={(next) => {
+        void persistChatDrawer(next);
+      }}
+    />
+    <p class="text-sm text-muted-foreground">{t("profile_chat_drawer_hint")}</p>
   </div>
 </div>

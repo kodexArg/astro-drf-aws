@@ -19,6 +19,7 @@
     disabled = false,
     name = undefined,
     class: className = undefined,
+    onCheckedChange = undefined,
   }: {
     checked?: boolean;
     label?: string;
@@ -26,11 +27,16 @@
     /** When set, a hidden input mirrors `checked` for plain form submission. */
     name?: string;
     class?: string;
+    /** Fires after the thumb flips — parent owns persistence / side effects. */
+    onCheckedChange?: (next: boolean) => void;
   } = $props();
 
   const toggle = new Toggle({
     value: () => checked,
-    onValueChange: (v) => (checked = v),
+    onValueChange: (v) => {
+      checked = v;
+      onCheckedChange?.(v);
+    },
     disabled: () => disabled,
   });
 </script>

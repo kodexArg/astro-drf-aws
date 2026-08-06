@@ -4,11 +4,11 @@
      LIVE-DOC:END -->
 
 <!--
-  Component-gallery demo of overlay/Drawer — the Drawer docks to the viewport,
-  so this wrapper mounts one left and one right instance (both collapsed by
-  default) and leaves an inline note pointing at the two edge tabs, the same
-  composition-over-a-real-component pattern the other showcase/*Demo wrappers
-  use (adr-22, COMPONENTIZATION).
+  Component-gallery demo of overlay/Drawer — docks to the right viewport
+  edge (product rule: left = shell menu / NavDrawer; showcase Drawer is a
+  right-side context panel). Default size L (18rem); Collapsed by default;
+  same composition-over-a-real-component pattern as the other showcase/*Demo
+  wrappers (adr-22, COMPONENTIZATION).
 -->
 <script lang="ts">
   import { Drawer } from "$lib/components/overlay";
@@ -18,16 +18,8 @@
 <p class="text-sm text-muted-foreground">{t("demo_drawer_note")}</p>
 
 <Drawer
-  side="left"
-  title={t("demo_drawer_left_title")}
-  openLabel={t("drawer_open")}
-  closeLabel={t("drawer_close")}
->
-  <p>{t("demo_drawer_left_body")}</p>
-</Drawer>
-
-<Drawer
   side="right"
+  size="L"
   title={t("demo_drawer_right_title")}
   openLabel={t("drawer_open")}
   closeLabel={t("drawer_close")}
