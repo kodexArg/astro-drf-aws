@@ -7,10 +7,25 @@
   A single-select chip row built on the melt/builders RadioGroup — the same
   headless-builder pattern as ThemeCard's bgPreset selector ([[MELT-UI]]).
   RadioGroup supplies roving-focus and aria-checked; the chips are the
-  styled layer on top.
+  styled layer on top. Optional per-chip `tone` paints a solid selected fill
+  (no `/alpha` washes) using design-system status colors.
 -->
 <script lang="ts" module>
-  export type ChipItem = { key: string; label: string; count?: number };
+  export type ChipTone = "default" | "success" | "warning" | "negative";
+  export type ChipItem = {
+    key: string;
+    label: string;
+    count?: number;
+    /** Selected fill; solid token colors — never translucent washes. */
+    tone?: ChipTone;
+  };
+
+  const SELECTED_TONE: Record<ChipTone, string> = {
+    default: "border-primary bg-primary text-primary-foreground",
+    success: "border-success bg-success text-success-foreground",
+    warning: "border-warning bg-warning text-warning-foreground",
+    negative: "border-negative bg-negative text-negative-foreground",
+  };
 </script>
 
 <script lang="ts">
@@ -57,6 +72,7 @@
   >
     {#each items as chip (chip.key)}
       {@const item = group.getItem(chip.key)}
+      {@const tone = chip.tone ?? "default"}
       <Button
         type="button"
         variant="bare"
@@ -64,13 +80,18 @@
         class={cn(
           "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-sm",
           item.checked
-            ? "border-primary bg-primary/10 text-foreground"
+            ? SELECTED_TONE[tone]
             : "border-input bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground",
         )}
       >
         {chip.label}
         {#if chip.count !== undefined}
-          <span class="tabular-nums text-xs opacity-70">({chip.count})</span>
+          <span
+            class={cn(
+              "tabular-nums text-xs",
+              item.checked ? "opacity-90" : "opacity-70",
+            )}
+          >({chip.count})</span>
         {/if}
       </Button>
     {/each}

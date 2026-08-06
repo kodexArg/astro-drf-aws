@@ -5,8 +5,10 @@ import {
   computeThemeSSRAttrs,
   parseThemeConfig,
   sanitizeColor,
+  sanitizeHexDigits,
   sanitizeRadius,
   sanitizeThemeConfig,
+  toHexDigits,
 } from "../src/lib/theme";
 import { THEME_PACK_IDS, isThemePackId, themeConfigFromPack } from "../src/lib/theme-packs";
 
@@ -36,6 +38,27 @@ describe("sanitizeColor", () => {
     expect(sanitizeColor("oklch(0.7 0.1 250); background: url(javascript:alert(1))")).toBeUndefined();
     expect(sanitizeColor("red;}<script>expression(alert(1))")).toBeUndefined();
     expect(sanitizeColor('oklch(0 0 0)" onmouseover="alert(1)')).toBeUndefined();
+  });
+});
+
+describe("toHexDigits / sanitizeHexDigits", () => {
+  test("extracts six lowercase digits from #rgb and #rrggbb(aa)", () => {
+    expect(toHexDigits("#AbC")).toBe("aabbcc");
+    expect(toHexDigits("#a1b2c3")).toBe("a1b2c3");
+    expect(toHexDigits("#a1b2c3ff")).toBe("a1b2c3");
+  });
+
+  test("returns empty for absent or non-hex without a browser", () => {
+    expect(toHexDigits(undefined)).toBe("");
+    expect(toHexDigits("")).toBe("");
+    // oklch needs canvas rasterization; bun:test has no document
+    expect(toHexDigits("oklch(0.7 0.1 250)")).toBe("");
+  });
+
+  test("sanitizeHexDigits strips junk and caps at six", () => {
+    expect(sanitizeHexDigits("#A1b2C3zz")).toBe("a1b2c3");
+    expect(sanitizeHexDigits("gg12")).toBe("12");
+    expect(sanitizeHexDigits("1234567890")).toBe("123456");
   });
 });
 

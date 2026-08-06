@@ -5,14 +5,15 @@
 
 <!--
   Single-date filter on the melt/builders Popover ([[MELT-UI]]) — Melt 0.44
-  ships no Date Picker builder, so the calendar itself is the platform's
-  native <input type="date">; Popover supplies the anchored, focus-trapped
-  surface around it. Value is a plain ISO "YYYY-MM-DD" string — no
+  ships no Date Picker builder, so the month grid is form/Calendar (hand-
+  rolled for the same absence) and Popover supplies the anchored, focus-
+  trapped surface around it. Value is a plain ISO "YYYY-MM-DD" string — no
   @internationalized/date dependency.
 -->
 <script lang="ts">
   import { Popover } from "melt/builders";
   import { Button } from "$lib/components/ui/button";
+  import Calendar from "./Calendar.svelte";
   import { cn } from "$lib/utils";
 
   let {
@@ -42,6 +43,10 @@
       ? new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { dateStyle: "medium" })
       : undefined,
   );
+
+  function onSelect(_iso: string): void {
+    popover.open = false;
+  }
 </script>
 
 <div class={cn("flex flex-col gap-1.5", className)}>
@@ -59,22 +64,15 @@
   </Button>
   <div
     {...popover.content}
-    class="z-50 rounded-md border bg-popover p-2 text-popover-foreground shadow-md"
+    class="z-50 rounded-md border bg-popover p-0 text-popover-foreground shadow-md"
   >
-    <div class="flex items-center gap-2">
-      <input
-        type="date"
-        bind:value
-        {min}
-        {max}
-        aria-label={label}
-        class="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-      />
-      {#if value && clearLabel}
+    <Calendar bind:value {min} {max} class="border-0" onValueChange={onSelect} />
+    {#if value && clearLabel}
+      <div class="border-t border-border px-2 pb-2 pt-1">
         <Button type="button" variant="ghost" size="sm" onclick={() => (value = undefined)}>
           {clearLabel}
         </Button>
-      {/if}
-    </div>
+      </div>
+    {/if}
   </div>
 </div>

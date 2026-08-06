@@ -97,7 +97,7 @@ Names here are reference copies of what [[GLOSSARY]] already decided, not the po
 | `ChatComposer` | `chat/` | Posts raw user text to the router endpoint | [[CHATBOT]] router UI |
 | `AuthPanel` | `auth/` | Session-aware auth actions | Any authenticated page |
 | `SessionBadge` | `auth/` | Compact current-session indicator | Any authenticated page |
-| `ProfileForm` | `auth/` | Editable profile fields (nickname, avatar visibility) with confirm-guarded save | `/profile/` |
+| `ProfileForm` | `auth/` | Editable profile fields (nickname, avatar visibility, ChatDrawer opt-in) with confirm-guarded save | `/profile/` |
 | `Select` | `form/` | Single-select popover, Melt builder | Forms needing a closed-option field |
 | `Combobox` | `form/` | Searchable single-select, Melt builder | Forms needing a filterable option field |
 | `Checkbox` | `form/` | Boolean checkbox, Melt Toggle builder | Forms needing a boolean field |

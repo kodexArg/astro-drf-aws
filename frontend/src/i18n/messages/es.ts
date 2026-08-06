@@ -98,7 +98,7 @@ export const es = {
   router_outcome_network_error: "Algo falló al contactar al asistente. Probá de nuevo.",
 
   // ChatUI assistant mode ([[CHATBOT]], adr-24) — status copy only; answers are model text
-  chatui_assistant_title: "Asistente",
+  chatui_assistant_title: "¿Cómo puedo ayudarte?",
   chatui_assistant_composer_placeholder: "Preguntá sobre esta pantalla",
   shell_chat_drawer_label: "Asistente de la página",
   assistant_outcome_disabled: "El asistente no está disponible por el momento.",
@@ -110,6 +110,9 @@ export const es = {
   // /profile/
   profile_title: "Perfil",
   profile_intro: "Administrá tu cuenta y tu apariencia.",
+  profile_chat_drawer: "Asistente de la página",
+  profile_chat_drawer_hint:
+    "Mostrá la pestaña del asistente (ChatUI) en el borde opuesto al menú. Desactivado por defecto.",
 
   // /showcase/components/ — gallery chrome
   gallery_title: "Componentes",
@@ -260,10 +263,7 @@ export const es = {
   fancy_drawer_close: "Cerrar panel",
   fancy_drawer_empty: "Sin contenido",
   demo_drawer_note:
-    "Los dos drawers están anclados a los bordes de la ventana y arrancan plegados: usá las pestañas de la izquierda y la derecha para deslizarlos.",
-  demo_drawer_left_title: "Navegación",
-  demo_drawer_left_body:
-    "Drawer izquierdo colapsable — ideal para la navegación principal del shell de la aplicación.",
+    "El drawer se ancla al borde derecho y arranca plegado: usá la pestaña del borde para deslizarlo. La navegación principal es el menú del shell (NavDrawer), no un Drawer.",
   demo_drawer_right_title: "Detalles",
   demo_drawer_right_body:
     "Drawer derecho colapsable — ideal para contexto, filtros o el detalle de la fila seleccionada.",

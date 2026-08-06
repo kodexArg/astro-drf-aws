@@ -5,20 +5,22 @@
 
 <!--
   From/to date-range filter on the melt/builders Popover ([[MELT-UI]]) — same
-  native-<input type="date"> rationale as form/DatePicker; two independently
-  bindable ISO "YYYY-MM-DD" strings, each constraining the other's range.
+  composition as form/DatePicker: form/RangeCalendar supplies the month grid
+  (Melt 0.44 has no RangeCalendar builder), Popover supplies the anchored,
+  focus-trapped surface. Two independently bindable ISO "YYYY-MM-DD" strings.
 -->
 <script lang="ts">
   import { Popover } from "melt/builders";
   import { Button } from "$lib/components/ui/button";
+  import RangeCalendar from "./RangeCalendar.svelte";
   import { cn } from "$lib/utils";
 
   let {
     from = $bindable(undefined),
     to = $bindable(undefined),
     label,
-    fromLabel,
-    toLabel,
+    fromLabel: _fromLabel,
+    toLabel: _toLabel,
     placeholder = "",
     clearLabel = "",
     min = undefined,
@@ -29,9 +31,9 @@
     to?: string | undefined;
     /** Accessible label for the trigger, i18n-supplied by the caller. */
     label: string;
-    /** Accessible label for the "from" input. */
+    /** Kept for API stability with the prior native dual-input surface. */
     fromLabel: string;
-    /** Accessible label for the "to" input. */
+    /** Kept for API stability with the prior native dual-input surface. */
     toLabel: string;
     placeholder?: string;
     /** Shown next to a chosen range; omit to hide the clear affordance. */
@@ -48,6 +50,10 @@
   const formatted = $derived(
     from && to ? `${format(from)} – ${format(to)}` : from ? format(from) : to ? format(to) : undefined,
   );
+
+  function onRangeChange(range: { from?: string; to?: string }): void {
+    if (range.from && range.to) popover.open = false;
+  }
 </script>
 
 <div class={cn("flex flex-col gap-1.5", className)}>
@@ -65,34 +71,15 @@
   </Button>
   <div
     {...popover.content}
-    class="z-50 rounded-md border bg-popover p-3 text-popover-foreground shadow-md"
+    class="z-50 rounded-md border bg-popover p-0 text-popover-foreground shadow-md"
   >
-    <div class="flex flex-col gap-2">
-      <div class="flex items-center gap-2">
-        <input
-          type="date"
-          bind:value={from}
-          {min}
-          max={to ?? max}
-          aria-label={fromLabel}
-          class="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        />
-        <span aria-hidden="true" class="text-muted-foreground">–</span>
-        <input
-          type="date"
-          bind:value={to}
-          min={from ?? min}
-          {max}
-          aria-label={toLabel}
-          class="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        />
-      </div>
-      {#if (from || to) && clearLabel}
+    <RangeCalendar bind:from bind:to {min} {max} class="border-0" {onRangeChange} />
+    {#if (from || to) && clearLabel}
+      <div class="border-t border-border px-2 pb-2 pt-1">
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          class="self-start"
           onclick={() => {
             from = undefined;
             to = undefined;
@@ -100,7 +87,7 @@
         >
           {clearLabel}
         </Button>
-      {/if}
-    </div>
+      </div>
+    {/if}
   </div>
 </div>

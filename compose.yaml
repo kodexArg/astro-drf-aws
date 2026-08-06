@@ -94,7 +94,17 @@ services:
       PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL:-http://localhost:8000}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:4321}
       PUBLIC_PROJECT_SLUG: ${PROJECT_SLUG:-astro-drf-aws}
-    command: ["bun", "run", "dev", "--host", "0.0.0.0"]
+    # Clear bind-mounted .astro/dev.json before start: Astro's lock treats
+    # process.kill(pid,0) as "server alive", and PID 8 is routinely reused
+    # inside the container, so a stale lock blocks every restart. Astro's
+    # own `--force` only clears the content-layer cache — it does not drop
+    # the lock (node_modules/astro/dist/cli/dev/index.js).
+    command:
+      [
+        "sh",
+        "-c",
+        "rm -f .astro/dev.json && exec bun run dev --host 0.0.0.0",
+      ]
     volumes:
       - ./frontend:/app
       - /app/node_modules  # anon volume: keep the image's install, don't let the host mask it

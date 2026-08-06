@@ -162,6 +162,7 @@ describe("/ session badge, authenticated branch (bdd-02); lobby gating (bdd-08, 
             ? "https://example.com/avatar.png"
             : "";
           const groups = cookie.includes("stub-role") ? ["admins"] : [];
+          const chat_drawer_enabled = cookie.includes("stub-chat");
           return Response.json({
             sub: "stub-sub",
             email: "stub@example.com",
@@ -171,6 +172,7 @@ describe("/ session badge, authenticated branch (bdd-02); lobby gating (bdd-08, 
             groups,
             nickname: "",
             avatar_visible: true,
+            chat_drawer_enabled,
           });
         }
         return new Response("not found", { status: 404 });
@@ -251,7 +253,7 @@ describe("/ session badge, authenticated branch (bdd-02); lobby gating (bdd-08, 
     expect(body).not.toContain('href="/showcase/components/"');
   });
 
-  test("with a session cookie and a role-holding group (groups: [admins]), the NAV_ITEMS cards and both drawers render, no pending surface (bdd-08)", async () => {
+  test("with a session cookie and a role-holding group (groups: [admins]), the NAV_ITEMS cards and nav drawer render; chat drawer stays off by default (bdd-05)", async () => {
     const res = await fetch(`${SSR_BASE}/`, {
       headers: { cookie: "sessionid=stub-role" },
     });
@@ -266,12 +268,21 @@ describe("/ session badge, authenticated branch (bdd-02); lobby gating (bdd-08, 
     expect(body).toContain(t("shell_nav_profile"));
     expect(body).not.toContain(t("pending_title"));
     expect(body).not.toContain(t("lobby_pending"));
-    // The role-gated drawers render their edge tabs.
+    // Nav drawer edge tab always mounts for role-holders; ChatDrawer is opt-in.
     expect(body).toContain(t("shell_nav_label"));
-    expect(body).toContain(t("shell_chat_drawer_label"));
+    expect(body).not.toContain(t("shell_chat_drawer_label"));
     // The profile deep-link also lives inside SessionBadge's ☰ popover,
     // gated on the role-holding (non-pending) session.
     expect(body).toContain('href="/profile/"');
+  });
+
+  test("with chat_drawer_enabled true, the page-context ChatDrawer edge tab mounts (bdd-05)", async () => {
+    const res = await fetch(`${SSR_BASE}/`, {
+      headers: { cookie: "sessionid=stub-role; stub-chat=1" },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain(t("shell_chat_drawer_label"));
   });
 
   test("with a non-empty picture claim, renders an <img> with that src, not the initials fallback", async () => {

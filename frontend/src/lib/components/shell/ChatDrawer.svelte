@@ -10,6 +10,7 @@
 <script lang="ts">
   import Drawer from "$lib/components/overlay/Drawer.svelte";
   import ChatUI from "$lib/components/chat/ChatUI.svelte";
+  import type { DrawerSize } from "$lib/components/shell/shell-sizes";
   import { t } from "../../../i18n";
   import type { SidebarSide } from "$lib/theme";
 
@@ -40,6 +41,8 @@
     publicBackendUrl = "",
     copy = EMPTY_COPY,
     open = $bindable(false),
+    /** Chat needs the wide step; overlay/Drawer itself defaults to L. */
+    size = "XL" as DrawerSize,
   }: {
     /** Mirror of nav `sidebarSide` — derived by the layout, never hardcoded. */
     side?: SidebarSide;
@@ -48,24 +51,28 @@
     publicBackendUrl?: string;
     copy?: ChatCopy;
     open?: boolean;
+    size?: DrawerSize;
   } = $props();
 </script>
 
 <Drawer
   bind:open
   {side}
-  width="22rem"
+  {size}
   title={copy.title || t("chatui_assistant_title")}
   openLabel={t("shell_chat_drawer_label")}
   closeLabel={t("drawer_close")}
 >
-  <div class="flex min-h-0 flex-1 flex-col">
+  {#snippet peekIcon()}
+    <span class="text-base font-bold leading-none" aria-hidden="true">?</span>
+  {/snippet}
+  <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
     <ChatUI
       mode="assistant"
       {page}
       {publicBackendUrl}
       {copy}
-      class="max-w-none flex-1 px-0 py-0"
+      class="max-w-none h-full min-h-0 flex-1 px-0 py-0"
     />
   </div>
 </Drawer>

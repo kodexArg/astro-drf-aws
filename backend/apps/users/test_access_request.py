@@ -144,6 +144,7 @@ def test_me_endpoint_does_not_leak_access_request(client):
         "groups": [],
         "nickname": "",
         "avatar_visible": True,
+        "chat_drawer_enabled": False,
         "theme_config": {},
     }
     assert "access_request" not in response.json()

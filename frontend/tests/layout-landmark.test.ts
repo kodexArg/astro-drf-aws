@@ -93,6 +93,23 @@ describe("bdd-26 — the header is a sibling of the main", () => {
     expect(source).not.toMatch(/\bfixed\b/);
   });
 
+  test("docked nav-pill keeps the sunken inset shadow", async () => {
+    const css = await Bun.file(path.join(SRC, "styles", "app.css")).text();
+    expect(css).toMatch(
+      /header\[data-docked\]\s*>\s*\.nav-pill\s*\{[^}]*box-shadow:\s*var\(--sunken-shadow\)/s,
+    );
+    expect(css).not.toMatch(
+      /header\[data-docked\]\s*>\s*\.nav-pill\s*\{[^}]*box-shadow:\s*none/s,
+    );
+  });
+
+  test("Base.astro rebinds the nav-dock observer on astro:page-load", async () => {
+    const source = await Bun.file(path.join(LAYOUTS, "Base.astro")).text();
+    expect(source).toContain("astro:page-load");
+    expect(source).toContain("bindNavDock");
+    expect(source).toContain("IntersectionObserver");
+  });
+
   test("PageCanvas reserves no fixed-header clearance", async () => {
     const canvas = await markupOf(COMPONENTS, LANDMARK_OWNER);
 
@@ -100,10 +117,22 @@ describe("bdd-26 — the header is a sibling of the main", () => {
     // space; a second reservation here would double it.
     expect(canvas).not.toContain("--layout-header-height");
 
-    // flex-1 inside body's app-shell flex column: the canvas fills exactly
-    // what the header leaves — never a second viewport (phantom scroll),
-    // never min-h-screen (mobile browser chrome must not push the fold).
+    // flex-1 inside the content column (beside the locked rail): the canvas
+    // fills exactly what the header leaves — never a second viewport
+    // (phantom scroll), never min-h-screen (mobile chrome must not push fold).
     expect(canvas).toContain("flex-1");
     expect(canvas).not.toContain("min-h-dvh");
+  });
+
+  test("Base.astro is a row shell: rail beside content column (header+main)", async () => {
+    const source = await markupOf(LAYOUTS, "Base.astro");
+    expect(source).toContain('class="app-shell flex min-h-0 w-full flex-1 flex-row"');
+    expect(source).not.toContain("app-shell-body");
+    const navAt = source.indexOf("<NavDrawer");
+    const headerAt = source.indexOf("<LayoutHeader");
+    const canvasAt = source.indexOf("<PageCanvas");
+    expect(navAt).toBeGreaterThan(-1);
+    expect(headerAt).toBeGreaterThan(navAt);
+    expect(canvasAt).toBeGreaterThan(headerAt);
   });
 });

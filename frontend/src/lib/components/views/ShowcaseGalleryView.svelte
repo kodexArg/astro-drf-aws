@@ -429,8 +429,8 @@
 
   <Separator />
 
-  <section class="flex flex-col gap-3">
-    <SectionTitle as="h2">{copy.auth}</SectionTitle>
+  <section class="flex flex-col gap-3" aria-label={copy.auth}>
+    <!-- AuthPanel owns its Card.Title ("Sesión"); no gallery SectionTitle here. -->
     {@render auth?.()}
   </section>
 

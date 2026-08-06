@@ -47,6 +47,10 @@ export const DEFAULTS: { mode: ThemeMode; bgPreset: ThemeBgPreset; sidebarSide: 
   sidebarSide: "left",
 };
 
+/** Matches `:root { --radius }` in `app.css`. Seeded into the Appearance
+ * radius control so the field is a live value, not an empty placeholder. */
+export const DEFAULT_RADIUS = "0.625rem";
+
 export const SIDEBAR_SIDES: readonly SidebarSide[] = ["left", "right"];
 
 export const COLOR_KEYS: readonly (keyof ThemeColors)[] = [
@@ -306,6 +310,28 @@ export function toHexColor(value: string): string | undefined {
   const hex = (n: number) => n.toString(16).padStart(2, "0");
   if (a < 255) return `#${hex(r)}${hex(g)}${hex(b)}${hex(a)}`;
   return `#${hex(r)}${hex(g)}${hex(b)}`;
+}
+
+/** Six lowercase hex digits (no `#`) for the profile color text field.
+ * Pure for `#rgb` / `#rrggbb` / `#rrggbbaa`; otherwise delegates to
+ * `toHexColor` (browser) and drops alpha. Empty string when unknown. */
+export function toHexDigits(value: string | undefined | null): string {
+  if (!value) return "";
+  const trimmed = value.trim();
+  const short = /^#([0-9a-fA-F]{3})$/.exec(trimmed);
+  if (short) {
+    const [r, g, b] = short[1].toLowerCase();
+    return `${r}${r}${g}${g}${b}${b}`;
+  }
+  const long = /^#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?$/.exec(trimmed);
+  if (long) return long[1].toLowerCase();
+  const hex = toHexColor(trimmed);
+  return hex ? hex.slice(1, 7).toLowerCase() : "";
+}
+
+/** Keeps at most six hex digits from free-typed input (strips `#` and junk). */
+export function sanitizeHexDigits(raw: string): string {
+  return raw.replace(/[^0-9a-fA-F]/g, "").slice(0, 6).toLowerCase();
 }
 
 /** Seeds unset palette keys from the live computed stylesheet so a control

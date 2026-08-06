@@ -13,7 +13,7 @@
 <script lang="ts" module>
   export const surfaceVariants = {
     level: {
-      page: "rounded-xl border bg-card text-card-foreground shadow",
+      page: "rounded-xl border bg-card text-card-foreground p-6 shadow",
       tile: "rounded-lg border bg-card text-card-foreground px-4 py-3",
       floating: "rounded-md border bg-popover text-popover-foreground p-4 shadow-md",
       menu: "rounded-md border bg-popover text-popover-foreground p-1 shadow-md",

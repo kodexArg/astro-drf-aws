@@ -34,6 +34,10 @@
 
   const tooltip = new Tooltip({
     openDelay: () => openDelay,
+    // Hover tooltips: a pointerdown on the trigger must not abort the open
+    // (Melt's default closeOnPointerDown=true + #clickedTrigger blocks focus
+    // reopen and races the openDelay timer).
+    closeOnPointerDown: false,
     floatingConfig: { computePosition: { placement: side } },
   });
 </script>

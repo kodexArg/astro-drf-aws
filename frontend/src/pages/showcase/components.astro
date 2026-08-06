@@ -97,9 +97,9 @@ const invoiceRows: DataRow[] = [
 const invoicePageCount = 5;
 
 const statusChips: ChipItem[] = [
-  { key: "paid", label: t("demo_chip_paid"), count: 18 },
-  { key: "pending", label: t("demo_chip_pending"), count: 6 },
-  { key: "overdue", label: t("demo_chip_overdue"), count: 3 },
+  { key: "paid", label: t("demo_chip_paid"), count: 18, tone: "success" },
+  { key: "pending", label: t("demo_chip_pending"), count: 6, tone: "warning" },
+  { key: "overdue", label: t("demo_chip_overdue"), count: 3, tone: "negative" },
 ];
 
 const metricTiles: MetricTileData[] = [
@@ -351,7 +351,7 @@ const tocItems: TableOfContentsItem[] = [
       client:visible
       slot="table-of-contents"
     />
-    <div slot="chat" class="flex flex-col gap-6">
+    <div slot="chat" class="flex h-full min-h-0 flex-col">
       <ChatUI
         client:visible
         publicBackendUrl={publicBackendUrl}
@@ -369,27 +369,6 @@ const tocItems: TableOfContentsItem[] = [
             router_outcome_hard_reject: t("router_outcome_hard_reject"),
             router_outcome_throttled: t("router_outcome_throttled"),
             router_outcome_network_error: t("router_outcome_network_error"),
-          },
-        }}
-      />
-      <ChatUI
-        client:visible
-        mode="assistant"
-        page="/showcase/components/"
-        publicBackendUrl={publicBackendUrl}
-        copy={{
-          title: t("chatui_assistant_title"),
-          composerPlaceholder: t("chatui_assistant_composer_placeholder"),
-          composerAriaLabel: t("chatui_composer_aria_label"),
-          composerSend: t("chatui_composer_send"),
-          messageGo: t("chatui_message_go"),
-          messageConfirm: t("chatui_message_confirm"),
-          outcomeCopy: {
-            assistant_outcome_disabled: t("assistant_outcome_disabled"),
-            assistant_outcome_throttled: t("assistant_outcome_throttled"),
-            assistant_outcome_unavailable: t("assistant_outcome_unavailable"),
-            assistant_outcome_network_error: t("assistant_outcome_network_error"),
-            assistant_outcome_validation_error: t("assistant_outcome_validation_error"),
           },
         }}
       />

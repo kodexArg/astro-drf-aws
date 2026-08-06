@@ -14,5 +14,7 @@ export interface Me {
   groups: string[];
   nickname: string;
   avatar_visible: boolean;
+  /** Opt-in page-context ChatDrawer; default false for every user. */
+  chat_drawer_enabled: boolean;
   theme_config?: ThemeConfig;
 }
