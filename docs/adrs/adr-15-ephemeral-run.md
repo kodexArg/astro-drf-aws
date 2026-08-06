@@ -4,7 +4,7 @@ type: adr
 category: devops
 use_case: provisioning any AWS resource for the reference deploy, running teardown, updating docs/INVENTORY.md
 created: 2026-07-10
-modified: 2026-08-04
+modified: 2026-08-05
 tags: [adr, infrastructure, ephemeral, inventory]
 ---
 
@@ -32,11 +32,15 @@ of project `astro-drf-aws`; it does not change multi-project doctrine.
 3. Every created resource carries the mandatory tag set owned by
    [[INFRASTRUCTURE]] — `project`, `env`, `lifecycle`. A resource missing any
    of the three is a defect, not a resource of this run.
-4. A dedicated ephemeral RDS instance is sanctioned here, diverging from the
-   shared `alvs-prod-pg` precedent ([[adr-06-initial-stack]] rule 5 requires
-   a new ADR for infrastructure divergence — this is it). Its specification
-   and cost expectation are owned by [[BD]]; no local exception may widen
-   the divergence.
+4. This run provisions no database instance of its own. It takes a database
+   and a login role on the shared `alvs-prod-pg` instance
+   ([[adr-06-initial-stack]] rule 5 — no infrastructure divergence remains
+   to sanction). The database and role names are derived from the project
+   slug, never typed as literals, so a spawned project inherits the shape
+   and not this run's name; the derivation, the specification, and the cost
+   expectation are owned by [[BD]]. The instance itself is a shared resource
+   under rule 6 and is never destroyed by teardown — Phase E drops only this
+   project's database and role.
 5. The inventory is committed and authoritative. `docs/INVENTORY.md` is
    updated in the same batch as each resource's creation, in the format
    owned by [[INFRASTRUCTURE]]; teardown executes from it and verifies
@@ -55,12 +59,27 @@ of project `astro-drf-aws`; it does not change multi-project doctrine.
    resolved in their own batches through the findings protocol, never by
    amending this ADR in place beyond a genuine policy change.
 
+## REJECTED
+
+- **A dedicated ephemeral RDS instance for this run** — rule 4's policy from
+  2026-07-10 until 2026-08-05: `alvs-prod-astro-drf-aws-pg`, a `db.t4g.micro`
+  of its own, sanctioned as the infrastructure divergence
+  [[adr-06-initial-stack]] rule 5 demands an ADR for. Retired by owner
+  directive (2026-08-05): the run's database is ~9 MB and the shared
+  `alvs-prod-pg` already hosts sibling projects the same way, so a whole
+  instance bought isolation nobody needed at the price of the run's largest
+  standing line item. The instance and its subnet group were destroyed in the
+  same batch as this edit and the data moved to a database on the shared
+  instance. It would reopen only if this run needed an engine version,
+  parameter group, or maintenance window the shared instance cannot carry —
+  none of which is a known need.
+
 ## RELATED
 
 ### related files
 
-- [[adr-06-initial-stack]] — the infrastructure-divergence rule this ADR
-  exercises (rule 4)
+- [[adr-06-initial-stack]] — the shared-infrastructure rule this ADR no
+  longer diverges from (rule 4)
 - [[adr-12-github-and-git]] — the dev←main pipeline this run is exempt from
 - [[adr-27-derived-project-deploy-identity]] — how a spawned project avoids
   inheriting this run's target

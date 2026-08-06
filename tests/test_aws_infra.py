@@ -27,6 +27,7 @@ PROFILE = os.environ.get("AWS_PROFILE", "kodex")
 REGION = os.environ.get("AWS_REGION", "us-east-1")
 ACCOUNT = "789650504128"
 PROJECT = os.environ.get("PROJECT_SLUG", "astro-drf-aws")
+SHARED_RDS = os.environ.get("SHARED_RDS_ID", "alvs-prod-pg")
 POOL_ID = "us-east-1_IzUPE4fDV"
 
 REQUIRED_TAGS = {"project": PROJECT, "env": "prod", "lifecycle": "ephemeral"}
@@ -59,8 +60,6 @@ TAGGABLE = [
     (f"secret alvs/prod/{PROJECT}/cognito", f"secret:alvs/prod/{PROJECT}/cognito"),
     (f"secret alvs/prod/{PROJECT}/s3", f"secret:alvs/prod/{PROJECT}/s3"),
     ("cognito pool us-east-1_IzUPE4fDV", "userpool/us-east-1_IzUPE4fDV"),
-    ("rds subnet group", f"subgrp:alvs-prod-{PROJECT}-subnets"),
-    (f"rds instance alvs-prod-{PROJECT}-pg", f"db:alvs-prod-{PROJECT}-pg"),
     ("s3 media bucket", f":alvs-{PROJECT}-media-prod"),
     ("ecr backend", f"repository/alvs/{PROJECT}-backend"),
     ("ecr frontend", f"repository/alvs/{PROJECT}-frontend"),
@@ -80,6 +79,7 @@ INVENTORY_TOKENS = [
     "us-east-1_IzUPE4fDV",
     f"alvs-prod-{PROJECT}-subnets",
     f"alvs-prod-{PROJECT}-pg",
+    SHARED_RDS,
     f"alvs-{PROJECT}-media-prod",
     f"alvs/{PROJECT}-backend",
     f"alvs/{PROJECT}-frontend",
@@ -242,11 +242,21 @@ def test_secrets_and_access() -> None:
 def test_rds_spec() -> None:
     rds = SESSION.client("rds")
     try:
-        inst = rds.describe_db_instances(
-            DBInstanceIdentifier=f"alvs-prod-{PROJECT}-pg"
-        )["DBInstances"][0]
+        inst = rds.describe_db_instances(DBInstanceIdentifier=SHARED_RDS)[
+            "DBInstances"
+        ][0]
     except ClientError as exc:
-        fail(f"RDS instance alvs-prod-{PROJECT}-pg not found: {exc}")
+        fail(f"shared RDS instance {SHARED_RDS} not found: {exc}")
+
+    try:
+        rds.describe_db_instances(DBInstanceIdentifier=f"alvs-prod-{PROJECT}-pg")
+    except ClientError:
+        ok(f"no dedicated instance alvs-prod-{PROJECT}-pg (adr-15 r4)")
+    else:
+        fail(
+            f"dedicated instance alvs-prod-{PROJECT}-pg still exists; "
+            "adr-15 r4 puts this project on the shared instance"
+        )
 
     if inst["Engine"] != "postgres":
         fail(f"RDS engine {inst['Engine']!r}, want 'postgres'")
@@ -262,7 +272,7 @@ def test_rds_spec() -> None:
         f"RDS PostgreSQL {inst['EngineVersion']} db.t4g.micro "
         "single-AZ, not public"
     )
-    skip("RDS live connection — EICE tunnel not automated (adr-12 / BD.md)")
+    skip("RDS live connection — SSM port-forward not automated (BD.md)")
 
 
 def test_cost_no_nat() -> None:

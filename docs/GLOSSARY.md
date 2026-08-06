@@ -80,8 +80,9 @@ Format: Term | Canonical form | Applies to | Forbidden forms.
 | Cognito user pool | `alvs-prod-astro-drf-aws` | the run's only user pool ([[AUTH]], B2.2) | per-app pools; names without the `alvs-prod-` prefix |
 | Cognito hosted-UI prefix | `alvs-astro-drf` | hosted-UI domain prefix ([[AUTH]]); `alvs-astro-drf-aws` was frozen at B1 but rejected by `CreateUserPoolDomain` — `aws` is a reserved word in hosted-UI domain prefixes, so B2.2 fell back to this value | the full pool name as prefix; ad-hoc abbreviations; any prefix containing the word `aws` |
 | Cognito test users | `test-admin@grupoalvs.com`, `test-plain@grupoalvs.com` | the B2 RBAC pair; Django group `admins` assigned to the first in C1 fixtures, never in Cognito ([[adr-14-auth]]) | real personal emails; `admin@…`; Cognito groups as roles |
-| RDS instance | `alvs-prod-astro-drf-aws-pg` | the dedicated ephemeral instance ([[BD]], [[adr-15-ephemeral-run]] r4) | using shared `alvs-prod-pg` in this run |
-| database name | `app` | the SQL database on that instance ([[BD]]) | the hyphenated project slug inside SQL identifiers |
+| RDS instance | `alvs-prod-pg` | the shared instance this run takes a database on ([[BD]], [[adr-15-ephemeral-run]] r4); the former dedicated `alvs-prod-astro-drf-aws-pg` was destroyed 2026-08-05 ([[INVENTORY]]) | a per-project instance in this run |
+| database name | `astro_drf_aws` | the SQL database on that instance — project slug with `-` → `_` ([[BD]]) | `app`; the hyphenated project slug inside SQL identifiers |
+| database role | `astro_drf_aws_user` | the login role owning that database — `<database>_user` ([[BD]]) | `app`; reusing the RDS master `postgres` as the app login |
 | S3 media bucket | `alvs-astro-drf-aws-media-prod` | private media bucket, no CDN — Django-presigned URLs only ([[INFRASTRUCTURE]]) | public buckets; per-service buckets |
 | ECR repositories | `alvs/astro-drf-aws-backend`, `alvs/astro-drf-aws-frontend` | container images, immutable tags `prod-<full-git-sha>` ([[INFRASTRUCTURE]]) | `latest` tags; mutable tags |
 | IAM roles (run) | `alvs-prod-astro-drf-aws-<component>-{exec,task}-role`, `<component>` ∈ `backend`, `frontend` | Fargate exec/task roles ([[INFRASTRUCTURE]]); frontend roles get zero secret access ([[adr-14-auth]] r7) | shared roles across projects; inline ad-hoc names |
