@@ -12,6 +12,15 @@
     - refactor(tests): conftest.py reload-urlconf contextmanager replaces importlib.reload + clear_url_caches duplicated in 4 test files
     - result: backend suite 245 passed / 1 failed in 12.77s → 259 passed / 0 failed in 8.26s
 
+- group: test-suite-audit-backend-coverage
+  priority: high
+  commit: pending
+  changes:
+    - feat(tests): apps/users/test_lobby.py — adr-21 rule 1, gated routes enumerated from URLconf so role-less authenticated session is refused by every one
+    - feat(tests): apps/users/test_deploy_checks.py — adr-14 rule 6, manage.py check --deploy reaches zero errors under production env
+    - feat(tests): config/test_secret_sources.py — honest current contract that COGNITO_CLIENT_SECRET and MSGRAPH_CLIENT_SECRET have no boot-time guard
+    - feat(tests): apps/router/test_temperature_wiring.py — adr-17 rule 7 at view's client-construction path, not only on client class in isolation
+
 - group: nav-fsm-frosted-rail
   priority: high
   commit: cd05d08
