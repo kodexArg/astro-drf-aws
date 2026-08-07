@@ -42,6 +42,8 @@ Both `docs/skills/` and `docs/agents/` are excluded from the `markdown-vault-doc
 | `assertion-review` | Enforces the `docs/assertions/` law family — every assertion's proving tests actually prove it ([[adr-01-constitution]] rule 7, [[assertion-00-discipline]]). | assertion authoring/review |
 | `kdx-report` | Formats a batch's findings into the fixed report shape consumed at the end of an `orch-*`/`wf-*` dispatch. | any worker producing a final report |
 | `kdx-send-to-telegram` | Delivers a completion/status ping to kodex's Telegram over the bot token, for a long-running batch with no other notification channel. | main loop, long-running batches |
+| `cowsay` | Deterministic stdlib cowsay binary for agent replies (`bin/cowsay`). Required so `start-dev-server` (and any `/cowsay` session) never freehands ASCII and travels with the clone — not the machine-global skill. | `start-dev-server`, `/cowsay` sessions |
+| `start-dev-server` | Local session boot: free host ports 8000/4321, bring up Compose `full` (Django + Astro), open `localhost:4321`, complete dev-login via chrome-devtools, announce done through `cowsay`. Proves Astro, Django, and chrome-devtools in one flow ([[DOCKER]], [[AUTH]], [[AGENTS]]). | local session start, `/start-dev-server` |
 
 ## Vendored MCP servers
 
@@ -55,8 +57,9 @@ Beyond skills, the template vendors one **MCP server** and transports it with th
 
 - **`codebase-memory`** — a graph provided by the `codebase-memory-mcp` MCP server and enforced by the `SessionStart` hook; it is not a vendored skill dir. Unlike `markdown-vault-docs`, it stays **not vendored**: it is a heavy graph service shared across every project on the machine, not a per-vault index cheap to run project-local ([[adr-20-markdown-vault-mcp]] rule 4). The two are disjoint — code graph vs `docs/` graph.
   - **It is local-only.** The server is a machine-wide static binary registered in user scope, and neither the binary nor its registration travels with a clone — so it is present on kodex's machines and **absent in a Claude Code cloud session**, which carries only what the repo commits. Vendoring it is not on the table: the sandbox's GitHub proxy refuses release assets from repositories not attached to the session, whatever the network access level. Treat the graph as a local accelerator, never a dependency: away from this machine, code discovery falls back to Grep/Glob/Read with no loss of correctness, and the `graph_first` hook stays silent there rather than name a tool that isn't installed.
+- **`chrome-devtools`** — browser MCP for smoke / open+login (`127.0.0.1:9222`, [[AGENTS]], [[FRONTEND]]). Required at runtime by `start-dev-server`, but **not vendored**: it is a machine/session MCP (Chromium + CDP), kodex-interactive only, same local-only posture as `codebase-memory`. The skill fails closed when the MCP is absent.
 - **`kdx-shared-agent-context-manager`, `kdx-pc-ssh`** — incidental mentions inside `kdx-orchestrator` (a context MCP that is main-loop-only; a Cloudflare tunnel name in an example). Neither is a dependency of this template.
-- The remaining global convenience skills of kodex's machines (`kdx-handoff`, `mermaid-diagrams`, …) are available when present but are **not required** for the template to build, test, and deploy — so they are not vendored. (`kdx-report` and `kdx-send-to-telegram` moved into the required table above once they were vendored under `docs/skills/`.)
+- The remaining global convenience skills of kodex's machines (`kdx-handoff`, `mermaid-diagrams`, …) are available when present but are **not required** for the template to build, test, and deploy — so they are not vendored. (`kdx-report` and `kdx-send-to-telegram` moved into the required table above once they were vendored under `docs/skills/`. `cowsay` used to live only as a global convenience skill; it is now **vendored** because `start-dev-server` depends on it.)
 
 ## Guardian & orchestrator agents
 
