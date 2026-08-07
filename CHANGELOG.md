@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+- group: test-suite-audit-backend-fixes
+  priority: high
+  commit: pending
+  changes:
+    - fix(tests): apps/users/test_auth.py — AUTHENTICATION_BACKENDS mutation left Django's lru_cache'd get_backends() stale; conftest.py now invalidates cache on teardown
+    - perf(tests): apps/router/test_rate_abuse.py, config/test_throttling.py — removed two real time.sleep() calls (1.2s + 1.1s) in favor of fake clock
+    - perf(tests): conftest.py PASSWORD_HASHERS override to fast hasher, dropping ~0.9s of real PBKDF2 bootstrap
+    - refactor(tests): conftest.py reload-urlconf contextmanager replaces importlib.reload + clear_url_caches duplicated in 4 test files
+    - result: backend suite 245 passed / 1 failed in 12.77s → 259 passed / 0 failed in 8.26s
+
 - group: nav-fsm-frosted-rail
   priority: high
   commit: cd05d08
