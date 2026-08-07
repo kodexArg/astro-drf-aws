@@ -70,9 +70,17 @@ const roleHolding = hasRole(me);
       area carries the named `page-main` group (transition:name below); fixed
       shell chrome carries its own view-transition-name (`shell-nav` /
       `shell-chat`) on the fixed root the component renders — never on this
-      Astro island wrapper — via `viewTransitionName`, kept distinct from the
-      `transition:persist` id (`shell-*-island`) so the two groups do not
-      collide. app.css stacks shell-nav/shell-chat above page-main.
+      Astro island wrapper — via `viewTransitionName`. app.css stacks
+      shell-nav/shell-chat above page-main.
+
+      `transition:persist="shell-*-island"` is an unrelated mechanism: it
+      only sets Astro's client-side DOM-identity-matching attribute so the
+      swap function relocates that exact node across a navigation, and
+      creates no `::view-transition-*` group of its own — there is nothing
+      here for `shell-nav`/`shell-chat` to collide with. The `-island`
+      suffix is a naming choice for readability only (so a reader can tell
+      the persist key apart from the CSS group name at a glance), kept
+      distinct from `viewTransitionName`'s value for that reason alone.
     */}
     <div class="app-shell flex min-h-0 w-full flex-1 flex-row">
       {

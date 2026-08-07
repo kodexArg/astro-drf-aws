@@ -331,19 +331,20 @@ body > astro-island {
 /* Shell edge chrome — names set on the fixed roots the components render
    (NavDrawer's rail <aside>, overlay/FancyDrawer's <aside>, overlay/Drawer's
    <aside> via ChatDrawer), never on the astro-island wrapper. Paint above
-   page-main's snapshot. */
+   page-main's snapshot.
+
+   `transition:persist="shell-*-island"` on the astro-island wrapper is a
+   different, unrelated mechanism: it only sets Astro's client-side
+   DOM-identity-matching attribute (`data-astro-transition-persist`) so the
+   swap function relocates that exact node across navigation. It does NOT
+   emit a `$$renderTransition(...)` call or create a `::view-transition-*`
+   pseudo-element pair the way `transition:name`/this component's own
+   `viewTransitionName` prop do — there is no `shell-*-island` group to
+   select here, and there never was one to collide with. */
 ::view-transition-group(shell-nav),
 ::view-transition-group(shell-chat) {
   animation: none;
   z-index: 40;
-}
-
-/* `transition:persist` ids (`shell-*-island`) stay separate from the group
-   names above so the two never collide; still no-op the animation on the
-   island wrapper's own group. */
-::view-transition-group(shell-nav-island),
-::view-transition-group(shell-chat-island) {
-  animation: none;
 }
 
 [data-bg-preset="melt"] {

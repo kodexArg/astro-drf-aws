@@ -91,15 +91,14 @@ describe("Base.astro — the VT group name lives on the fixed root, never the is
     expect(source).toContain('transition:name="page-main"');
   });
 
-  test("NavDrawer's persist id is distinct from its VT group name", async () => {
+  test("NavDrawer's persist id uses a distinct '-island' string from its VT group name (readability, not collision-avoidance — transition:persist creates no view-transition group to collide with)", async () => {
     const source = await read(BASE_ASTRO);
     expect(source).toContain('transition:persist="shell-nav-island"');
     expect(source).toContain('viewTransitionName="shell-nav"');
-    // The persist id and the group name never collide.
     expect("shell-nav-island").not.toBe("shell-nav");
   });
 
-  test("ChatDrawer's persist id is distinct from its VT group name", async () => {
+  test("ChatDrawer's persist id uses a distinct '-island' string from its VT group name (readability, not collision-avoidance)", async () => {
     const source = await read(BASE_ASTRO);
     expect(source).toContain('transition:persist="shell-chat-island"');
     expect(source).toContain('viewTransitionName="shell-chat"');
@@ -129,29 +128,86 @@ describe("app.css — every ::view-transition-group() name is actually assigned 
     );
   });
 
-  test("the island persist groups (shell-*-island) are a distinct, separately-declared no-op", async () => {
-    const css = await read(APP_CSS);
-    expect(css).toMatch(
-      /::view-transition-group\(shell-nav-island\),\s*::view-transition-group\(shell-chat-island\)\s*\{[^}]*animation:\s*none/,
-    );
+  test("no dead ::view-transition-group() name in the real app.css / Base.astro pair", async () => {
+    const [css, base] = await Promise.all([read(APP_CSS), read(BASE_ASTRO)]);
+    expect(findDeadGroupNames(css, base)).toEqual([]);
   });
 
-  test("no dead group name — page-main/shell-nav/shell-chat/shell-nav-island/shell-chat-island each trace back to an actual directive or prop in the sources this suite checks", async () => {
-    const [baseSource, navDrawerSource, chatDrawerSource] = await Promise.all([
-      read(BASE_ASTRO),
+  test("the literal group names live in Base.astro's props; NavDrawer/ChatDrawer carry only the plumbing", async () => {
+    const [navDrawerSource, chatDrawerSource] = await Promise.all([
       read(NAV_DRAWER),
       read(CHAT_DRAWER),
     ]);
-    expect(baseSource).toContain("page-main");
-    expect(baseSource).toContain("shell-nav-island");
-    expect(baseSource).toContain("shell-chat-island");
-    expect(baseSource).toContain('viewTransitionName="shell-nav"');
-    expect(baseSource).toContain('viewTransitionName="shell-chat"');
-    // The literal group names live in Base.astro's props; NavDrawer/ChatDrawer
-    // only carry the plumbing (the prop + forwarding), never a hardcoded
-    // "shell-nav"/"shell-chat" of their own — that would collide with the
-    // showcase gallery's second, unnamed NavDrawer instance.
+    // Never a hardcoded "shell-nav"/"shell-chat" of their own — that would
+    // collide with the showcase gallery's second, unnamed NavDrawer
+    // instance (both `<NavDrawer>`s render on `/showcase/components/` for a
+    // role-holding session: Base.astro's real one, and the gallery's demo).
     expect(navDrawerSource).not.toContain('"shell-nav"');
     expect(chatDrawerSource).not.toContain('"shell-chat"');
+  });
+});
+
+// --- The check itself, and proof it is not vacuous -------------------------
+//
+// This is the fix for the audited gap: a prior version of this file checked
+// group names as bare substrings of Base.astro's source text, which passes
+// identically whether or not a name is genuinely wired as a
+// `view-transition-name` — exactly how `shell-nav-island` / `shell-chat-island`
+// shipped as two dead CSS rules (removed from app.css) with matching
+// `transition:persist="shell-*-island"` text that LOOKED like wiring but
+// isn't: `transition:persist` sets only Astro's client-side DOM-identity
+// attribute (`data-astro-transition-persist`) and emits no
+// `$$renderTransition(...)` call and no `::view-transition-*` group at all.
+// The two directives that DO create a live view-transition-name are
+// `transition:name="X"` (Astro's own compiler-generated group) and this
+// codebase's `viewTransitionName="X"` prop (threaded onto a fixed root's
+// inline `style`, per overlay/Drawer.svelte, overlay/FancyDrawer.svelte,
+// shell/NavDrawer.svelte, shell/ChatDrawer.svelte) — only those two count as
+// "wired" below.
+
+function extractGroupNames(css: string): string[] {
+  const names = new Set<string>();
+  for (const m of css.matchAll(/::view-transition-group\(([a-z0-9-]+)\)/g)) {
+    names.add(m[1]!);
+  }
+  return [...names];
+}
+
+function extractWiredNames(astroSource: string): string[] {
+  const names = new Set<string>();
+  for (const m of astroSource.matchAll(/\btransition:name="([a-z0-9-]+)"/g)) names.add(m[1]!);
+  for (const m of astroSource.matchAll(/\bviewTransitionName="([a-z0-9-]+)"/g)) names.add(m[1]!);
+  return [...names];
+}
+
+/** Every CSS group name with no matching `transition:name`/`viewTransitionName`. */
+function findDeadGroupNames(css: string, astroSource: string): string[] {
+  const wired = new Set(extractWiredNames(astroSource));
+  return extractGroupNames(css).filter((name) => !wired.has(name));
+}
+
+describe("findDeadGroupNames — the check that closes the audited gap, proven non-vacuous", () => {
+  test("a name backed only by transition:persist is reported dead — reproduces the exact defect that shipped", () => {
+    const astroSource = `<Island transition:persist="ghost-island" />`;
+    const css = `::view-transition-group(ghost-island) { animation: none; }`;
+    expect(findDeadGroupNames(css, astroSource)).toEqual(["ghost-island"]);
+  });
+
+  test("a name backed by transition:name is recognized as wired, not dead", () => {
+    const astroSource = `<Main transition:name="bar-group" />`;
+    const css = `::view-transition-group(bar-group) { animation: none; }`;
+    expect(findDeadGroupNames(css, astroSource)).toEqual([]);
+  });
+
+  test("a name backed by the viewTransitionName prop is recognized as wired, not dead", () => {
+    const astroSource = `<NavDrawer viewTransitionName="baz-group" />`;
+    const css = `::view-transition-group(baz-group) { animation: none; }`;
+    expect(findDeadGroupNames(css, astroSource)).toEqual([]);
+  });
+
+  test("a CSS rule with no matching directive at all is reported dead", () => {
+    const astroSource = `<Nothing here="true" />`;
+    const css = `::view-transition-group(nowhere) { animation: none; }`;
+    expect(findDeadGroupNames(css, astroSource)).toEqual(["nowhere"]);
   });
 });
