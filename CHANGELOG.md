@@ -33,6 +33,16 @@
     - feat(tests): assistant-boundary.test.ts — adr-25 rules 3-4, page identity never page text and prose never mints an anchor
     - result: frontend suite 902 → 1246 tests, 0 fail, 4.91s
 
+- group: test-suite-audit-harness
+  priority: high
+  commit: pending
+  changes:
+    - fix(tests): test_aws_infra.py — removed hardcoding, self-selects present/absent per resource from docs/INVENTORY.md per adr-27 rule 6
+    - perf(tests): test_live_doc.py — rglob replaced with git ls-files pattern (1.23s → 0.75s); test_aws_infra.py tag scan memoized
+    - fix(tests): no-WATCHLISTS-dict invariant asserted in both test_guardian_identity_triangle.py and test_nudge_hooks.py; one owner kept per adr-03 rule 8
+    - refactor(tests): test_check_variables_hook.py inline tempdir factored into one fixture
+    - result: all 11 tests/ files exit 0, including test_aws_infra.py which was red
+
 - group: nav-fsm-frosted-rail
   priority: high
   commit: cd05d08
