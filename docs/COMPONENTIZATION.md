@@ -40,7 +40,7 @@ Two more mechanics worth knowing before touching that file. It is the only DOM-b
 src/lib/components/
   primitives/        # PageTitle, SectionTitle, PageHeading, PageCanvas, Surface — .svelte, zero-hydration
   header/            # LayoutHeader, NavBar — the page shell's top edge; a layout fixture, never a page's
-  shell/             # NavDrawer (docked-rail/floating-drawer modes), nav-fsm.ts (preference/viewport/presentation FSM), ChatDrawer, NavItem, NavLockToggle, NavBadge, NavbarIcon, nav.ts (NAV_ITEMS/NAV_SECTIONS) — the site nav + assistant drawers and their shared registry
+  shell/             # NavDrawer (docked-rail/floating-drawer modes), nav-fsm.ts (preference/presentation/active FSM, no viewport field), ChatDrawer, NavItem, NavLockToggle, NavBadge, NavbarIcon, nav.ts (NAV_ITEMS/NAV_SECTIONS) — the site nav + assistant drawers and their shared registry
   ui/                # shadcn-svelte vendored set (adr-04 r4), incl. table/
   data/              # DataTable, NumericValue, StatusBadge, ChipFilterBar, Pagination, Collapsible, Tree
   dashboard/         # MetricTile, MetricTileStrip, EntityCard, EntityGrid, SummaryCard
