@@ -4,7 +4,7 @@ type: adr
 category: frontend
 use_case: changing NavDrawer or FancyDrawer, adjusting shell menu visibility, lock or pin behavior, or the breakpoint that chooses rail vs drawer
 created: 2026-08-05
-modified: 2026-08-05
+modified: 2026-08-07
 tags: [adr, frontend, shell, navigation, nav-fsm]
 ---
 
@@ -39,11 +39,14 @@ tags: [adr, frontend, shell, navigation, nav-fsm]
    like the `theme` cookie, so the first byte of every navigation already
    knows locked vs unlocked. localStorage alone is not the source of truth.
    Mechanism: [[DESIGN-SYSTEM]].
-7. `NavDrawer`'s runtime state is a closed FSM with four fields —
-   preference (`locked`|`unlocked`), viewport (`mobile`|`tablet`|`desk`),
-   presentation (`rail`|`drawer`), and active item — resolved by
-   `shell/nav-fsm` before and after paint. Presentation is derived, never
-   stored. Active comes from the `pathname` prop `Base.astro` already passes
+7. `NavDrawer`'s runtime state is a closed FSM with three fields —
+   preference (`locked`|`unlocked`), presentation (`rail`|`drawer`), and
+   active item — resolved by `shell/nav-fsm`. Presentation is derived from
+   preference alone and never stored; because both of its values are a menu,
+   no FSM input can resolve to no menu (rule 3). The viewport band is **not**
+   an FSM field: rule 2's floor is enforced by CSS at the rail minimum width
+   over the pair rule 8 mounts, so nothing measured at runtime decides what
+   renders. Active comes from the `pathname` prop `Base.astro` already passes
    ([[COMPONENTIZATION]]).
 8. When preference is locked, first paint may mount both the rail and the
    drawer and let CSS at the rail minimum choose which is visible, so a full
@@ -63,6 +66,10 @@ tags: [adr, frontend, shell, navigation, nav-fsm]
 - **NEVER** make lock preference depend on `onMount` / localStorage alone
   (rule 6). That blanks the locked rail on every Astro navigation until
   hydrate.
+- **NEVER** reintroduce a runtime measurement into the FSM to choose the
+  presentation (rule 7). Both presentations are a menu, CSS already
+  enforces rule 2's floor, and a measured field can only start wrong and
+  jump.
 
 ## REJECTED
 
@@ -77,6 +84,19 @@ tags: [adr, frontend, shell, navigation, nav-fsm]
   outright (rules 2–3, FORBIDDEN) since it is exactly the defect the source
   design already hit once. Reopens only if a dedicated, always-wired open
   control replaces the forced-drawer fallback.
+- **The viewport band as an FSM field** — `nav-fsm` carried a `viewport`
+  (`mobile`|`tablet`|`desk`) resolved from two `matchMedia` listeners, and
+  `resolvePresentation` took it as a second argument. Dropped 2026-08-07,
+  owner authorization in conversation ([[adr-00-adr-doctrine]] rule 8): it
+  decided nothing, because rule 8 already mounts rail and drawer together
+  and CSS at the rail minimum picks the visible one. Its only effect was
+  that presentation started at a guessed `desk` until `onMount` corrected
+  it — a hydration jump bought with two listeners and a three-value type.
+  Rule 2's floor is unchanged; it is enforced where it always actually was,
+  in CSS. `DESK_MIN_WIDTH` (the Tailwind `lg` desk/tablet split) is dropped
+  with it — it was informational only and had no consumer once viewport
+  left the FSM. It would reopen only if a presentation decision genuinely
+  needed a measurement no media query can express.
 
 ## RELATED
 
@@ -85,6 +105,8 @@ tags: [adr, frontend, shell, navigation, nav-fsm]
 - [[adr-08-frontend-and-design-system]] — frontend stack this menu sits in
 - [[adr-23-showcase-ready-components]] — zero-prop mount for `NavDrawer` and
   `FancyDrawer`
+- [[adr-00-adr-doctrine]] — rule 8, the in-place policy change this ADR's
+  rule 7 rewrite and REJECTED entry follow
 
 ### related files
 

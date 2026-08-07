@@ -5,11 +5,11 @@
 
 <!--
   Site navigation: a two-mode drawer over NAV_SECTIONS, driven by
-  shell/nav-fsm: preference (nav_lock cookie, SSR), viewport band
-  (matchMedia), presentation (rail|drawer), active (from Base.astro).
-  Locked preference mounts rail + drawer together; CSS at RAIL_MIN_WIDTH
-  picks which is visible so navigation never flashes unlocked
-  ([[adr-28-nav-fsm-frosted-rail]]). See [[bdd-12-navigation-shell]],
+  shell/nav-fsm: preference (nav_lock cookie, SSR), presentation
+  (rail|drawer), active (from Base.astro). Locked preference mounts rail +
+  drawer together; CSS at RAIL_MIN_WIDTH picks which is visible so
+  navigation never flashes unlocked ([[adr-28-nav-fsm-frosted-rail]]). No
+  viewport measurement decides what renders. See [[bdd-12-navigation-shell]],
   [[COMPONENTIZATION]].
 -->
 <script lang="ts">
@@ -19,15 +19,10 @@
   import NavLockToggle from "./NavLockToggle.svelte";
   import { NAV_SECTIONS, isActive } from "./nav";
   import {
-    DESK_MIN_WIDTH,
-    RAIL_MIN_WIDTH,
     migrateLegacyNavLock,
     resolveNavFsm,
-    resolvePresentation,
-    resolveViewport,
     writeNavLockCookie,
     type NavLockPreference,
-    type NavViewport,
   } from "./nav-fsm";
   import { ASIDE_SIZE_VAR, type AsideSize } from "./shell-sizes";
   import { t } from "../../../i18n";
@@ -74,42 +69,29 @@
   const dense = $derived(asideSize === "S");
 
   let localPreference = $state<NavLockPreference | null>(null);
-  let viewport = $state<NavViewport>("desk");
   let mode = $state<ThemeMode>(DEFAULTS.mode);
 
   const preference = $derived(localPreference ?? preferenceProp);
-  const fsm = $derived(resolveNavFsm({ preference, viewport, active: pathname }));
+  const fsm = $derived(resolveNavFsm({ preference, active: pathname }));
 
   onMount(() => {
     mode = readThemeCookie().mode ?? DEFAULTS.mode;
 
     const migrated = migrateLegacyNavLock();
     if (migrated) localPreference = migrated;
-
-    const railMq = window.matchMedia(`(min-width: ${RAIL_MIN_WIDTH})`);
-    const deskMq = window.matchMedia(`(min-width: ${DESK_MIN_WIDTH})`);
-    const syncViewport = () => {
-      viewport = resolveViewport(railMq.matches, deskMq.matches);
-    };
-    syncViewport();
-    railMq.addEventListener("change", syncViewport);
-    deskMq.addEventListener("change", syncViewport);
-    return () => {
-      railMq.removeEventListener("change", syncViewport);
-      deskMq.removeEventListener("change", syncViewport);
-    };
   });
 
   function persistPreference(next: NavLockPreference) {
     localPreference = next;
     writeNavLockCookie(next);
-    if (next === "locked" && resolvePresentation(next, viewport) === "rail") {
+    if (next === "locked") {
       open = false;
     }
   }
 
   function togglePin() {
-    if (preference === "unlocked" && viewport === "mobile") return;
+    // CSS already forces the drawer below the rail floor (RAIL_MIN_WIDTH),
+    // so a mobile guard here is not a behavior change ([[adr-28-nav-fsm-frosted-rail]] rule 2).
     persistPreference(preference === "locked" ? "unlocked" : "locked");
   }
 
