@@ -21,6 +21,18 @@
     - feat(tests): config/test_secret_sources.py — honest current contract that COGNITO_CLIENT_SECRET and MSGRAPH_CLIENT_SECRET have no boot-time guard
     - feat(tests): apps/router/test_temperature_wiring.py — adr-17 rule 7 at view's client-construction path, not only on client class in isolation
 
+- group: test-suite-audit-frontend
+  priority: high
+  commit: pending
+  changes:
+    - refactor(tests): chat-composer, context-menu, navbar-icon, shell-nav converted from literal-token greps to real happy-dom mounts; mount harness extracted and cached per path
+    - fix(tests): navbar-icon.test.ts — removed false CSS-cascade-order regression claim; asserts reachable DOM contract and states the limit
+    - feat(tests): env-boundary.test.ts — adr-08 rule 7, every client-reachable import.meta.env reference is PUBLIC_*
+    - feat(tests): astro-authoring.test.ts — adr-08 rule 9 generally, not only <main> landmark slice
+    - feat(tests): nav-render-matrix.test.ts — adr-28 rules 3-4 across preference x viewport matrix by real mount
+    - feat(tests): assistant-boundary.test.ts — adr-25 rules 3-4, page identity never page text and prose never mints an anchor
+    - result: frontend suite 902 → 1246 tests, 0 fail, 4.91s
+
 - group: nav-fsm-frosted-rail
   priority: high
   commit: cd05d08
