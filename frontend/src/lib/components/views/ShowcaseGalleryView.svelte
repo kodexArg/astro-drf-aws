@@ -56,6 +56,7 @@
     dropdownMenu: string;
     contextMenu: string;
     menubar: string;
+    breadcrumb: string;
     tableOfContents: string;
     overlay: string;
     accordion: string;
@@ -104,6 +105,7 @@
     "dropdown-menu": dropdownMenu,
     "context-menu": contextMenu,
     menubar,
+    breadcrumb,
     "table-of-contents": tableOfContents,
     chat,
     "overlay-triggers": overlayTriggers,
@@ -148,6 +150,7 @@
     "dropdown-menu"?: Snippet;
     "context-menu"?: Snippet;
     menubar?: Snippet;
+    breadcrumb?: Snippet;
     "table-of-contents"?: Snippet;
     chat?: Snippet;
     "overlay-triggers"?: Snippet;
@@ -363,6 +366,10 @@
     <div class="flex flex-col gap-2">
       <SectionTitle as="h3">{copy.menubar}</SectionTitle>
       {@render menubar?.()}
+    </div>
+    <div class="flex flex-col gap-2">
+      <SectionTitle as="h3">{copy.breadcrumb}</SectionTitle>
+      {@render breadcrumb?.()}
     </div>
     <div class="flex flex-col gap-2">
       <SectionTitle as="h3">{copy.tableOfContents}</SectionTitle>

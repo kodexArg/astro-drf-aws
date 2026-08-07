@@ -24,3 +24,4 @@ export { default as MenubarDemo } from "./MenubarDemo.svelte";
 export { default as TableOfContentsDemo } from "./TableOfContentsDemo.svelte";
 export { default as DrawerDemo } from "./DrawerDemo.svelte";
 export { default as SurfaceDemo } from "./SurfaceDemo.svelte";
+export { default as BreadcrumbDemo } from "./BreadcrumbDemo.svelte";

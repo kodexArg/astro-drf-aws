@@ -18,6 +18,8 @@ export const es = {
   pending_title: "Autorización pendiente",
   nav_chatui: "Chat",
   nav_profile: "Perfil",
+  nav_home: "Inicio",
+  breadcrumb_nav: "Ruta",
 
   // home cards (views/HomeCardsView) — one card per NAV_ITEMS row
   // (shell/nav.ts); each abstract is a short, non-invasive one-sentence
@@ -169,6 +171,7 @@ export const es = {
   gallery_dropdownmenu: "Menú desplegable",
   gallery_contextmenu: "Menú contextual",
   gallery_menubar: "Barra de menú",
+  gallery_breadcrumb: "Ruta de navegación",
   gallery_toc: "Tabla de contenidos",
   gallery_feedback: "Feedback",
   gallery_progress: "Progreso",
@@ -203,6 +206,8 @@ export const es = {
   demo_dialog_title: "Diálogo de ejemplo",
   demo_dialog_desc: "Un modal genérico sobre el builder Dialog de Melt.",
   demo_dialog_body: "Esto confirma que la capa overlay vendorizada renderiza de punta a punta.",
+  demo_breadcrumb_account: "Acme Corp",
+  demo_breadcrumb_current: "Facturas",
   demo_col_reference: "Referencia",
   demo_col_account: "Cuenta",
   demo_col_amount: "Importe",

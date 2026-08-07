@@ -83,6 +83,7 @@ export const GALLERY_REGISTRY: GalleryRegistryEntry[] = [
   { path: "nav/DropdownMenu.svelte", category: "nav", hydration: "visible" },
   { path: "nav/ContextMenu.svelte", category: "nav", hydration: "visible" },
   { path: "nav/Menubar.svelte", category: "nav", hydration: "visible" },
+  { path: "nav/Breadcrumb.svelte", category: "nav", hydration: "visible" },
   { path: "nav/TableOfContents.svelte", category: "nav", hydration: "visible" },
 
   // chat/ — ChatMessageList and ChatComposer are composed inside the ChatUI
@@ -145,6 +146,7 @@ export const GALLERY_REGISTRY: GalleryRegistryEntry[] = [
   { path: "showcase/DropdownMenuDemo.svelte", category: "showcase", hydration: "visible" },
   { path: "showcase/ContextMenuDemo.svelte", category: "showcase", hydration: "visible" },
   { path: "showcase/MenubarDemo.svelte", category: "showcase", hydration: "visible" },
+  { path: "showcase/BreadcrumbDemo.svelte", category: "showcase", hydration: "visible" },
   { path: "showcase/TableOfContentsDemo.svelte", category: "showcase", hydration: "visible" },
   { path: "showcase/TooltipDemo.svelte", category: "showcase", hydration: "visible" },
   { path: "showcase/PopoverDemo.svelte", category: "showcase", hydration: "visible" },

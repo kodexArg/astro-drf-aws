@@ -52,6 +52,7 @@ import {
   ToggleGroupDemo,
   ContextMenuDemo,
   MenubarDemo,
+  BreadcrumbDemo,
   TableOfContentsDemo,
   DrawerDemo,
   SurfaceDemo,
@@ -257,6 +258,7 @@ const tocItems: TableOfContentsItem[] = [
       dropdownMenu: t("gallery_dropdownmenu"),
       contextMenu: t("gallery_contextmenu"),
       menubar: t("gallery_menubar"),
+      breadcrumb: t("gallery_breadcrumb"),
       tableOfContents: t("gallery_toc"),
       overlay: t("gallery_overlay"),
       accordion: t("gallery_accordion"),
@@ -345,6 +347,14 @@ const tocItems: TableOfContentsItem[] = [
       slot="context-menu"
     />
     <MenubarDemo menus={menubarMenus} client:visible slot="menubar" />
+    <BreadcrumbDemo
+      items={[
+        { label: t("demo_breadcrumb_account"), href: "#" },
+        { label: t("demo_breadcrumb_current") },
+      ]}
+      client:visible
+      slot="breadcrumb"
+    />
     <TableOfContentsDemo
       items={tocItems}
       label={t("demo_toc_label")}
