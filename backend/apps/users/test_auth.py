@@ -3,7 +3,6 @@ Governed by: [[adr-14-auth]]
 Docs: [[BACKEND]] · [[AUTH]]
 LIVE-DOC:END"""
 
-import importlib
 import urllib.request
 from urllib.parse import parse_qs, urlparse
 
@@ -11,12 +10,13 @@ import pytest
 from django.core.checks import Error
 from django.core.management import call_command
 from django.core.management.base import SystemCheckError
-from django.urls import NoReverseMatch, clear_url_caches, reverse
+from django.urls import NoReverseMatch, reverse
 
 import apps.users.urls
 import config.urls
 from apps.users import checks, oidc
 from apps.users.models import User
+from conftest import reload_urlconf
 
 SUB = "cognito-sub-123"
 CLAIMS = {
@@ -112,20 +112,13 @@ def test_login_falls_back_to_dev_login_under_debug(client, settings):
     settings.COGNITO_USER_POOL_ID = ""
     settings.DEBUG = True
     settings.AUTH_DEV_MODE = True
-    clear_url_caches()
-    importlib.reload(apps.users.urls)
-    importlib.reload(config.urls)
-    try:
+    with reload_urlconf(apps.users.urls, config.urls):
         response = client.get("/accounts/login/")
         assert response.status_code == 302
         assert response["Location"] == "/accounts/dev-login/"
         assert response["Cache-Control"] == "no-store"
-    finally:
         settings.DEBUG = False
         settings.AUTH_DEV_MODE = False
-        clear_url_caches()
-        importlib.reload(apps.users.urls)
-        importlib.reload(config.urls)
 
 
 @pytest.mark.django_db
@@ -323,22 +316,15 @@ def test_dev_login_matches_real_session(client, settings):
         "django.contrib.auth.backends.ModelBackend",
         "apps.users.backends.DevLoginBackend",
     ]
-    clear_url_caches()
-    importlib.reload(apps.users.urls)
-    importlib.reload(config.urls)
-    try:
+    with reload_urlconf(apps.users.urls, config.urls):
         response = client.get("/accounts/dev-login/?email=dev@example.com")
         assert response.status_code == 302
         assert response["Location"] == "http://localhost:4321/"
         assert "_auth_user_id" in client.session
         assert User.objects.filter(email="dev@example.com").exists()
         assert response["Cache-Control"] == "no-store"
-    finally:
         settings.DEBUG = False
         settings.AUTH_DEV_MODE = False
-        clear_url_caches()
-        importlib.reload(apps.users.urls)
-        importlib.reload(config.urls)
 
 
 def test_dev_login_absent_when_not_debug(client, settings):
@@ -352,18 +338,11 @@ def test_dev_login_absent_when_not_debug(client, settings):
 def test_dev_login_absent_when_flag_off_even_under_debug(client, settings):
     settings.DEBUG = True
     settings.AUTH_DEV_MODE = False
-    clear_url_caches()
-    importlib.reload(apps.users.urls)
-    importlib.reload(config.urls)
-    try:
+    with reload_urlconf(apps.users.urls, config.urls):
         with pytest.raises(NoReverseMatch):
             reverse("accounts:dev-login")
         assert client.get("/accounts/dev-login/").status_code == 404
-    finally:
         settings.DEBUG = False
-        clear_url_caches()
-        importlib.reload(apps.users.urls)
-        importlib.reload(config.urls)
 
 
 def test_check_deploy_fails_when_dev_mode_in_prod(settings):

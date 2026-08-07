@@ -3,7 +3,6 @@ Governed by: [[adr-14-auth]]
 Docs: [[BACKEND]] · [[AUTH]]
 LIVE-DOC:END"""
 
-import importlib
 import json
 from urllib.parse import unquote
 
@@ -14,7 +13,7 @@ import config.urls
 from apps.users import oidc
 from apps.users.models import User
 from apps.users.services import upsert_user_from_claims
-from django.urls import clear_url_caches
+from conftest import reload_urlconf
 
 pytestmark = pytest.mark.django_db
 
@@ -322,19 +321,12 @@ def test_dev_login_sets_theme_cookie(client, settings):
         "django.contrib.auth.backends.ModelBackend",
         "apps.users.backends.DevLoginBackend",
     ]
-    clear_url_caches()
-    importlib.reload(apps.users.urls)
-    importlib.reload(config.urls)
-    try:
+    with reload_urlconf(apps.users.urls, config.urls):
         User.objects.create(
             sub="dev-theme@example.com", email="theme@example.com", theme_config=VALID_THEME
         )
         response = client.get("/accounts/dev-login/?email=theme@example.com")
         assert response.status_code == 302
         assert _decoded_theme_cookie(response) == VALID_THEME
-    finally:
         settings.DEBUG = False
         settings.AUTH_DEV_MODE = False
-        clear_url_caches()
-        importlib.reload(apps.users.urls)
-        importlib.reload(config.urls)

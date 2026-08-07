@@ -5,7 +5,7 @@ LIVE-DOC:END"""
 
 """Tests for CooldownThrottle (docs/tdds/tdd-01-cooldown-throttle.md)."""
 
-import time
+from datetime import UTC, datetime
 
 import pytest
 from django.core.management import call_command
@@ -55,13 +55,16 @@ def test_second_call_within_window_is_rejected_with_429(client, settings, django
     assert second["Cache-Control"] == "no-store"
 
 
-def test_call_after_window_succeeds(client, settings, django_user_model):
+def test_call_after_window_succeeds(client, settings, django_user_model, monkeypatch):
     settings.THROTTLE_COOLDOWN_SECONDS = 1
     user = _user(django_user_model, "cooldown-user-2")
     client.force_login(user, backend=MODEL_BACKEND)
 
+    now = [1_700_000_000.0]
+    monkeypatch.setattr(CooldownThrottle, "timer", staticmethod(lambda: now[0]))
+
     first = client.get("/cooldown-probe/")
-    time.sleep(1.1)
+    now[0] += 1.1
     second = client.get("/cooldown-probe/")
 
     assert first.status_code == 200

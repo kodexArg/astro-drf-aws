@@ -10,7 +10,7 @@ Redis ([[adr-10-cache]]). These tests exercise the pure cache-backed module
 directly; RouteView wiring is covered in test_route_view.py.
 """
 
-import time
+from datetime import UTC, datetime
 
 import pytest
 from django.core.cache import cache
@@ -71,13 +71,20 @@ def test_block_expires_after_configured_duration(settings, monkeypatch):
 
     now = [3_000_000.0]
     monkeypatch.setattr("apps.router.rate_abuse._now", lambda: now[0])
+    # DatabaseCache's TTL math and expiry check read real time; fake both
+    # to the same clock so the block-expiry assertion needs no sleep.
+    monkeypatch.setattr("django.core.cache.backends.base.time.time", lambda: now[0])
+    monkeypatch.setattr(
+        "django.core.cache.backends.db.tz_now",
+        lambda: datetime.fromtimestamp(now[0], tz=UTC),
+    )
 
     evaluate_rate_abuse(user_id=4)
     now[0] += 1
     evaluate_rate_abuse(user_id=4)  # crosses threshold=1/min trivially -> blocked
     assert is_rate_blocked(user_id=4) is True
 
-    time.sleep(1.2)  # real TTL expiry (cache backend honors wall-clock TTL)
+    now[0] += 1.2  # advance the fake clock past the 1s block TTL
     assert is_rate_blocked(user_id=4) is False
 
 
