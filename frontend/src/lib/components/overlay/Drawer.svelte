@@ -3,6 +3,18 @@
      Docs: [[FRONTEND]] · [[DESIGN-SYSTEM]] · [[COMPONENTIZATION]]
      LIVE-DOC:END -->
 
+<!--
+  Shell stacking: ClientRouter view transitions hoist named snapshots into a
+  layer above the live DOM. A fixed drawer with only document z-40 is
+  covered by `page-main`'s snapshot during navigation. A caller composing
+  this into shell chrome passes `viewTransitionName` (ChatDrawer: `shell-chat`)
+  so this <aside> itself joins that layer; app.css stacks
+  `::view-transition-group(shell-chat)` above `page-main`. The name must
+  live on this fixed root — never on an Astro island wrapper — or the
+  captured box misses the overlay. Empty (the default) keeps showcase/demo
+  mounts out of the VT layer, since two elements can never share one
+  `view-transition-name`.
+-->
 <script lang="ts">
   import { cn } from "$lib/utils";
   import { ChevronLeft, ChevronRight } from "$lib/components/icons";
@@ -23,6 +35,11 @@
     closeLabel = t("drawer_close"),
     /** Optional peek-tab content; defaults to open/close carets. */
     peekIcon,
+    /**
+     * CSS `view-transition-name` for shell chrome composing this drawer.
+     * Empty keeps showcase / demos out of the VT layer.
+     */
+    viewTransitionName = "",
     children,
     class: className = undefined,
   }: {
@@ -33,6 +50,7 @@
     openLabel?: string;
     closeLabel?: string;
     peekIcon?: Snippet;
+    viewTransitionName?: string;
     children?: Snippet;
     class?: string;
   } = $props();
@@ -43,6 +61,14 @@
     isLeft ? (open ? ChevronLeft : ChevronRight) : open ? ChevronRight : ChevronLeft,
   );
   const width = $derived(DRAWER_SIZE_VAR[size]);
+  const rootStyle = $derived(
+    [
+      `width: ${width}`,
+      viewTransitionName.trim() ? `view-transition-name: ${viewTransitionName.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("; "),
+  );
 </script>
 
 <aside
@@ -53,7 +79,7 @@
     className,
   )}
   data-drawer-size={size}
-  style={`width: ${width}`}
+  style={rootStyle}
 >
   <div
     inert={!open}

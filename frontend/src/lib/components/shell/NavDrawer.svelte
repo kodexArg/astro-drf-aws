@@ -11,6 +11,18 @@
   navigation never flashes unlocked ([[adr-28-nav-fsm-frosted-rail]]). No
   viewport measurement decides what renders. See [[bdd-12-navigation-shell]],
   [[COMPONENTIZATION]].
+
+  Shell stacking: ClientRouter view transitions hoist named snapshots into a
+  layer above the live DOM. Both presentations here are `fixed` (the rail:
+  `inset-y-0 z-30`; the FancyDrawer: `top-1/2 z-40`), so both are covered by
+  `page-main`'s snapshot during navigation unless they join the same layer.
+  A caller composing this into shell chrome passes `viewTransitionName`
+  (Base.astro: `shell-nav`), applied to the rail's fixed <aside> here and
+  forwarded to FancyDrawer for the unlocked presentation; app.css stacks
+  `::view-transition-group(shell-nav)` above `page-main`. Empty (the
+  default) keeps the `/showcase/components/` gallery's second NavDrawer
+  instance out of the VT layer — two elements can never share one
+  `view-transition-name`.
 -->
 <script lang="ts">
   import { onMount } from "svelte";
@@ -49,6 +61,13 @@
      * Tokens: `--shell-aside-*` in `app.css` ([[DESIGN-SYSTEM]] rem-over-px).
      */
     asideSize = "M" as AsideSize,
+    /**
+     * CSS `view-transition-name` for shell chrome, applied to the rail's
+     * fixed root and forwarded to FancyDrawer. Empty keeps a bare or
+     * gallery-demo mount out of the VT layer; Base.astro's real instance
+     * passes `shell-nav`.
+     */
+    viewTransitionName = "",
   }: {
     /**
      * The current path, supplied by the page. Read from a prop rather than from
@@ -63,10 +82,19 @@
     open?: boolean;
     preference?: NavLockPreference;
     asideSize?: AsideSize;
+    viewTransitionName?: string;
   } = $props();
 
   const railWidth = $derived(ASIDE_SIZE_VAR[asideSize]);
   const dense = $derived(asideSize === "S");
+  const railStyle = $derived(
+    [
+      `width: ${railWidth}`,
+      viewTransitionName.trim() ? `view-transition-name: ${viewTransitionName.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("; "),
+  );
 
   let localPreference = $state<NavLockPreference | null>(null);
   let mode = $state<ThemeMode>(DEFAULTS.mode);
@@ -199,7 +227,7 @@
         : "right-0 [box-shadow:-0.0625rem_0_0.875rem_-0.25rem_color-mix(in_oklch,var(--border)_55%,transparent)]",
     )}
     data-aside-size={asideSize}
-    style={`width: ${railWidth}`}
+    style={railStyle}
   >
     {@render body("inverse")}
   </aside>
@@ -211,6 +239,7 @@
     {side}
     width={railWidth}
     title=""
+    {viewTransitionName}
     openLabel={t("shell_nav_label")}
     closeLabel={t("fancy_drawer_close")}
   >
