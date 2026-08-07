@@ -5,6 +5,7 @@
 
 export { default as HomeCardsView } from "./HomeCardsView.svelte";
 export { default as HomeCard } from "./HomeCard.svelte";
+export { default as LoginLandingView } from "./LoginLandingView.svelte";
 export { default as ProfileView } from "./ProfileView.svelte";
 export { default as ShowcaseGalleryView } from "./ShowcaseGalleryView.svelte";
 export { default as ChatView } from "./ChatView.svelte";
