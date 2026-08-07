@@ -65,6 +65,22 @@ const roleHolding = hasRole(me);
       <aside> is position:fixed + h-dvh (viewport-tall, not page-tall). Header
       + main stay a column on the remaining side (bdd-12 / bdd-26). Unlocked
       FancyDrawer is fixed and takes no row space.
+
+      VT stacking contract ([[adr-28-nav-fsm-frosted-rail]]): the page-content
+      area carries the named `page-main` group (transition:name below); fixed
+      shell chrome carries its own view-transition-name (`shell-nav` /
+      `shell-chat`) on the fixed root the component renders — never on this
+      Astro island wrapper — via `viewTransitionName`. app.css stacks
+      shell-nav/shell-chat above page-main.
+
+      `transition:persist="shell-*-island"` is an unrelated mechanism: it
+      only sets Astro's client-side DOM-identity-matching attribute so the
+      swap function relocates that exact node across a navigation, and
+      creates no `::view-transition-*` group of its own — there is nothing
+      here for `shell-nav`/`shell-chat` to collide with. The `-island`
+      suffix is a naming choice for readability only (so a reader can tell
+      the persist key apart from the CSS group name at a glance), kept
+      distinct from `viewTransitionName`'s value for that reason alone.
     */}
     <div class="app-shell flex min-h-0 w-full flex-1 flex-row">
       {
@@ -73,10 +89,11 @@ const roleHolding = hasRole(me);
         roleHolding && (
           <NavDrawer
             client:load
-            transition:persist="shell-nav"
+            transition:persist="shell-nav-island"
             pathname={Astro.url.pathname}
             side={navSide}
             preference={navPreference}
+            viewTransitionName="shell-nav"
             navigates
           />
         )
@@ -99,7 +116,7 @@ const roleHolding = hasRole(me);
           </Fragment>
         </LayoutHeader>
 
-        <PageCanvas transition:animate={PAGE_FADE}>
+        <PageCanvas transition:name="page-main" transition:animate={PAGE_FADE}>
           <slot />
         </PageCanvas>
       </div>
@@ -111,8 +128,10 @@ const roleHolding = hasRole(me);
       roleHolding && me?.chat_drawer_enabled && (
         <ChatDrawer
           client:load
+          transition:persist="shell-chat-island"
           side={chatSide}
           page={pageIdentity}
+          viewTransitionName="shell-chat"
           publicBackendUrl={publicBackendUrl}
           copy={{
             title: t("chatui_assistant_title"),

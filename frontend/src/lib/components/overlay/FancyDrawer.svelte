@@ -10,6 +10,17 @@
   Drawer's full-height edge-anchored slide. The peek tab stays in-flow inside
   the aside's box so closed-state hit-testing works ([[adr-28-nav-fsm-frosted-rail]]).
   Zero-prop safe (adr-23 rule 1).
+
+  Shell stacking: ClientRouter view transitions hoist named snapshots into a
+  layer above the live DOM. A fixed drawer with only document z-40 is
+  covered by `page-main`'s snapshot during navigation. A caller composing
+  this into shell chrome passes `viewTransitionName` (site menu: `shell-nav`)
+  so this <aside> itself joins that layer; app.css stacks
+  `::view-transition-group(shell-nav)` above `page-main`. The name must live
+  on this fixed root — never on an Astro island wrapper — or the captured
+  box misses the overlay. Empty (the default) keeps showcase/demo mounts out
+  of the VT layer, since two elements can never share one
+  `view-transition-name`.
 -->
 <script lang="ts">
   import { onDestroy } from "svelte";
@@ -31,6 +42,11 @@
     width = DEFAULT_WIDTH,
     openLabel = t("fancy_drawer_open"),
     closeLabel = t("fancy_drawer_close"),
+    /**
+     * CSS `view-transition-name` for shell chrome composing this drawer.
+     * Empty keeps showcase / demos out of the VT layer.
+     */
+    viewTransitionName = "",
     children,
     class: className = undefined,
   }: {
@@ -40,6 +56,7 @@
     width?: string;
     openLabel?: string;
     closeLabel?: string;
+    viewTransitionName?: string;
     children?: Snippet;
     class?: string;
   } = $props();
@@ -57,6 +74,16 @@
       : isLeft
         ? `calc(-100% + ${TAB_WIDTH})`
         : `calc(100% - ${TAB_WIDTH})`,
+  );
+
+  const rootStyle = $derived(
+    [
+      `width: calc(${width} + ${TAB_WIDTH})`,
+      `transform: translate(${offsetX}, -50%)`,
+      viewTransitionName.trim() ? `view-transition-name: ${viewTransitionName.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("; "),
   );
 
   let rootEl: HTMLElement | undefined = $state();
@@ -134,7 +161,7 @@
     isLeft ? "left-0" : "right-0",
     className,
   )}
-  style={`width: calc(${width} + ${TAB_WIDTH}); transform: translate(${offsetX}, -50%)`}
+  style={rootStyle}
 >
   {#if !isLeft}
     <button

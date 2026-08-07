@@ -316,6 +316,37 @@ body > astro-island {
   display: contents;
 }
 
+/* View-transition stacking contract ([[adr-28-nav-fsm-frosted-rail]]):
+   during a ClientRouter navigation the browser paints ::view-transition-*
+   snapshots in a layer above the live DOM. `page-main` (Base.astro's
+   PageCanvas, transition:name) needs no morph animation of its own (the
+   fade is already handled by transition:animate) and must stay BELOW the
+   fixed shell chrome, or its snapshot covers the nav rail / FancyDrawer /
+   ChatDrawer peek tab for the transition's duration. */
+::view-transition-group(page-main) {
+  animation: none;
+  z-index: 1;
+}
+
+/* Shell edge chrome — names set on the fixed roots the components render
+   (NavDrawer's rail <aside>, overlay/FancyDrawer's <aside>, overlay/Drawer's
+   <aside> via ChatDrawer), never on the astro-island wrapper. Paint above
+   page-main's snapshot.
+
+   `transition:persist="shell-*-island"` on the astro-island wrapper is a
+   different, unrelated mechanism: it only sets Astro's client-side
+   DOM-identity-matching attribute (`data-astro-transition-persist`) so the
+   swap function relocates that exact node across navigation. It does NOT
+   emit a `$$renderTransition(...)` call or create a `::view-transition-*`
+   pseudo-element pair the way `transition:name`/this component's own
+   `viewTransitionName` prop do — there is no `shell-*-island` group to
+   select here, and there never was one to collide with. */
+::view-transition-group(shell-nav),
+::view-transition-group(shell-chat) {
+  animation: none;
+  z-index: 40;
+}
+
 [data-bg-preset="melt"] {
   --melt-dots-size: 2rem;
   --melt-dots-color: oklch(0.90 0.05 75);

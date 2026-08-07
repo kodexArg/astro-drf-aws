@@ -6,6 +6,12 @@
 <!--
   Composition only: overlay/Drawer + chat/ChatUI in assistant mode.
   Side is the mirror of the nav drawer's sidebarSide — never a second hard edge.
+
+  Shell stacking: same ClientRouter VT contract as NavDrawer/FancyDrawer —
+  a caller passes `viewTransitionName` (Base.astro: `shell-chat`) down onto
+  overlay/Drawer's fixed <aside> so the page-main fade cannot cover the peek
+  tab during navigation ([[adr-28-nav-fsm-frosted-rail]]). Empty (the
+  default) keeps a bare gallery mount out of the VT layer.
 -->
 <script lang="ts">
   import Drawer from "$lib/components/overlay/Drawer.svelte";
@@ -43,6 +49,12 @@
     open = $bindable(false),
     /** Chat needs the wide step; overlay/Drawer itself defaults to L. */
     size = "XL" as DrawerSize,
+    /**
+     * CSS `view-transition-name` forwarded to overlay/Drawer's fixed root.
+     * Empty keeps a bare gallery mount out of the VT layer; Base.astro's
+     * real instance passes `shell-chat`.
+     */
+    viewTransitionName = "",
   }: {
     /** Mirror of nav `sidebarSide` — derived by the layout, never hardcoded. */
     side?: SidebarSide;
@@ -52,6 +64,7 @@
     copy?: ChatCopy;
     open?: boolean;
     size?: DrawerSize;
+    viewTransitionName?: string;
   } = $props();
 </script>
 
@@ -59,6 +72,7 @@
   bind:open
   {side}
   {size}
+  {viewTransitionName}
   title={copy.title || t("chatui_assistant_title")}
   openLabel={t("shell_chat_drawer_label")}
   closeLabel={t("drawer_close")}
