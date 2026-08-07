@@ -150,20 +150,6 @@ def load_agnostic_script():
     return module
 
 
-def test_dispatch_hook_carries_no_watchlist_dict() -> None:
-    """The single source is each guardian's own frontmatter `watch:` list
-    (adr-03-guardians rule 8) — a second, hand-kept WATCHLISTS dict in the
-    Claude-native hook is the retired two-place doctrine (formerly rule 5).
-    Asserting its absence guards against the old duplicate creeping back."""
-    text = DISPATCH_HOOK.read_text(encoding="utf-8")
-    if "WATCHLISTS = {" in text or "WATCHLISTS: dict" in text:
-        fail(
-            "dispatch_guardians.py still defines its own WATCHLISTS dict; "
-            "it must delegate to docs/hooks/guardian-dispatch instead"
-        )
-    ok("dispatch_guardians.py carries no watchlist dict of its own")
-
-
 def test_frontmatter_watch_is_the_single_source() -> None:
     """The agnostic script reads `watch:` straight from each guardian's own
     frontmatter, and the Claude-native hook resolves to the exact same
@@ -240,7 +226,6 @@ def main() -> int:
         test_guardian_named_once_across_eight_file_batch,
         test_api_gate_silent_on_false_positive,
         test_api_gate_fires_on_true_positive,
-        test_dispatch_hook_carries_no_watchlist_dict,
         test_frontmatter_watch_is_the_single_source,
         test_pr_flow_nudges_on_worktree_remove,
         test_pr_flow_silent_on_worktree_list_and_add,

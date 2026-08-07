@@ -45,22 +45,35 @@ def block_body(text: str) -> list[str] | None:
     return lines[s + 1:e]
 
 
+def tracked_files() -> list[Path]:
+    """Prefer `git ls-files` (respects .gitignore, no directory walk needed);
+    fall back to an excludes-aware rglob for a non-git checkout."""
+    try:
+        proc = subprocess.run(
+            ["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True,
+        )
+        return [ROOT / line for line in proc.stdout.splitlines() if line.strip()]
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        excl = set(MANIFEST["exclude_dirs"])
+        return [
+            f for f in ROOT.rglob("*")
+            if f.is_file() and not any(part in excl for part in f.parts)
+        ]
+
+
 def matched_files() -> list[Path]:
     from fnmatch import fnmatch
-    excl = set(MANIFEST["exclude_dirs"])
+    roots = tuple(MANIFEST["roots"])
     out = []
-    for root in MANIFEST["roots"]:
-        p = ROOT / root
-        cands = [p] if p.is_file() else [f for f in p.rglob("*") if f.is_file()]
-        for f in cands:
-            if any(part in excl for part in f.parts):
-                continue
-            if not f.stat().st_size or f.name.endswith(".d.ts"):
-                continue
-            rel = f.relative_to(ROOT).as_posix()
-            if any(fnmatch(rel, r["glob"]) or fnmatch(rel, "**/" + r["glob"])
-                   for r in MANIFEST["rules"]):
-                out.append(f)
+    for f in tracked_files():
+        if not f.is_file() or not f.stat().st_size or f.name.endswith(".d.ts"):
+            continue
+        rel = f.relative_to(ROOT).as_posix()
+        if not any(rel == r or rel.startswith(r + "/") for r in roots):
+            continue
+        if any(fnmatch(rel, r["glob"]) or fnmatch(rel, "**/" + r["glob"])
+               for r in MANIFEST["rules"]):
+            out.append(f)
     return out
 
 

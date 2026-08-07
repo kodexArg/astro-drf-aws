@@ -1,8 +1,6 @@
 
 from __future__ import annotations
 
-import importlib.machinery
-import importlib.util
 import re
 import sys
 from pathlib import Path
@@ -44,15 +42,19 @@ def parse_frontmatter(text: str, label: str) -> dict[str, str]:
     for line in lines[1:end]:
         m = FRONTMATTER_KEY.match(line)
         if m:
-            key, val = m.group(1), m.group(2).strip()
-            data.setdefault(key, val.strip('"').strip("'"))
+            key, val = m.group(1), m.group(2).strip().strip('"').strip("'")
+            if key == "watch":
+                val = val or "yes"
+            data.setdefault(key, val)
     return data
 
 
 def discover_guardian_defs() -> dict[str, dict[str, str]]:
     """filename stem -> frontmatter, for every docs/agents/*.md whose
     frontmatter description names it a guardian. Generic: no literal
-    project-specific guardian name is ever hardcoded here."""
+    project-specific guardian name is ever hardcoded here. Captures whether
+    a `watch:` list is present so extract_watchlist_keys() need not re-glob
+    and re-parse the same files (adr-03-guardians rule 8)."""
     found: dict[str, dict[str, str]] = {}
     for path in sorted(AGENTS_DIR.glob("*.md")):
         fm = parse_frontmatter(path.read_text(encoding="utf-8"), path.name)
@@ -61,28 +63,14 @@ def discover_guardian_defs() -> dict[str, dict[str, str]]:
     return found
 
 
-def extract_watchlist_keys() -> list[str]:
-    """The single source is each guardian's own frontmatter `watch:` list
-    (adr-03-guardians rule 8), read live by docs/hooks/guardian-dispatch —
-    no hand-kept WATCHLISTS dict exists anymore. This loads that agnostic
-    script (never the Claude PostToolUse hook, which may carry side
-    effects) and returns the guardian names it discovered a watch: list
-    for."""
-    if not AGNOSTIC_SCRIPT.is_file():
-        fail(f"missing {AGNOSTIC_SCRIPT.relative_to(ROOT)}")
-    loader = importlib.machinery.SourceFileLoader(
-        "guardian_dispatch_agnostic", str(AGNOSTIC_SCRIPT)
-    )
-    spec = importlib.util.spec_from_loader(loader.name, loader)
-    module = importlib.util.module_from_spec(spec)
-    loader.exec_module(module)
-    lists = module.watchlists(AGENTS_DIR)
-    if not lists:
-        fail(
-            f"{AGNOSTIC_SCRIPT.relative_to(ROOT)}: watchlists() found no "
-            "guardian with a frontmatter watch: list"
-        )
-    return list(lists.keys())
+def extract_watchlist_keys(guardians: dict[str, dict[str, str]]) -> list[str]:
+    """Reuses discover_guardian_defs()'s own parse, since it already
+    captured `watch:` presence per file (adr-03-guardians rule 8) — no
+    second glob/read of docs/agents/ or load of the agnostic script."""
+    keys = [stem for stem, fm in guardians.items() if fm.get("watch")]
+    if not keys:
+        fail("no guardian definition carries a frontmatter watch: list")
+    return keys
 
 
 def test_dispatch_hook_has_no_own_watchlist() -> None:
@@ -108,7 +96,7 @@ def test_identity_triangle() -> None:
             "'guardian') is broken or the harness shipped with zero guardians"
         )
 
-    watchlist_keys = extract_watchlist_keys()
+    watchlist_keys = extract_watchlist_keys(guardians)
     if len(watchlist_keys) != len(set(watchlist_keys)):
         fail(f"WATCHLISTS has duplicate keys: {watchlist_keys}")
     watchlist_set = set(watchlist_keys)
