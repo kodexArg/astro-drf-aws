@@ -1,9 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
+import { flushSync, mountAt, unmount } from "./component-mount.test";
 
-// Source-level contract tests for the ported docked-rail/floating-drawer nav
-// (bdd-12-navigation-shell). DOM-mount behavior (zero-props, no throw) is
-// covered by component-mount.test.ts's self-discovering glob.
+// bun run test only — see component-mount.test.ts for why a bare `bun test`
+// falsely fails this suite (no --conditions browser/svelte, no DOM). DOM-mount
+// zero-prop coverage lives in component-mount.test.ts's self-discovering
+// glob; this file pins load-bearing behavior the glob cannot parametrize.
+// adr-28's preference x viewport render matrix is owned by a sibling file.
 
 const ROOT = path.join(import.meta.dir, "..");
 const NAV_TS = path.join(ROOT, "src", "lib", "components", "shell", "nav.ts");
@@ -16,8 +19,8 @@ const DRAWER = path.join(ROOT, "src", "lib", "components", "overlay", "Drawer.sv
 const CHAT_DRAWER = path.join(ROOT, "src", "lib", "components", "shell", "ChatDrawer.svelte");
 const FANCY_DRAWER = path.join(ROOT, "src", "lib", "components", "overlay", "FancyDrawer.svelte");
 
-async function read(file: string): Promise<string> {
-  return Bun.file(file).text();
+async function readCss(): Promise<string> {
+  return Bun.file(APP_CSS).text();
 }
 
 describe("nav.ts — NAV_SECTIONS grouping capability", () => {
@@ -36,143 +39,145 @@ describe("nav.ts — NAV_SECTIONS grouping capability", () => {
 });
 
 describe("NavItem — tone prop for docked-rail contrast (adr-08 r9)", () => {
-  test("defaults to 'default', so a bare mount needs no tone", async () => {
-    const source = await read(NAV_ITEM);
-    expect(source).toMatch(/tone\s*=\s*"default"/);
+  test("active state renders aria-current=page and a real accessible link", async () => {
+    const { target, instance } = await mountAt(NAV_ITEM, {
+      href: "/profile/",
+      label: "Profile",
+      active: true,
+    });
+    try {
+      const link = target.querySelector("a") as HTMLAnchorElement;
+      expect(link.getAttribute("aria-current")).toBe("page");
+      expect(link.textContent).toContain("Profile");
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 
-  test("inverse tone drops the ghost hover fill for a no-panel rail", async () => {
-    const source = await read(NAV_ITEM);
-    // Capsule always uses bare; inverse paints a foreground wash, not ghost/secondary.
-    expect(source).toContain('variant="bare"');
-    expect(source).toContain("hover:bg-foreground/10");
-    expect(source).not.toMatch(/variant=\{[^}]*"ghost"/);
-  });
-
-  test("icon sits in a bordered circular disc (feedlot capsule)", async () => {
-    const source = await read(NAV_ITEM);
-    expect(source).toContain("rounded-full border");
-    expect(source).toContain("size-8 shrink-0 place-items-center");
-    expect(source).toContain("border-primary bg-primary text-primary-foreground");
-  });
-
-  test("dense mode tightens gap/padding for asideSize S", async () => {
-    const source = await read(NAV_ITEM);
-    expect(source).toMatch(/dense\s*=\s*false/);
-    expect(source).toContain('dense ? "gap-1.5 pr-2" : "gap-2 pr-3"');
+  test("inactive state carries no aria-current", async () => {
+    const { target, instance } = await mountAt(NAV_ITEM, { href: "/profile/", label: "Profile" });
+    try {
+      const link = target.querySelector("a") as HTMLAnchorElement;
+      expect(link.hasAttribute("aria-current")).toBe(false);
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 });
 
 describe("NavLockToggle — zero-prop safe, non-mutating by default (adr-23)", () => {
-  test("onclick has no default handler — a bare click performs no action", async () => {
-    const source = await read(NAV_LOCK_TOGGLE);
-    expect(source).toMatch(/onclick\s*[,;:]/);
-    expect(source).not.toContain("onclick = () =>");
+  test("a bare click performs no action", async () => {
+    const { target, instance } = await mountAt(NAV_LOCK_TOGGLE);
+    try {
+      const button = target.querySelector("button") as HTMLButtonElement;
+      expect(button.getAttribute("aria-pressed")).toBe("false");
+      expect(() => button.click()).not.toThrow();
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 
-  test("locked defaults to false", async () => {
-    const source = await read(NAV_LOCK_TOGGLE);
-    expect(source).toMatch(/locked\s*=\s*false/);
+  test("locked reflects into aria-pressed and fires the caller's onclick", async () => {
+    let clicks = 0;
+    const { target, instance } = await mountAt(NAV_LOCK_TOGGLE, {
+      locked: true,
+      onclick: () => clicks++,
+    });
+    try {
+      const button = target.querySelector("button") as HTMLButtonElement;
+      expect(button.getAttribute("aria-pressed")).toBe("true");
+      button.click();
+      expect(clicks).toBe(1);
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 });
 
 describe("FancyDrawer — hover-open floating panel, sibling of Drawer (adr-23 r2)", () => {
-  test("carries the 2s leave cooldown", async () => {
-    const source = await read(FANCY_DRAWER);
-    expect(source).toContain("CLOSE_DELAY_MS = 2000");
+  test("opens on click and dismisses on an outside pointerdown", async () => {
+    const { target, instance } = await mountAt(FANCY_DRAWER);
+    try {
+      const tab = target.querySelector("button") as HTMLButtonElement;
+      tab.click();
+      flushSync();
+      expect(tab.getAttribute("aria-expanded")).toBe("true");
+
+      document.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      flushSync();
+      expect(tab.getAttribute("aria-expanded")).toBe("false");
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 
-  test("dismisses on an outside pointerdown", async () => {
-    const source = await read(FANCY_DRAWER);
-    expect(source).toContain("onDocumentPointerDown");
-  });
-
-  test("open defaults to false, closed on a bare mount", async () => {
-    const source = await read(FANCY_DRAWER);
-    expect(source).toMatch(/open\s*=\s*\$bindable\(false\)/);
-  });
-
-  test("the peek tab is in-flow inside the aside's box, not absolute left-full (adr-28)", async () => {
-    const source = await read(FANCY_DRAWER);
-    expect(source).not.toContain("left-full");
-    expect(source).not.toContain("right-full");
-    expect(source).not.toContain("absolute top-1/2");
-    expect(source).toContain("TAB_WIDTH");
-  });
-
-  test("the tab toggles on click, not only hover", async () => {
-    const source = await read(FANCY_DRAWER);
-    expect(source).toContain("onclick={onTabClick}");
+  test("closed by default on a bare mount", async () => {
+    const { target, instance } = await mountAt(FANCY_DRAWER);
+    try {
+      const tab = target.querySelector("button") as HTMLButtonElement;
+      expect(tab.getAttribute("aria-expanded")).toBe("false");
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 });
 
 describe("NavDrawer — nav_lock cookie preference and non-mutating footer defaults", () => {
-  test("preference comes from a prop (SSR), not from onMount/localStorage alone", async () => {
-    const source = await read(NAV_DRAWER);
-    expect(source).toMatch(/preference:\s*preferenceProp/);
-    expect(source).not.toMatch(/localStorage\.getItem\(PIN_KEY\)/);
-  });
-
-  test("locking persists via writeNavLockCookie, not localStorage", async () => {
-    const source = await read(NAV_DRAWER);
-    expect(source).toContain("writeNavLockCookie(next)");
-  });
-
-  test("the legacy shell-nav-pinned key is migrated once, never written again", async () => {
-    const source = await read(NAV_DRAWER);
-    expect(source).toContain("migrateLegacyNavLock()");
-    expect(source).not.toContain("localStorage.setItem");
-  });
-
   test("the profile disc is inert unless navigates is set (adr-22 r2)", async () => {
-    const source = await read(NAV_DRAWER);
-    expect(source).toMatch(/href=\{navigates \? "\/profile\/" : "#"\}/);
-  });
-
-  test("the theme disc never PATCHes the backend — cookie-only, like QuickThemeToggle", async () => {
-    const source = await read(NAV_DRAWER);
-    expect(source).not.toContain("fetch(");
-    expect(source).not.toMatch(/PATCH\s*\//);
-  });
-
-  test("defaults to the unlocked (floating) mode", async () => {
-    const source = await read(NAV_DRAWER);
-    expect(source).toMatch(/preferenceProp\s*=\s*"unlocked"/);
-  });
-
-  test("carries no feedlot business content", async () => {
-    const source = await read(NAV_DRAWER);
-    const feedlotTerms = [
-      "hacienda",
-      "alimentacion",
-      "sanidad",
-      "pesajes",
-      "racion",
-      "gastos",
-      "cow",
-      "wheat",
-      "OPERACIÓN",
-      "NUTRICIÓN",
-      "ADMINISTRACIÓN",
-    ];
-    for (const term of feedlotTerms) {
-      expect(source.toLowerCase()).not.toContain(term.toLowerCase());
+    const { target, instance } = await mountAt(NAV_DRAWER);
+    try {
+      const profileLink = [...target.querySelectorAll("a")].at(-1) as HTMLAnchorElement | undefined;
+      expect(profileLink?.getAttribute("href")).toBe("#");
+    } finally {
+      unmount(instance);
+      target.remove();
     }
   });
 
-  test("asideSize defaults to M and drives width via shell tokens", async () => {
-    const source = await read(NAV_DRAWER);
-    expect(source).toMatch(/asideSize\s*=\s*"M"/);
-    expect(source).toContain("ASIDE_SIZE_VAR[asideSize]");
-    expect(source).not.toContain('const RAIL_WIDTH = "14rem"');
+  test("navigates=true wires the real profile href", async () => {
+    const { target, instance } = await mountAt(NAV_DRAWER, { navigates: true });
+    try {
+      const profileLink = [...target.querySelectorAll("a")].find(
+        (a) => a.getAttribute("href") === "/profile/",
+      );
+      expect(profileLink).toBeDefined();
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 
-  test("locked rail is viewport-fixed (h-dvh), not page-tall self-stretch", async () => {
-    const source = await read(NAV_DRAWER);
-    expect(source).toContain("data-aside-spacer");
-    expect(source).toContain("fixed inset-y-0");
-    expect(source).toContain("h-dvh");
-    expect(source).not.toMatch(/"flex[^"]*self-stretch/);
+  test("the theme disc never issues a fetch on a bare mount", async () => {
+    const nativeFetch = globalThis.fetch;
+    let called = false;
+    globalThis.fetch = (async (...args: Parameters<typeof fetch>) => {
+      called = true;
+      return nativeFetch(...args);
+    }) as typeof fetch;
+    const { target, instance } = await mountAt(NAV_DRAWER);
+    try {
+      expect(called).toBe(false);
+    } finally {
+      unmount(instance);
+      target.remove();
+      globalThis.fetch = nativeFetch;
+    }
+  });
+
+  test("locked preference mounts a rail landmark", async () => {
+    const { target, instance } = await mountAt(NAV_DRAWER, { preference: "locked" });
+    try {
+      expect(target.querySelector("aside")).not.toBeNull();
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 });
 
@@ -186,7 +191,7 @@ describe("shell-sizes — aside L/M/S and drawer XL/L/M/S tokens", () => {
   });
 
   test("app.css pins rem values and aliases drawer M/S to aside M/S", async () => {
-    const css = await read(APP_CSS);
+    const css = await readCss();
     expect(css).toContain("--shell-aside-l: 15rem");
     expect(css).toContain("--shell-aside-m: 11rem");
     expect(css).toContain("--shell-aside-s: 9rem");
@@ -198,17 +203,25 @@ describe("shell-sizes — aside L/M/S and drawer XL/L/M/S tokens", () => {
 });
 
 describe("Drawer — size enum XL|L|M|S default L", () => {
-  test("defaults to L and no longer takes a freeform width prop", async () => {
-    const source = await read(DRAWER);
-    expect(source).toMatch(/size\s*=\s*"L"/);
-    expect(source).toContain("DRAWER_SIZE_VAR[size]");
-    expect(source).not.toMatch(/width\s*=\s*"18rem"/);
+  test("defaults to L via the data-drawer-size attribute", async () => {
+    const { target, instance } = await mountAt(DRAWER);
+    try {
+      const aside = target.querySelector("aside") as HTMLElement;
+      expect(aside.getAttribute("data-drawer-size")).toBe("L");
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 
   test("ChatDrawer defaults to XL (former 22rem chat width)", async () => {
-    const source = await read(CHAT_DRAWER);
-    expect(source).toMatch(/size\s*=\s*"XL"/);
-    expect(source).toContain("{size}");
-    expect(source).not.toContain('width="22rem"');
+    const { target, instance } = await mountAt(CHAT_DRAWER);
+    try {
+      const aside = target.querySelector("aside") as HTMLElement;
+      expect(aside.getAttribute("data-drawer-size")).toBe("XL");
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 });

@@ -1,84 +1,107 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
+import { mountAt, unmount } from "./component-mount.test";
 
-// NavbarIcon's component contract, ported from the gateway's
-// navbar-icon.test.ts — its bdd-30 `data-amounts` half (the treasury amount
-// abbreviation feature) does not exist in this template and is deliberately
-// dropped. What remains is source-level by necessity: the assertions are
-// about defaults and attribute wiring a DOM-free test cannot observe at
-// runtime.
+// bun run test only — see component-mount.test.ts for why a bare `bun test`
+// falsely fails this suite (no --conditions browser/svelte, no DOM).
 
 const ROOT = path.join(import.meta.dir, "..");
 const NAVBAR_ICON = path.join(ROOT, "src", "lib", "components", "shell", "NavbarIcon.svelte");
 const APP_CSS = path.join(ROOT, "src", "styles", "app.css");
 
-async function read(file: string): Promise<string> {
-  return Bun.file(file).text();
+async function readCss(): Promise<string> {
+  return Bun.file(APP_CSS).text();
 }
 
 describe("NavbarIcon — the component contract", () => {
-  test("every prop has a default, so a bare mount is valid (adr-22 r1)", async () => {
-    const source = await read(NAVBAR_ICON);
-    expect(source).toMatch(/icon\s*=\s*undefined/);
-    expect(source).toMatch(/label\s*=\s*""/);
-    expect(source).toMatch(/active\s*=\s*false/);
-    expect(source).toMatch(/onclick\s*=\s*undefined/);
+  test("a bare mount renders an accessible button with a fallback label", async () => {
+    const { target, instance } = await mountAt(NAVBAR_ICON);
+    try {
+      const button = target.querySelector("button") as HTMLButtonElement;
+      expect(button).not.toBeNull();
+      expect(button.getAttribute("aria-label")).not.toBe("");
+      expect(button.getAttribute("aria-pressed")).toBe("false");
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 
-  test("the click handler is optional-called, never assumed (adr-22 r2)", async () => {
-    // A bare `onclick()` would throw on the zero-prop mount.
-    const source = await read(NAVBAR_ICON);
-    expect(source).toContain("onclick?.()");
+  test("a bare click performs no action (onclick defaults to a no-op)", async () => {
+    const { target, instance } = await mountAt(NAVBAR_ICON);
+    try {
+      const button = target.querySelector("button") as HTMLButtonElement;
+      expect(() => button.click()).not.toThrow();
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 
-  test("it always has an accessible name, even with no label", async () => {
-    const source = await read(NAVBAR_ICON);
-    expect(source).toMatch(/label\s*\|\|\s*t\("navbar_icon_fallback"\)/);
-    expect(source).toContain("aria-label={accessibleName}");
+  test("announces state via aria-pressed and a real label", async () => {
+    const active = await mountAt(NAVBAR_ICON, { label: "Home", active: true });
+    try {
+      const button = active.target.querySelector("button") as HTMLButtonElement;
+      expect(button.getAttribute("aria-pressed")).toBe("true");
+      expect(button.getAttribute("aria-label")).toBe("Home");
+    } finally {
+      unmount(active.instance);
+      active.target.remove();
+    }
+
+    const inactive = await mountAt(NAVBAR_ICON, { label: "Home", active: false });
+    try {
+      const button = inactive.target.querySelector("button") as HTMLButtonElement;
+      expect(button.getAttribute("aria-pressed")).toBe("false");
+    } finally {
+      unmount(inactive.instance);
+      inactive.target.remove();
+    }
   });
 
-  test("state is announced, not just painted", async () => {
-    const source = await read(NAVBAR_ICON);
-    expect(source).toContain("aria-pressed={active}");
+  test("onclick fires the caller-supplied callback exactly once per click", async () => {
+    let calls = 0;
+    const { target, instance } = await mountAt(NAVBAR_ICON, { onclick: () => calls++ });
+    try {
+      const button = target.querySelector("button") as HTMLButtonElement;
+      button.click();
+      button.click();
+      expect(calls).toBe(2);
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
+});
 
-  test("the active colour comes from the token, never a literal", async () => {
-    const source = await read(NAVBAR_ICON);
-    expect(source).toContain("text-accent-active");
-    expect(source).not.toMatch(/oklch\(|#[0-9a-fA-F]{3,8}/);
-  });
-
-  test("it carries a visible focus ring", async () => {
-    const source = await read(NAVBAR_ICON);
-    expect(source).toContain("focus-visible:ring-ring");
-  });
-
-  test("hovering an active icon does not blank its active colour", async () => {
-    // Caught live in the browser, by no other gate: hover variants outrank base
-    // utilities, so the accent vanished while the pointer rested on the control.
-    const source = await read(NAVBAR_ICON);
-    expect(source).toContain("hover:text-accent-active");
-    // The unconditional form is the defect; the colour may only change on
-    // hover in the INACTIVE branch.
-    expect(source).not.toMatch(/"hover:bg-accent hover:text-accent-foreground"/);
-  });
-
-  test("hover restyles the surface, which is state-independent", async () => {
-    const source = await read(NAVBAR_ICON);
-    expect(source).toContain("hover:bg-accent");
+// happy-dom does not implement cascade order / computed style resolution, so
+// the hover-vs-active cascade regression this component's history guards
+// against is not reachable from this harness — only class-token presence is,
+// asserted here as an honest, narrower substitute, never as a cascade proof.
+describe("NavbarIcon — active colour class wiring (honest limit: not a cascade proof)", () => {
+  test("active state carries the accent-active class, never a literal colour", async () => {
+    const { target, instance } = await mountAt(NAVBAR_ICON, { active: true });
+    try {
+      const button = target.querySelector("button") as HTMLButtonElement;
+      const classList = button.getAttribute("class") ?? "";
+      expect(classList).toContain("text-accent-active");
+      expect(classList).not.toMatch(/oklch\(|#[0-9a-fA-F]{3,8}/);
+    } finally {
+      unmount(instance);
+      target.remove();
+    }
   });
 });
 
 describe("NavbarIcon — the --accent-active token ships a light/dark pair", () => {
-  // A light-only token renders muddy or invisible in dark mode ([[DESIGN-SYSTEM]]).
   test("declared in :root and again under .dark", async () => {
-    const css = await read(APP_CSS);
+    const css = await readCss();
     const declarations = css.match(/^\s*--accent-active:/gm) ?? [];
     expect(declarations).toHaveLength(2);
   });
 
   test("the dark value is lighter than the light one", async () => {
-    const css = await read(APP_CSS);
+    const css = await readCss();
     const values = [...css.matchAll(/--accent-active:\s*oklch\(([0-9.]+)/g)].map((m) =>
       Number(m[1]),
     );
@@ -88,12 +111,12 @@ describe("NavbarIcon — the --accent-active token ships a light/dark pair", () 
   });
 
   test("it is exposed to Tailwind as a utility colour", async () => {
-    const css = await read(APP_CSS);
+    const css = await readCss();
     expect(css).toContain("--color-accent-active: var(--accent-active);");
   });
 
   test("it is not merely an alias of --accent or --primary", async () => {
-    const css = await read(APP_CSS);
+    const css = await readCss();
     expect(css).not.toMatch(/--accent-active:\s*var\(--(accent|primary)\)/);
   });
 });

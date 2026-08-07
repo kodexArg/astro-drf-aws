@@ -33,26 +33,52 @@ Object.assign(globalThis, nativeHttp);
 // an imported `.svelte` file resolves to its own path string instead of a
 // component. `generate: "client"` is what makes each mount below a real
 // client-side render rather than the SSR string path smoke.test.ts covers.
+//
+// Every test file that mounts a component imports this module (bun caches
+// it as one instance across the process), so the plugin below installs
+// once and `compileCache` is shared by every describe block that mounts —
+// the same dependency graph is compiled once, not per test file.
+export const compileCache = new Map<string, string>();
+
 Bun.plugin({
   name: "svelte",
   setup(build) {
     build.onLoad({ filter: /\.svelte$/ }, async ({ path: file }) => {
+      const cached = compileCache.get(file);
+      if (cached) return { contents: cached, loader: "js" };
       const source = await Bun.file(file).text();
       const { js } = compile(source, { filename: file, generate: "client", css: "injected" });
+      compileCache.set(file, js.code);
       return { contents: js.code, loader: "js" };
     });
 
     build.onLoad({ filter: /\.svelte\.(ts|js)$/ }, async ({ path: file }) => {
+      const cached = compileCache.get(file);
+      if (cached) return { contents: cached, loader: "js" };
       const source = await Bun.file(file).text();
       const { js } = compileModule(source, { filename: file, generate: "client" });
+      compileCache.set(file, js.code);
       return { contents: js.code, loader: "js" };
     });
   },
 });
 
-const { mount, unmount, flushSync } = await import("svelte");
+export const { mount, unmount, flushSync } = await import("svelte");
 
-const COMPONENTS_ROOT = path.join(import.meta.dir, "..", "src", "lib", "components");
+export const COMPONENTS_ROOT = path.join(import.meta.dir, "..", "src", "lib", "components");
+
+/** Mounts a component (by absolute path) with zero-or-given props; caller unmounts and removes target. */
+export async function mountAt<P extends Record<string, unknown>>(
+  absPath: string,
+  props?: P,
+): Promise<{ target: HTMLElement; instance: ReturnType<typeof mount> }> {
+  const mod = await import(absPath);
+  const target = document.createElement("div");
+  document.body.appendChild(target);
+  const instance = mount(mod.default, props ? { target, props } : { target });
+  flushSync();
+  return { target, instance };
+}
 
 // The named membership of adr-22 rule 1's context-bound exemption: each of
 // these reads a Svelte context its parent sets, so a bare mount throws BY
