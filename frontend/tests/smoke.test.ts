@@ -71,7 +71,7 @@ afterAll(() => {
   server?.kill();
 });
 
-test("/ renders the new shell for an anonymous visitor — LayoutHeader/NavBar chrome and PageCanvas landmark, no cards, no drawers", async () => {
+test("/ renders a splash login for an anonymous visitor — Cognito CTA, placeholder footer, shell chrome, no route cards", async () => {
   const res = await fetch(`${BASE}/`, { redirect: "manual" });
   expect(res.status).toBe(200);
   expect(res.headers.get("cache-control")).toBeTruthy();
@@ -81,7 +81,9 @@ test("/ renders the new shell for an anonymous visitor — LayoutHeader/NavBar c
   expect(body).toContain("data-nav-sentinel");
   expect(body).toContain("data-nav-header");
   expect(body).toContain("<main");
-  expect(body).toContain(t("home_cards_title"));
+  expect(body).toContain(t("login_title"));
+  expect(body).toContain(t("login_footer"));
+  expect(body).toContain("/accounts/login/");
   // No NAV_ITEMS cards and no role-gated drawers for an anonymous visitor.
   expect(body).not.toContain('href="/chatui/"');
   expect(body).not.toContain('href="/showcase/components/"');

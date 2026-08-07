@@ -4,18 +4,20 @@
  * Docs: [[FRONTEND]]
  * LIVE-DOC:END */
 import Base from "../layouts/Base.astro";
-import { HomeCardsView } from "$lib/components/views";
+import { HomeCardsView, LoginLandingView } from "$lib/components/views";
 import { NAV_ITEMS } from "$lib/components/shell/nav";
 import { loadSession, DENIED_QUERY } from "$lib/authGate";
 import { hasRole } from "$lib/auth";
 import { t } from "../i18n";
+
+const publicBackendUrl = process.env.PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
 const me = await loadSession(Astro.request);
 // A role-less session bounced off a gated page arrives with `?denied=1`
 // (requireRole, $lib/authGate) — surface a visible reason, not a silent
 // redirect ([[adr-21-authorization-lobby]]).
 const denied = Astro.url.searchParams.get(DENIED_QUERY) === "1";
-// Signed-in with zero groups = lobby pending (adr-20); anonymous sees shell only.
+// Signed-in with zero groups = lobby pending (adr-20); anonymous sees splash.
 const pending = me !== null && !hasRole(me);
 const roleHolding = hasRole(me);
 
@@ -31,17 +33,28 @@ const items = roleHolding
   : [];
 ---
 
-<Base title={t("home_cards_title")} {me}>
-  <HomeCardsView
-    denied={denied}
-    pending={pending}
-    items={items}
-    copy={{
-      deniedTitle: t("denied_title"),
-      deniedBody: t("denied_body"),
-      pendingTitle: t("pending_title"),
-      pendingBody: t("lobby_pending"),
-      cardsTitle: t("home_cards_title"),
-    }}
-  />
+<Base title={roleHolding ? t("home_cards_title") : t("login_title")} {me}>
+  {
+    roleHolding ? (
+      <HomeCardsView
+        denied={denied}
+        pending={pending}
+        items={items}
+        copy={{
+          deniedTitle: t("denied_title"),
+          deniedBody: t("denied_body"),
+          pendingTitle: t("pending_title"),
+          pendingBody: t("lobby_pending"),
+          cardsTitle: t("home_cards_title"),
+        }}
+      />
+    ) : (
+      <LoginLandingView
+        publicBackendUrl={publicBackendUrl}
+        pending={pending}
+        denied={denied}
+        loginLabel={t("auth_login")}
+      />
+    )
+  }
 </Base>

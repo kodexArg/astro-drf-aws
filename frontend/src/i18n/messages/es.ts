@@ -19,6 +19,15 @@ export const es = {
   nav_chatui: "Chat",
   nav_profile: "Perfil",
 
+  // splash / login (/) — anonymous + pending sessions
+  login_title: "astro-drf-aws",
+  login_subtitle: "Template · Astro + Django",
+  login_hint: "Iniciá sesión para acceder.",
+  login_pending_hint:
+    "Tu sesión está iniciada. Podés cerrarla desde el menú de arriba a la derecha.",
+  // Placeholder footer — replace with copyright or a support mailto/URL.
+  login_footer: "© Your organization",
+
   // home cards (views/HomeCardsView) — one card per NAV_ITEMS row
   // (shell/nav.ts); each abstract is a short, non-invasive one-sentence
   // description.
