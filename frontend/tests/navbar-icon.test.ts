@@ -1,3 +1,7 @@
+/* LIVE-DOC:START — alvs-fleet-management live-doc; see [[HARNESS]]
+ * Docs: [[FRONTEND]]
+ * LIVE-DOC:END */
+
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { mountAt, unmount } from "./component-mount.test";

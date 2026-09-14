@@ -1,6 +1,6 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
-Governed by: [[adr-06-initial-stack]] · [[adr-16-m365-graph]]
-Docs: [[BACKEND]] · [[VARIABLES]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[HARNESS]]
+Governed by: [[adr-06-initial-stack]]
+Docs: [[BACKEND]]
 LIVE-DOC:END"""
 
 """adr-06 rule 6 / adr-16: `SECRET_KEY` hard-fails loudly when unset under

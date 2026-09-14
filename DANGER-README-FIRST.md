@@ -1,5 +1,11 @@
 # DANGER — READ FIRST
 
+> [!important] 2026-09-14 doctrine
+> Derived products are **permanent** ([[adr-29-permanent-deployment]]): deploy from
+> `main`, do **not** invent secret ARNs, do **not** mutate sibling FG/FM production
+> AWS, do **not** treat ephemeral teardown as the default clone path.
+
+
 Register of decisions taken **autonomously** by Claude Code under the owner's `/goal proceed
 without human` grant (2026-07-17). Every entry is a decision a human would normally gate.
 Guardrails in force for the whole autonomous run: **no action that could cost >$50** (no new

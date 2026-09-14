@@ -23,9 +23,9 @@ PR_FLOW_HOOK = ROOT / ".claude" / "hooks" / "require_pr_flow.py"
 # guardian filenames are expected to exist, so a seed helper can copy them
 # into an isolated tempdir project for the tests below.
 GUARDIAN_FILES = (
-    "astro-drf-aws-prd.md",
-    "astro-drf-aws-adr.md",
-    "astro-drf-aws-api.md",
+    "kbot-prd.md",
+    "kbot-adr.md",
+    "kbot-api.md",
 )
 
 
@@ -33,13 +33,20 @@ def seed_agents(project_dir: Path) -> None:
     """Copy the real guardian definitions (with their live `watch:`
     frontmatter) and the agnostic script into an isolated tempdir project,
     so the delegated hook has a real watchlist source to read."""
-    agents_dst = project_dir / "docs" / "agents"
-    agents_dst.mkdir(parents=True, exist_ok=True)
-    for name in GUARDIAN_FILES:
-        shutil.copy(AGENTS_DIR / name, agents_dst / name)
+    # Team Party: root agents/ is canonical; docs/agents may symlink to it.
+    for agents_dst in (project_dir / "agents", project_dir / "docs" / "agents"):
+        agents_dst.mkdir(parents=True, exist_ok=True)
+        for name in GUARDIAN_FILES:
+            shutil.copy(AGENTS_DIR / name, agents_dst / name)
     hooks_dst = project_dir / "docs" / "hooks"
     hooks_dst.mkdir(parents=True, exist_ok=True)
     shutil.copy(AGNOSTIC_SCRIPT, hooks_dst / "guardian-dispatch")
+    # Fleet hook loads hooks/khook-guardian-dispatch from CLAUDE_PROJECT_DIR
+    root_hooks = project_dir / "hooks"
+    root_hooks.mkdir(parents=True, exist_ok=True)
+    src = ROOT / "hooks" / "khook-guardian-dispatch"
+    if src.is_file():
+        shutil.copy(src, root_hooks / "khook-guardian-dispatch")
 
 
 def fail(msg: str) -> None:
@@ -106,14 +113,14 @@ def test_guardian_named_once_across_eight_file_batch() -> None:
         project = Path(tmp)
         session = "S-batch"
         first = run_dispatch(project, "docs/adrs/adr-01.md", session)
-        if "astro-drf-aws-adr" not in context_of(first):
+        if "kbot-adr" not in context_of(first):
             fail(
                 "the first edit in the batch must name the ADR guardian; "
                 f"got stdout={first.stdout!r}"
             )
         for n in range(2, 9):
             proc = run_dispatch(project, f"docs/adrs/adr-{n:02d}.md", session)
-            if "astro-drf-aws-adr" in context_of(proc):
+            if "kbot-adr" in context_of(proc):
                 fail(
                     f"edit {n} of the batch re-named the ADR guardian; the "
                     f"nudge must fire once per session, not per file. "
@@ -157,7 +164,7 @@ def test_frontmatter_watch_is_the_single_source() -> None:
     truly delegates rather than re-deriving its own answer."""
     module = load_agnostic_script()
     lists = module.watchlists(AGENTS_DIR)
-    for name in ("astro-drf-aws-prd", "astro-drf-aws-adr", "astro-drf-aws-api"):
+    for name in ("kbot-prd", "kbot-adr", "kbot-api"):
         if name not in lists or not lists[name]:
             fail(f"docs/agents/{name}.md: no watch: frontmatter list found")
 
@@ -165,9 +172,9 @@ def test_frontmatter_watch_is_the_single_source() -> None:
         project = Path(tmp)
         session = "S-source"
         cases = (
-            ("docs/constitution/PRD.md", "astro-drf-aws-prd"),
-            ("docs/adrs/adr-00-adr-doctrine.md", "astro-drf-aws-adr"),
-            ("docs/API.md", "astro-drf-aws-api"),
+            ("docs/constitution/PRD.md", "kbot-prd"),
+            ("docs/adrs/adr-00-adr-doctrine.md", "kbot-adr"),
+            ("docs/API.md", "kbot-api"),
         )
         for rel, expected in cases:
             proc = run_dispatch(project, rel, session + expected)
@@ -188,12 +195,12 @@ def test_pr_flow_nudges_on_worktree_remove() -> None:
             f"{proc.returncode} stderr={proc.stderr!r}"
         )
     out = proc.stdout.lower()
-    if "rule 5" not in out or "after" not in out or "merge" not in out:
+    if "after" not in out or "merge" not in out or "worktree" not in out:
         fail(
-            "git worktree remove must nudge the adr-19 rule-5 ordering "
-            f"(remove after merge); got stdout={proc.stdout!r}"
+            "git worktree remove must nudge remove-after-merge ordering "
+            f"(adr-27); got stdout={proc.stdout!r}"
         )
-    ok("git worktree remove nudges the rule-5 ordering")
+    ok("git worktree remove nudges remove-after-merge ordering")
 
 
 def test_pr_flow_silent_on_worktree_list_and_add() -> None:

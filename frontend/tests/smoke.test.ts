@@ -1,3 +1,7 @@
+/* LIVE-DOC:START — alvs-fleet-management live-doc; see [[HARNESS]]
+ * Docs: [[FRONTEND]]
+ * LIVE-DOC:END */
+
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { t } from "../src/i18n";
 import { DENIED_QUERY, DENIED_REDIRECT } from "../src/lib/authGate";

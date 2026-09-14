@@ -3,12 +3,18 @@ title: INVENTORY
 type: reference
 status: active
 created: 2026-07-11
-tags: [infrastructure, aws, inventory, ephemeral]
+modified: 2026-09-14
+tags: [infrastructure, aws, inventory, permanent]
 ---
 
 # INVENTORY
 
-The committed resource inventory for the `astro-drf-aws` stage-3 run. Every AWS resource this run touches has a row here, updated **in the same batch** as its creation ([[adr-15-ephemeral-run]] Article III). Phase E teardown executes from the `ephemeral` rows and verifies against the Resource Groups Tagging API; `shared` rows are never destroyed.
+Committed resource ledger. For **derived products**, every project-owned resource row is updated in the same batch as the change that creates or alters it ([[adr-29-permanent-deployment]]). Secret ARNs appear only after bootstrap — never invented.
+
+> [!warning] Clones start empty of project rows
+> A spawned repo inherits **no** project-owned inventory. Shared substrate rows below are **reference discovery** for the ALVS account — not a license to mutate them or to copy demo attachments. Do not treat historical `astro-drf-aws` ephemeral rows as the clone's stack ([[adr-27-derived-project-deploy-identity]]).
+
+The sections that follow document the template's historical stage-3 discovery / demo attachments (see superseded [[adr-15-ephemeral-run]]). Shared rows are never destroyed.
 
 - Account `789650504128`, region `us-east-1`, profile `kodex` ([[INFRASTRUCTURE]]).
 - `shared` = pre-existing ALVS resource, never mutated beyond this project's own attachments; `ephemeral` = created by this run, carries the mandatory tag set (`project=astro-drf-aws`, `env=prod`, `lifecycle=ephemeral`) and dies in Phase E.

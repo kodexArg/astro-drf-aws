@@ -8,6 +8,10 @@ tags: [harness, variables, ssot]
 
 # VARIABLES
 
+> [!important] Placeholders for clones
+> Live secret ARNs, subnet IDs, security-group IDs, Cognito pool/client IDs, and ALB rule numbers are **bootstrap-filled**. The template ships the **naming scheme** and `REPLACE_AFTER_BOOTSTRAP` / GitHub Actions `vars.*` slots — never invented suffixes, never sibling-product values ([[adr-29-permanent-deployment]], [[adr-27-derived-project-deploy-identity]]).
+
+
 The environment-variable **SSOT**. Every variable either backend or frontend code reads is declared here first.
 
 > [!warning]
@@ -30,8 +34,8 @@ Read by both services and by tooling (CI, compose). Non-secret identity values.
 
 | Name | Scope | Envs | Secret? | Source | Description |
 |---|---|---|---|---|---|
-| `PROJECT_SLUG` | backend + CI | dev/prod/local | no | plain task env; `.env` local | Project slug — the `<project>` in every AWS name ([[INFRASTRUCTURE]], [[GLOSSARY]]). This template's reference value: `astro-drf-aws`. Read by `backend/config/settings.py` and by `.github/workflows/deploy-prod.yml`; the frontend never reads this name directly — it receives the derived `PUBLIC_PROJECT_SLUG` below ([[VARIABLES]] Frontend) |
-| `BASE_DOMAIN` | backend + frontend | dev/prod/local | no | plain task env; `.env` local | Base domain (`grupoalvs.com`); project host is `<slug>[.dev].<domain>` ([[INFRASTRUCTURE]]) |
+| `PROJECT_SLUG` | backend + CI | dev/prod/local | no | plain task env; `.env` local | Project slug — the `<project>` in every AWS name ([[INFRASTRUCTURE]], [[GLOSSARY]]). Clones set this once at bootstrap. Template demo seed may remain `astro-drf-aws` in local `.env.example` only — clearly marked demo. Read by `backend/config/settings.py` and by deploy vars; the frontend receives `PUBLIC_PROJECT_SLUG` |
+| `BASE_DOMAIN` | backend + frontend | prod/local | no | plain task env; `.env` local | Base domain (`{{BASE_DOMAIN}}`); public host is owner-chosen `{{PUBLIC_HOST}}` — not necessarily `<slug>.<domain>` ([[INFRASTRUCTURE]]) |
 
 #### Sanctioned `PROJECT_SLUG` consumption points
 
@@ -40,7 +44,7 @@ The reference value `astro-drf-aws` is a literal exactly once per surface — ev
 - **`.env.example`** — `PROJECT_SLUG=astro-drf-aws`, the local dev seed.
 - **`backend/config/settings.py`** — `PROJECT_SLUG = _env("PROJECT_SLUG", "astro-drf-aws")`, the single fallback default.
 - **`compose.yaml`** — `${PROJECT_SLUG:-astro-drf-aws}` (Compose project `name:` and the `PUBLIC_PROJECT_SLUG` passthrough to the frontend container).
-- **`.github/workflows/deploy-prod.yml`** — the one seed line `PROJECT_SLUG: astro-drf-aws`; every other job reads `${{ env.PROJECT_SLUG }}` / `${PROJECT_SLUG}`, never a second literal. The four opaque ARNs (`SECRET_DJANGO`/`SECRET_DB`/`SECRET_COGNITO`/`SECRET_MSGRAPH`) are a distinct exception — AWS-random-suffix values baked at provisioning time, not derivable from the slug (issue #129).
+- **`.github/workflows/deploy-prod.yml`** — `PROJECT_SLUG`, `PROJECT_HOST` / `PUBLIC_HOST`, network IDs, and `SECRET_*` are **GitHub Actions repository variables** (or clearly marked `REPLACE_AFTER_BOOTSTRAP` placeholders). They are **not** committed live ARNs. Opaque AWS-assigned secret ARN suffixes are not a pure function of the slug — fill them only after bootstrap; **never invent** them (FG issue #129 lesson). Optional integrations (e.g. MS Graph) get their own secret only when the product opts in — not as a template default.
 - **`frontend/src/layouts/Base.astro`** — `process.env.PUBLIC_PROJECT_SLUG ?? "astro-drf-aws"`, the frontend-side fallback (the only frontend file carrying it).
 - **Markdown docs** (`*.md`) — narrative/reference use is exempt everywhere; this table and [[GLOSSARY]] are themselves that reference.
 - **Live-doc block headers** ([[adr-19-live-doc-backlinks]]) — the generated `LIVE-DOC:START — astro-drf-aws live-doc …` line stamped by the linker, not a hand-typed hardcode.
@@ -58,7 +62,7 @@ The reference value `astro-drf-aws` is a literal exactly once per surface — ev
 | `DB_USER` | backend | dev/prod/local | yes | `alvs/<env>/<project>/db` (`username`); `.env` local | Database user |
 | `DB_PASSWORD` | backend | dev/prod/local | yes | `alvs/<env>/<project>/db` (`password`); `.env` local | Database password |
 | `SECRET_KEY` | backend | dev/prod/local | yes | `alvs/<env>/<project>/django`; `.env` local | Django secret key |
-| `ALLOWED_HOSTS` | backend | dev/prod/local | yes | `alvs/<env>/<project>/django`; `.env` local | Django allowed hosts list. **Prod value must also include `backend.astro-drf-aws-prod.local`** (the Cloud Map hostname) alongside the public domain — the frontend's SSR fetch reaches the backend by that internal host, not by the public domain (2026-07-13 fix) |
+| `ALLOWED_HOSTS` | backend | dev/prod/local | yes | `alvs/<env>/<project>/django`; `.env` local | Django allowed hosts list. **Prod value must also include `backend.{{PROJECT_SLUG}}-prod.local`** (the Cloud Map hostname) alongside `{{PUBLIC_HOST}}` — the frontend's SSR fetch reaches the backend by that internal host, not by the public domain (2026-07-13 fix) |
 | `DEBUG` | backend | dev/prod/local | yes | `alvs/<env>/<project>/django`; `.env` local | Django debug flag (never true in prod) |
 | `CORS_ALLOWED_ORIGINS` | backend | dev/prod/local | yes | `alvs/<env>/<project>/django`; `.env` local | CORS origin allowlist |
 | `CSRF_TRUSTED_ORIGINS` | backend | dev/prod/local | yes | `alvs/<env>/<project>/django`; `.env` local | CSRF trusted origins — carries the split local origins ([[DOCKER]]) |

@@ -1,8 +1,12 @@
 name: deploy-prod
 
+# Production deploy from main (adr-29). Env values are repository
+# variables filled AFTER AWS bootstrap — never invent ARNs (adr-27).
+# ECS services use deployment circuit breaker with rollback.
+
 on:
   push:
-    branches: [prod]
+    branches: [main]
 
 concurrency:
   group: deploy-prod
@@ -13,28 +17,73 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: us-east-1
-  AWS_ACCOUNT_ID: "789650504128"
-  DEPLOY_ROLE_ARN: arn:aws:iam::789650504128:role/gha-deploy-prod
-  PROJECT_SLUG: astro-drf-aws
-  ENV_NAME: prod
-  CLUSTER: alvs-prod
-  ECR_REGISTRY: 789650504128.dkr.ecr.us-east-1.amazonaws.com
-  PUBLIC_SUBNET_A: subnet-0367b5e29ffc0c525
-  PUBLIC_SUBNET_B: subnet-03e3ec09d37971485
-  TASK_SG_ID: sg-027b8d1f3fe41007a
-  # opaque AWS-assigned suffix — not a pure function of PROJECT_SLUG, stays literal (issue #129)
-  SECRET_DJANGO: arn:aws:secretsmanager:us-east-1:789650504128:secret:alvs/prod/astro-drf-aws/django-3aQ89E
-  # opaque AWS-assigned suffix — not a pure function of PROJECT_SLUG, stays literal (issue #129)
-  SECRET_DB: arn:aws:secretsmanager:us-east-1:789650504128:secret:alvs/prod/astro-drf-aws/db-57dPTf
-  # opaque AWS-assigned suffix — not a pure function of PROJECT_SLUG, stays literal (issue #129)
-  SECRET_COGNITO: arn:aws:secretsmanager:us-east-1:789650504128:secret:alvs/prod/astro-drf-aws/cognito-kZbof7
-  # opaque AWS-assigned suffix — not a pure function of PROJECT_SLUG, stays literal (issue #129)
-  SECRET_MSGRAPH: arn:aws:secretsmanager:us-east-1:789650504128:secret:alvs/prod/astro-drf-aws/msgraph-2vkmEp
+  # ---------------------------------------------------------------------------
+  # Bootstrap-filled repository variables (Settings → Secrets and variables →
+  # Actions → Variables). NEVER invent ARNs or opaque suffixes. NEVER copy
+  # sibling-product (FG/FM) or this template's historical demo ARNs into a clone.
+  # See docs/INFRASTRUCTURE.md, adr-29-permanent-deployment, adr-27.
+  # ---------------------------------------------------------------------------
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+  DEPLOY_ROLE_ARN: ${{ vars.DEPLOY_ROLE_ARN }}
+  PROJECT_SLUG: ${{ vars.PROJECT_SLUG }}
+  # Owner-decided public host — NOT composed from the slug.
+  PROJECT_HOST: ${{ vars.PROJECT_HOST }}
+  BASE_DOMAIN: ${{ vars.BASE_DOMAIN }}
+  ENV_NAME: ${{ vars.ENV_NAME }}
+  CLUSTER: ${{ vars.CLUSTER }}
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+  PUBLIC_SUBNET_A: ${{ vars.PUBLIC_SUBNET_A }}
+  PUBLIC_SUBNET_B: ${{ vars.PUBLIC_SUBNET_B }}
+  TASK_SG_ID: ${{ vars.TASK_SG_ID }}
+  # Opaque AWS-assigned secret ARN suffixes — fill AFTER bootstrap only.
+  SECRET_DJANGO: ${{ vars.SECRET_DJANGO }}
+  SECRET_DB: ${{ vars.SECRET_DB }}
+  SECRET_COGNITO: ${{ vars.SECRET_COGNITO }}
+  # Optional product integrations (MS Graph, etc.): leave unset unless opted in.
+  # SECRET_MSGRAPH: ${{ vars.SECRET_MSGRAPH }}
   CLOUDMAP_SERVICE: backend
 
 jobs:
+
+  # Fail closed before any AWS call when bootstrap vars are missing (adr-27).
+  check-bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require deploy vars (REPLACE_AFTER_BOOTSTRAP)
+        env:
+          V_AWS_REGION: ${{ vars.AWS_REGION }}
+          V_AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+          V_DEPLOY_ROLE_ARN: ${{ vars.DEPLOY_ROLE_ARN }}
+          V_PROJECT_SLUG: ${{ vars.PROJECT_SLUG }}
+          V_PROJECT_HOST: ${{ vars.PROJECT_HOST }}
+          V_BASE_DOMAIN: ${{ vars.BASE_DOMAIN }}
+          V_ENV_NAME: ${{ vars.ENV_NAME }}
+          V_CLUSTER: ${{ vars.CLUSTER }}
+          V_ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+          V_PUBLIC_SUBNET_A: ${{ vars.PUBLIC_SUBNET_A }}
+          V_PUBLIC_SUBNET_B: ${{ vars.PUBLIC_SUBNET_B }}
+          V_TASK_SG_ID: ${{ vars.TASK_SG_ID }}
+          V_SECRET_DJANGO: ${{ vars.SECRET_DJANGO }}
+          V_SECRET_DB: ${{ vars.SECRET_DB }}
+          V_SECRET_COGNITO: ${{ vars.SECRET_COGNITO }}
+        run: |
+          missing=0
+          for name in AWS_REGION AWS_ACCOUNT_ID DEPLOY_ROLE_ARN PROJECT_SLUG PROJECT_HOST BASE_DOMAIN ENV_NAME CLUSTER ECR_REGISTRY PUBLIC_SUBNET_A PUBLIC_SUBNET_B TASK_SG_ID SECRET_DJANGO SECRET_DB SECRET_COGNITO; do
+            eval "val=\$V_$name"
+            if [ -z "$val" ]; then
+              echo "Missing repository variable: $name (fill after bootstrap — never invent ARNs)"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::Deploy target not configured. Set GitHub Actions variables after AWS bootstrap. See docs/INFRASTRUCTURE.md / ONBOARDING.md. Fail-closed per adr-27."
+            exit 1
+          fi
+          echo "Bootstrap vars present for PROJECT_SLUG=$V_PROJECT_SLUG host=$V_PROJECT_HOST"
+
   test:
+    needs: check-bootstrap
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -147,7 +196,7 @@ jobs:
           echo "backend_log_group=/alvs/${PROJECT_SLUG}/backend-${ENV_NAME}" >> "$GITHUB_OUTPUT"
           echo "frontend_log_group=/alvs/${PROJECT_SLUG}/frontend-${ENV_NAME}" >> "$GITHUB_OUTPUT"
           echo "cloudmap_namespace=${PROJECT_SLUG}-${ENV_NAME}.local" >> "$GITHUB_OUTPUT"
-          echo "project_host=${PROJECT_SLUG}.grupoalvs.com" >> "$GITHUB_OUTPUT"
+          echo "project_host=${PROJECT_HOST}" >> "$GITHUB_OUTPUT"
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
@@ -207,7 +256,7 @@ jobs:
                 "command": ["sh", "-c", "uv run python manage.py migrate --noinput && uv run python manage.py createcachetable"],
                 "environment": [
                   {"name": "PROJECT_SLUG", "value": "${PROJECT_SLUG}"},
-                  {"name": "BASE_DOMAIN", "value": "grupoalvs.com"},
+                  {"name": "BASE_DOMAIN", "value": "${BASE_DOMAIN}"},
                   {"name": "USE_X_FORWARDED_PROTO", "value": "true"}
                 ],
                 "secrets": [
@@ -302,7 +351,7 @@ jobs:
                 "portMappings": [{"containerPort": 8000, "protocol": "tcp"}],
                 "environment": [
                   {"name": "PROJECT_SLUG", "value": "${PROJECT_SLUG}"},
-                  {"name": "BASE_DOMAIN", "value": "grupoalvs.com"},
+                  {"name": "BASE_DOMAIN", "value": "${BASE_DOMAIN}"},
                   {"name": "USE_X_FORWARDED_PROTO", "value": "true"}
                 ],
                 "secrets": [
@@ -320,10 +369,7 @@ jobs:
                   {"name": "COGNITO_CLIENT_ID", "valueFrom": "${SECRET_COGNITO}:COGNITO_CLIENT_ID::"},
                   {"name": "COGNITO_CLIENT_SECRET", "valueFrom": "${SECRET_COGNITO}:COGNITO_CLIENT_SECRET::"},
                   {"name": "COGNITO_DOMAIN", "valueFrom": "${SECRET_COGNITO}:COGNITO_DOMAIN::"},
-                  {"name": "COGNITO_REGION", "valueFrom": "${SECRET_COGNITO}:COGNITO_REGION::"},
-                  {"name": "MSGRAPH_TENANT_ID", "valueFrom": "${SECRET_MSGRAPH}:tenant_id::"},
-                  {"name": "MSGRAPH_CLIENT_ID", "valueFrom": "${SECRET_MSGRAPH}:client_id::"},
-                  {"name": "MSGRAPH_CLIENT_SECRET", "valueFrom": "${SECRET_MSGRAPH}:client_secret::"}
+                  {"name": "COGNITO_REGION", "valueFrom": "${SECRET_COGNITO}:COGNITO_REGION::"}
                 ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
@@ -381,13 +427,16 @@ jobs:
           JSON
           aws ecs register-task-definition --cli-input-json file://frontend-taskdef.json
 
-      - name: Update ECS services (force new deployment)
+      - name: Update ECS services (circuit breaker + rollback)
         run: |
+          # deploymentCircuitBreaker.rollback=true: failed roll-forward restores
+          # the previous task definition (docs/INFRASTRUCTURE.md).
           for name in ${PROJECT_SLUG}-backend ${PROJECT_SLUG}-frontend; do
             taskdef="${name}-prod"
-            echo "Updating service $name → $taskdef"
+            echo "Updating service $name → $taskdef (circuitBreaker enable+rollback)"
             aws ecs update-service --cluster "${CLUSTER}" --service "$name" \
-              --task-definition "$taskdef" --force-new-deployment
+              --task-definition "$taskdef" --force-new-deployment \
+              --deployment-configuration "deploymentCircuitBreaker={enable=true,rollback=true},maximumPercent=200,minimumHealthyPercent=100"
           done
 
           echo "Waiting for services to stabilize..."

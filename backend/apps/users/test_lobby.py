@@ -1,6 +1,6 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
-Governed by: [[adr-21-authorization-lobby]] · [[adr-16-m365-graph]]
-Docs: [[BACKEND]] · [[AUTH]] · [[API]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[HARNESS]]
+Governed by: [[adr-14-auth]]
+Docs: [[BACKEND]] · [[AUTH]]
 LIVE-DOC:END"""
 
 """adr-21 rule 1: every gated route requires a Django session AND at least

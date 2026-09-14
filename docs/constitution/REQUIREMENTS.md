@@ -18,8 +18,8 @@ Frontend toolchain is **bun** — package manager AND runtime; npm is prohibited
 
 | Package | Version | Status | Note (checked 2026-07-11) |
 |---|---|---|---|
-| Django | 6.0.7 | stable | **Fallback taken (A1, 2026-07-11):** DRF 3.17.1 still omits `Framework :: Django :: 6.1` from its classifiers, so the pre-decided fallback rule applies and Django is pinned to **6.0.7 stable** (also the current PyPI latest; 6.1 final expected ~Aug 2026). Re-evaluate when DRF declares 6.1. |
-| djangorestframework | 3.17.1 | stable | Latest. Classifiers list Django up to **6.0** only; 6.1 **not** present (re-checked 2026-07-11) — this is why Django is held at 6.0.7. Flag clears once a DRF release adds the 6.1 classifier. |
+| Django | 6.1 | stable | **Fallback taken (A1, 2026-07-11):** DRF 3.17.1 still omits `Framework :: Django :: 6.1` from its classifiers, so the pre-decided fallback rule applies and Django is pinned to **6.1** (FG floor 2026-09-14; template leads) (also the current PyPI latest; 6.1 final expected ~Aug 2026). Re-evaluate when DRF declares 6.1. |
+| djangorestframework | 3.18.0 | stable | Latest. Classifiers list Django up to **6.0** only; 6.1 **not** present (re-checked 2026-07-11) — this is why Django is held at 6.0.7. Flag clears once a DRF release adds the 6.1 classifier. |
 | Python | 3.14.6 | stable | |
 | psycopg | 3.3.4 | stable | PostgreSQL driver ([[BD]]) |
 | uvicorn | 0.51.0 | stable | **Chosen ASGI server** (decided 2026-07-10): standalone with `--workers`, sized by `UVICORN_WORKERS` (default `4`, [[VARIABLES]]) in the `backend/Dockerfile` CMD (closes #262). Async-first — AI/streaming features expected soon ([[BACKEND]]). gunicorn evaluated and not selected; it is not in the stack. |
@@ -54,7 +54,7 @@ Pulled ephemerally by a `compose.yaml` dev command through `uv run --with` — n
 
 | Package | Version | Status | Note (checked 2026-07-11) |
 |---|---|---|---|
-| Astro | 7.0.7 | stable | Astro 7 is the current major. The `beta`/`rc` npm dist-tags are **stale** — nothing newer than 7.0.7 exists. |
+| Astro | 7.2.9 | stable | Astro 7 is the current major. The `beta`/`rc` npm dist-tags are **stale** — nothing newer than 7.0.7 exists. |
 | Svelte | 5.56.4 | stable | |
 | @astrojs/svelte | 9.0.1 | stable | |
 | @astrojs/node | 11.0.2 | stable | Standalone SSR adapter, executed under bun ([[FRONTEND]]) |
@@ -88,3 +88,7 @@ Not shipped in any container — a **dev-harness** dependency, installed into a 
 
 > [!note]
 > Each re-pin re-runs the same policy — **latest available, beta acceptable** — and updates this table with the date checked. Current check date: **2026-07-11** (A1 sweep: all pins re-verified; only Django changed — 6.1b1 → 6.0.7 stable via the DRF-classifier fallback). Never bump a pin without recording the new check date in the Note column.
+
+
+> [!note] 2026-09-14 pin bump
+> Template tracks FG floor: Astro **7.2.9**, `@astrojs/node` **11.1.4**, Django **6.1**, DRF **3.18.0**. Verify with local `uv sync` / `bun install` before treating as clone default.
