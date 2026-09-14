@@ -11,20 +11,20 @@ description: >
 
 > [!info] In force on this repo (Team Party map)
 > Layout [[adr-25-harness-layout]]: project stack skill (stem names the pinned stack taught).
-> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `fm.grupoalvs.com`.
+> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `{{PUBLIC_HOST}}`.
 > Citations: [[adr-24-constitution]], [[adr-25-harness-layout]], [[adr-27-guardians-and-delivery]].
 > Live AWS names that still contain `astro-drf-aws` are leftover until Gabriel reprovisions — do not invent ARNs.
 
 
 # k-aws-containers
 
-**Only stack:** ECS **Fargate** + **ECR** for the astro-drf-aws template on **ALVS** (`789650504128`, **us-east-1**). Doctrine: `docs/INFRASTRUCTURE.md`. Precedent: **sroa** on clusters `alvs-dev` / `alvs-prod`.
+**Only stack:** ECS **Fargate** + **ECR** for the astro-drf-aws template on **ALVS** (`{{AWS_ACCOUNT_ID}}`, **us-east-1**). Doctrine: `docs/INFRASTRUCTURE.md`. Precedent: **sroa** on clusters `alvs-dev` / `alvs-prod`.
 
 ## Fixed topology (do not invent alternatives)
 
 | Item | Value |
 |------|--------|
-| Account | ALVS `789650504128` |
+| Account | ALVS `{{AWS_ACCOUNT_ID}}` |
 | Region | **us-east-1 only** |
 | Envs | **dev**, **prod** — no staging |
 | Clusters | `alvs-dev`, `alvs-prod` |
@@ -73,7 +73,7 @@ executionRoleArn: alvs-<env>-<project>-<component>-exec-role
 taskRoleArn:      alvs-<env>-<project>-<component>-task-role
 container:
   name: <project>-<component>
-  image: 789650504128.dkr.ecr.us-east-1.amazonaws.com/alvs/<project>-<component>:<env>-<sha>
+  image: {{AWS_ACCOUNT_ID}}.dkr.ecr.us-east-1.amazonaws.com/alvs/<project>-<component>:<env>-<sha>
   portMappings: [{ containerPort: 8000|4321, protocol: tcp }]
   essential: true
   environment: non-secrets only (see docs/VARIABLES.md)
@@ -104,7 +104,7 @@ Push only via GHA OIDC (`gha-deploy-<env>`) — long-lived keys forbidden (`docs
 
 ## ALB path ownership (shared ALB)
 
-Host: `<project>.dev.grupoalvs.com` (dev) / `<project>.grupoalvs.com` (prod).
+Host: `<project>.dev.{{BASE_DOMAIN}}` (dev) / `<project>.{{BASE_DOMAIN}}` (prod).
 
 | Priority idea | Path / host | Target |
 |---------------|-------------|--------|

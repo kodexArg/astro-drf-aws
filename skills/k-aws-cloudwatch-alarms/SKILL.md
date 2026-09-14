@@ -9,7 +9,7 @@ description: >
 
 > [!info] In force on this repo (Team Party map)
 > Layout [[adr-25-harness-layout]]: project stack skill (stem names the pinned stack taught).
-> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `fm.grupoalvs.com`.
+> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `{{PUBLIC_HOST}}`.
 > Citations: [[adr-24-constitution]], [[adr-25-harness-layout]], [[adr-27-guardians-and-delivery]].
 > Live AWS names that still contain `astro-drf-aws` are leftover until Gabriel reprovisions — do not invent ARNs.
 

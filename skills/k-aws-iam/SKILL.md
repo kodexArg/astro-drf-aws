@@ -5,12 +5,12 @@ description: >
   ALVS IAM for this template: Fargate exec/task roles, GHA OIDC deploy roles,
   least privilege for Django/Astro on ECS. Use when creating or editing roles,
   trust policies, or task permissions for astro-drf-aws. us-east-1, account
-  789650504128. Not for Cognito app RBAC or org-wide IAM redesign.
+  {{AWS_ACCOUNT_ID}}. Not for Cognito app RBAC or org-wide IAM redesign.
 ---
 
 > [!info] In force on this repo (Team Party map)
 > Layout [[adr-25-harness-layout]]: project stack skill (stem names the pinned stack taught).
-> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `fm.grupoalvs.com`.
+> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `{{PUBLIC_HOST}}`.
 > Citations: [[adr-24-constitution]], [[adr-25-harness-layout]], [[adr-27-guardians-and-delivery]].
 > Live AWS names that still contain `astro-drf-aws` are leftover until Gabriel reprovisions — do not invent ARNs.
 
@@ -23,7 +23,7 @@ description: >
 
 | Item | Value |
 |------|--------|
-| Account | `789650504128` |
+| Account | `{{AWS_ACCOUNT_ID}}` |
 | Region | us-east-1 |
 | Profile | `kodex` (human/agent ops); deploy via **OIDC** roles |
 | Envs | dev, prod |
@@ -61,7 +61,7 @@ Live precedent (do not rename): `alvs-prod-sroa-backend-exec-role`, `…-task-ro
 }
 ```
 
-Prefer condition `aws:SourceAccount` = `789650504128` when creating new roles.
+Prefer condition `aws:SourceAccount` = `{{AWS_ACCOUNT_ID}}` when creating new roles.
 
 ### GHA OIDC
 

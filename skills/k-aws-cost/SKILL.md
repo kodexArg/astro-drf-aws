@@ -4,12 +4,12 @@ version: v0.1.0
 description: >
   Cost discipline for ALVS astro-drf-aws: Fargate 256/512, no NAT, no Redis,
   shared ALB, single-AZ micro RDS. Use when reviewing spend, rightsizing, or
-  blocking expensive “best practice” additions. Account 789650504128 us-east-1.
+  blocking expensive “best practice” additions. Account {{AWS_ACCOUNT_ID}} us-east-1.
 ---
 
 > [!info] In force on this repo (Team Party map)
 > Layout [[adr-25-harness-layout]]: project stack skill (stem names the pinned stack taught).
-> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `fm.grupoalvs.com`.
+> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `{{PUBLIC_HOST}}`.
 > Citations: [[adr-24-constitution]], [[adr-25-harness-layout]], [[adr-27-guardians-and-delivery]].
 > Live AWS names that still contain `astro-drf-aws` are leftover until Gabriel reprovisions — do not invent ARNs.
 
@@ -41,7 +41,7 @@ Any proposal that adds NAT, Redis, Multi-AZ RDS “because production”, or sec
 
 ## Allowed cost work
 
-- Cost Explorer by service/tag for account `789650504128`  
+- Cost Explorer by service/tag for account `{{AWS_ACCOUNT_ID}}`  
 - Right-size **after** CloudWatch CPU/mem evidence (`k-aws-observability`)  
 - Budgets/alerts for unexpected spend  
 - ECR lifecycle policies to expire untagged images  

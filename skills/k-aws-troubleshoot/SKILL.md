@@ -9,7 +9,7 @@ description: >
 
 > [!info] In force on this repo (Team Party map)
 > Layout [[adr-25-harness-layout]]: project stack skill (stem names the pinned stack taught).
-> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `fm.grupoalvs.com`.
+> Product SSOT: `docs/constitution/PRD.md`. Canonical host: `{{PUBLIC_HOST}}`.
 > Citations: [[adr-24-constitution]], [[adr-25-harness-layout]], [[adr-27-guardians-and-delivery]].
 > Live AWS names that still contain `astro-drf-aws` are leftover until Gabriel reprovisions — do not invent ARNs.
 
@@ -18,7 +18,7 @@ description: >
 
 ## Order of operations (always)
 
-1. **Identity** — `aws sts get-caller-identity --profile kodex` (account must be `789650504128`).  
+1. **Identity** — `aws sts get-caller-identity --profile kodex` (account must be `{{AWS_ACCOUNT_ID}}`).  
 2. **Service** — running vs desired on `alvs-<env>`.  
 3. **Events** — ECS service events (last failure reason).  
 4. **Task** — stopped reason / essential container exit.  

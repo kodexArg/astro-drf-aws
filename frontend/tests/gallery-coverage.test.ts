@@ -1,4 +1,4 @@
-/* LIVE-DOC:START — alvs-fleet-management live-doc; see [[HARNESS]]
+/* LIVE-DOC:START — astro-drf-aws live-doc; see [[HARNESS]]
  * Docs: [[FRONTEND]]
  * LIVE-DOC:END */
 
@@ -7,8 +7,7 @@ import { Glob } from "bun";
 import path from "node:path";
 import { GALLERY_REGISTRY } from "../src/lib/components/showcase/galleryRegistry";
 
-// The automated backstop for the showcase gallery's own decay, adapted from
-// the alvs-financial-gateway suite of the same name: docs/COMPONENTIZATION.md
+// The automated backstop for the showcase gallery's own decay. docs/COMPONENTIZATION.md
 // names exactly this shape — "an enumerated list of subjects decays back into
 // the code-review-only enforcement the harness replaces" — of
 // component-mount.test.ts's own `discover()`/`CONTEXT_BOUND` pair, one layer
@@ -17,7 +16,7 @@ import { GALLERY_REGISTRY } from "../src/lib/components/showcase/galleryRegistry
 // under the tracked categories has a documented fate: a `GALLERY_REGISTRY`
 // row (it IS exhibited) or a `GALLERY_EXCLUDED` entry (it is deliberately
 // not, for a stated, named reason). A file in neither bucket is silent
-// drift — exactly what decayed the gateway's gallery to ~26% coverage before
+// drift — the failure mode this suite exists to catch before
 // this test existed there.
 const COMPONENTS_ROOT = path.join(import.meta.dir, "..", "src", "lib", "components");
 

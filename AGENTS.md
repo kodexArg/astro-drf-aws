@@ -48,4 +48,4 @@ Forest → tavern → camp (N slices) → stalking → plaza. Skill: `skills/k-t
 - **Grok:** `.grok/skills` → `skills/`. Prefer `grok --cwd <clone>`.
 - **Kimi:** point `extra_agent_dirs` at **this clone’s** `agents/`, never a sibling product.
 
-Old `orch-*` / `astro-drf-aws-*` / `kdx-*` trees live under `docs/obsolete/harness-pre-team-party/` for archaeology only.
+Pre-Team-Party `orch-*` / `kdx-*` archaeology trees were removed; use root `agents/` / `skills/` / `hooks/` / `adrs/`.

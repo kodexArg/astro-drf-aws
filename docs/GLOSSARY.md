@@ -36,7 +36,7 @@ Format: Term | Canonical form | Applies to | Forbidden forms.
 | shadow test | `shadow test` | BDD browser validation ([[BDD]]) | `e2e test`, `smoke test` |
 | endpoint | `endpoint` | any route declared in [[API]] | `route` (in API context) |
 | project slug | `astro-drf-aws` (this template's reference project; `PROJECT_SLUG` backend/CI, `PUBLIC_PROJECT_SLUG` frontend-derived form) | AWS resource names, secrets paths, hosts ([[INFRASTRUCTURE]]); frontend-visible copy via `PUBLIC_PROJECT_SLUG` ([[VARIABLES]]) | `astro_drf_aws`, `astrodrfaws`; a literal `astro-drf-aws` typed outside the sanctioned single-source points ([[VARIABLES]], issue #133) |
-| base domain | `grupoalvs.com` (`BASE_DOMAIN`) | project hosts `<slug>[.dev].grupoalvs.com` | hardcoding the host instead of composing it |
+| base domain | `example.com` (`BASE_DOMAIN`) | project hosts `<slug>[.dev].example.com` | hardcoding the host instead of composing it |
 | view | Django server code only — views and viewsets ([[BACKEND]]) | backend code | calling Astro pages or Svelte files "views" |
 | page | `page` — an Astro `src/pages/` route ([[FRONTEND]]) | frontend routes | `view` (Django's word), `screen` |
 | template | Django template — fragment/HTML rendering ([[BACKEND]], [[HTMX]]) | backend rendering | calling Astro layouts "templates" |
@@ -80,7 +80,7 @@ Format: Term | Canonical form | Applies to | Forbidden forms.
 | CI workflow (prod) | `.github/workflows/deploy-prod.yml` | the prod-only deploy workflow ([[INFRASTRUCTURE]], [[adr-15-ephemeral-run]]) | `deploy.yml`, `main.yml`; a `deploy-dev.yml` in this run |
 | Cognito user pool | `alvs-prod-astro-drf-aws` | the run's only user pool ([[AUTH]], B2.2) | per-app pools; names without the `alvs-prod-` prefix |
 | Cognito hosted-UI prefix | `alvs-astro-drf` | hosted-UI domain prefix ([[AUTH]]); `alvs-astro-drf-aws` was frozen at B1 but rejected by `CreateUserPoolDomain` — `aws` is a reserved word in hosted-UI domain prefixes, so B2.2 fell back to this value | the full pool name as prefix; ad-hoc abbreviations; any prefix containing the word `aws` |
-| Cognito test users | `test-admin@grupoalvs.com`, `test-plain@grupoalvs.com` | the B2 RBAC pair; Django group `admins` assigned to the first in C1 fixtures, never in Cognito ([[adr-14-auth]]) | real personal emails; `admin@…`; Cognito groups as roles |
+| Cognito test users | `test-admin@example.com`, `test-plain@example.com` | the B2 RBAC pair; Django group `admins` assigned to the first in C1 fixtures, never in Cognito ([[adr-14-auth]]) | real personal emails; `admin@…`; Cognito groups as roles |
 | RDS instance | `alvs-prod-astro-drf-aws-pg` | the dedicated ephemeral instance ([[BD]], [[adr-15-ephemeral-run]] r4) | using shared `alvs-prod-pg` in this run |
 | database name | `app` | the SQL database on that instance ([[BD]]) | the hyphenated project slug inside SQL identifiers |
 | S3 media bucket | `alvs-astro-drf-aws-media-prod` | private media bucket, no CDN — Django-presigned URLs only ([[INFRASTRUCTURE]]) | public buckets; per-service buckets |
@@ -91,7 +91,7 @@ Format: Term | Canonical form | Applies to | Forbidden forms.
 | ECS services | `astro-drf-aws-backend`, `astro-drf-aws-frontend` | the two Fargate services, born at first deploy (D2) ([[INFRASTRUCTURE]]) | `-service` suffixes; per-env suffixes (cluster is already prod) |
 | log groups (run) | `/alvs/astro-drf-aws/backend-prod`, `/alvs/astro-drf-aws/frontend-prod` | CloudWatch Logs groups ([[INFRASTRUCTURE]]) | `/ecs/*` defaults |
 | secrets paths (run) | `alvs/prod/astro-drf-aws/{django,db,cognito,s3}` | Secrets Manager components; JSON keys per [[VARIABLES]] | SSM Parameter Store; secrets outside this prefix |
-| project host | `astro-drf-aws.grupoalvs.com` | ALB A-alias host, no CDN in front ([[INFRASTRUCTURE]]) | pointing the apex or other hosts at this run |
+| project host | `{{PUBLIC_HOST}}` (compose `<PROJECT_SLUG>.<BASE_DOMAIN>`, e.g. `app.example.com`) | ALB A-alias host, no CDN in front ([[INFRASTRUCTURE]]) | pointing the apex or other hosts at this run |
 | Django app (m365) | `m365` | app-only Microsoft Graph capability app ([[BACKEND]], [[adr-16-m365-graph]]); no models, owns the two demo Graph read endpoints | `graph`, `microsoft`, `sharepoint` |
 | endpoint segment (hello) | `hello` — `/api/m365/hello/` | live Graph read of workbook cell A1, demo endpoint ([[API]], [[adr-16-m365-graph]]) | `cell-a1`, `test-a1` |
 | endpoint segment (world) | `world` — `/api/m365/world/` | live Graph read of workbook cell C3, demo endpoint ([[API]], [[adr-16-m365-graph]]) | `cell-c3`, `test-c3` |
