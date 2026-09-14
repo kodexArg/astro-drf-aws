@@ -1,3 +1,7 @@
+/* LIVE-DOC:START — alvs-fleet-management live-doc; see [[HARNESS]]
+ * Docs: [[FRONTEND]]
+ * LIVE-DOC:END */
+
 import { describe, expect, test } from "bun:test";
 
 // adr-25 rules 3-4: the request carries a page IDENTITY, never scraped page

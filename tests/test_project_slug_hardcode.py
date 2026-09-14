@@ -22,8 +22,8 @@ These are the well-determined places the literal may still appear:
       (adr-19-live-doc-backlinks), not a hardcode;
   (e) a short, explicit EXCEPTIONS list below, for opaque values that are
       not derivable from PROJECT_SLUG at all: `.github/workflows/
-      deploy-prod.yml` lines holding one of the six AWS-random-suffix ARNs
-      baked in at provisioning time (issue #129); `.claude/hooks/
+      deploy-prod.yml` bootstrap comments / var names (ARNs must not be
+      committed — adr-27 / adr-29); `.claude/hooks/
       graph_first.py`'s codebase-memory-mcp project id (a different
       identifier namespace, not this app's PROJECT_SLUG);
       `tests/test_graph_first_hook.py`'s derivation fixtures — it types a
@@ -34,8 +34,8 @@ These are the well-determined places the literal may still appear:
       park-mode file, harness tooling, not this app's PROJECT_SLUG (#307);
   (f) this test file itself — it necessarily types the literal it searches
       for;
-  (g) a guardian name — `astro-drf-aws-prd`, `astro-drf-aws-adr`, or
-      `astro-drf-aws-api` — is a SEPARATE naming axis (an agent identity,
+  (g) a guardian name — `kbot-prd`, `kbot-adr`, or
+      `kbot-api` — is a SEPARATE naming axis (an agent identity,
       not the project slug), guarded on its own by
       `tests/test_guardian_identity_triangle.py`. A line is allowed under
       this rule if, after stripping every guardian-name token, no bare
@@ -60,7 +60,7 @@ SLUG = "astro-drf-aws"
 # rule (g): guardian names are a separate naming axis (agent identities),
 # guarded on their own by tests/test_guardian_identity_triangle.py — not a
 # PROJECT_SLUG hardcode. `\b` keeps a suffix like `-prdx` from matching.
-GUARDIAN_NAME_RE = re.compile(r"astro-drf-aws-(?:prd|adr|api)\b", re.IGNORECASE)
+GUARDIAN_NAME_RE = re.compile(r"kbot-(?:prd|adr|api|bdd)\b", re.IGNORECASE)
 
 EXCLUDE_DIR_NAMES = {".git", "node_modules", ".astro", "dist", ".venv", ".mvmcp"}
 

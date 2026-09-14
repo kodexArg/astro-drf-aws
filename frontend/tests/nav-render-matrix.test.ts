@@ -1,5 +1,8 @@
+/* LIVE-DOC:START — alvs-fleet-management live-doc; see [[HARNESS]]
+ * Docs: [[FRONTEND]]
+ * LIVE-DOC:END */
+
 import { describe, expect, test } from "bun:test";
-import path from "node:path";
 import {
   DESK_MIN_WIDTH,
   RAIL_MIN_WIDTH,
@@ -75,7 +78,7 @@ function stubMatchMedia(width: number): () => void {
       media: query,
       addEventListener() {},
       removeEventListener() {},
-    } as MediaQueryList;
+    } as unknown as MediaQueryList;
   }) as typeof window.matchMedia;
   return () => {
     window.matchMedia = original;

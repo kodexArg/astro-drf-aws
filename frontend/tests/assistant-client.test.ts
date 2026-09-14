@@ -1,3 +1,7 @@
+/* LIVE-DOC:START — alvs-fleet-management live-doc; see [[HARNESS]]
+ * Docs: [[FRONTEND]]
+ * LIVE-DOC:END */
+
 import { describe, expect, test } from "bun:test";
 import {
   askAssistant,

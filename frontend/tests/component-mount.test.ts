@@ -1,3 +1,7 @@
+/* LIVE-DOC:START — alvs-fleet-management live-doc; see [[HARNESS]]
+ * Docs: [[FRONTEND]]
+ * LIVE-DOC:END */
+
 import { describe, expect, test } from "bun:test";
 import { Glob } from "bun";
 import path from "node:path";
@@ -75,7 +79,7 @@ export async function mountAt<P extends Record<string, unknown>>(
   const mod = await import(absPath);
   const target = document.createElement("div");
   document.body.appendChild(target);
-  const instance = mount(mod.default, props ? { target, props } : { target });
+  const instance = mount(mod.default, { target, props: (props ?? {}) as P });
   flushSync();
   return { target, instance };
 }

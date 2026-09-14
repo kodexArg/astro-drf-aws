@@ -14,22 +14,22 @@ Owner: **`kodexArg`**. Repo protocol: SSH. CLI: `gh` (used directly). Ruled by [
 
 | Branch | Role |
 |---|---|
-| **`main`** | Integration / default development. Feature PRs merge here. |
-| **`prod`** | **Production.** Not `main`. Promote only from `main` (PR → `prod`). |
+| **`main`** | **Single line** — integration **and** production. Feature PRs merge here; every push to `main` may deploy to AWS. |
+| **`prod`** | **Retired** for derived products. Historical only; do not open new promote PRs to `prod`. |
 
-Forbidden as production name: treating `main` as live. Forbidden branch name for default: `master` ([[GLOSSARY]]).
+Forbidden: treating a second long-lived branch as production. Forbidden default branch name: `master` ([[GLOSSARY]]). Ruled by [[adr-29-permanent-deployment]].
 
 ## Who may push
 
-- **Direct push to `main` and `prod`:** account **`kodexArg` only**.
+- **Direct push to `main`:** account **`kodexArg` only**. (`prod` is retired for derived products.)
 - Everyone else (agents, collaborators): **branches + PRs**. No direct push to protected lines.
 
 ## How we work
 
 1. **Issues** for work tracking — open early, close with PR. Every issue uses a repository template from `.github/ISSUE_TEMPLATE/` — the BDD/Gherkin feature form is `gh-issue-feature-bdd.md` (chooser label "Feature (BDD)"); its References section is filled liberally so no issue is orphaned for want of a link graph.
-2. **PRs** for every change that lands on `main` (and every promote to `prod`).
-3. Agents open branches / PRs; they do not force-push `main`/`prod` as another identity.
-4. Base of feature PRs: **`main`**. Base of release/promote PRs: **`prod`** (head = `main` or release branch).
+2. **PRs** for every change that lands on `main`.
+3. Agents open branches / PRs; they do not force-push `main` as another identity.
+4. Base of feature PRs: **`main`**. There is no separate promote-to-`prod` step for derived products.
 
 ### The feature template at a glance (80-col view)
 
@@ -81,13 +81,14 @@ One primary type label per issue/PR; add `blocked` only when stuck.
 ## Git tags (releases)
 
 - Format: **`vMAJOR.MINOR.PATCH`** (semver).
-- Cut tags **from `prod` only** after a promote lands.
-- Optional prerelease: `vX.Y.Z-rc.N` still from `prod` (or a short-lived release branch merged to `prod` first).
+- Cut tags **from `main` only** after a production-ready land.
+- Optional prerelease: `vX.Y.Z-rc.N` still from `main` (or a short-lived release branch merged to `main` first).
 
 ## CI / deploy refs
 
-- **dev** pipelines / OIDC trust: `refs/heads/main` (and PR checks).
-- **prod** pipelines / OIDC trust: `refs/heads/prod` (and tags `v*` if used).
+- **PR checks:** pull requests targeting `main`.
+- **Production deploy + OIDC trust:** `refs/heads/main` only. Workflow `.github/workflows/deploy-prod.yml` triggers on `push` to `main`.
+- No cloud `dev` environment and no second deploy ref for derived products ([[adr-29-permanent-deployment]]).
 - Detail for AWS roles: [[INFRASTRUCTURE]].
 
 ### OIDC subject format — immutable IDs
@@ -106,5 +107,7 @@ Consequences that bind this template and every project spawned from it:
 - Read a repo's live prefix with `gh api repos/OWNER/REPO/actions/oidc/customization/sub` (`sub_claim_prefix`). This repo's: `repo:kodexArg@47777332/astro-drf-aws@1305504992`.
 - Repos born before the cutoff keep the classic format until they are recreated, renamed, or transferred — then they flip and their trust entries must follow.
 
-> [!note] Ephemeral reference run
-> For the template's own stage-3 run the `dev ← main` pipeline is **out of scope**: `main` is the local development line, `prod` is the only branch reaching AWS, and OIDC deploy trust exists for `refs/heads/prod` only. The `dev ← main` trust above stays doctrine for real projects. Ruled by [[adr-15-ephemeral-run]].
+> [!note] Permanent product deploy (derived clones)
+> Derived products deploy production from `main`. There is no cloud `dev` environment and no second deploy ref. Secret ARNs, subnet IDs, and Cognito client IDs are filled **after bootstrap** — never invented, never copied from this template's live inventory. Ruled by [[adr-29-permanent-deployment]], [[adr-27-derived-project-deploy-identity]].
+>
+> Historical note: an optional template stage-3 experiment once used `refs/heads/prod` + ephemeral teardown ([[adr-15-ephemeral-run]]); that path is **superseded for clones** and must not be re-inherited.

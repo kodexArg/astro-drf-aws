@@ -1,4 +1,4 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[HARNESS]]
 Governed by: [[adr-17-chatbot-two-tier]] · [[adr-18-async-mandatory]]
 Docs: [[BACKEND]] · [[CHATBOT]]
 LIVE-DOC:END"""

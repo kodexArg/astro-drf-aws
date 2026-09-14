@@ -1,4 +1,4 @@
-"""LIVE-DOC:START — astro-drf-aws live-doc; see [[adr-19-live-doc-backlinks]]
+"""LIVE-DOC:START — astro-drf-aws live-doc; see [[HARNESS]]
 Governed by: [[adr-16-m365-graph]]
 Docs: [[BACKEND]]
 API: [[API]]

@@ -1,5 +1,12 @@
 # Onboarding — astro-drf-aws (Alvsgroup)
 
+> [!important] 2026-09-14 template doctrine
+> - `main` is live (prod). See [[adr-29-permanent-deployment]], [[GH]], [[CLONE-DRY-RUN]].
+> - Harness is Team Party: root `agents/` / `skills/` / `hooks/` / `adrs/`.
+> - PRD is hollow `{{PLACEHOLDER}}` — define the user before inventing product.
+> - Deploy vars are bootstrap-filled — never invent ARNs.
+
+
 Welcome. The objective ([PRD](docs/PRD.md)) is a **solid harness and a strongly opinionated
 stack whose railguard cannot be left**, oriented to growth through new apps and features
 without compromising the foundations. The harness is the point — a live documentation system

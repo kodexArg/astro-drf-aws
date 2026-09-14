@@ -5,35 +5,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/load_ssot.py\""
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/khook-repo-health.py\""
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/graph_freshness.py\""
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/khook-load-ssot.py\""
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/mvmcp_freshness.py\""
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Grep|Glob",
-        "hooks": [
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/khook-load-adr-index.py\""
+          },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/graph_first.py\""
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/require_pr_flow.py\""
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/khook-mvmcp-freshness.py\""
           }
         ]
       }
@@ -43,7 +27,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/require_api_read.py\""
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/khook-require-api-read.py\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/khook-require-pr-flow.py\""
           }
         ]
       }
@@ -54,22 +49,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_adr.py\""
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/khook-check-adr.py\""
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_api.py\""
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/khook-check-api.py\""
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_variables.py\""
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/dispatch_guardians.py\""
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/khook-dispatch-guardians.py\""
           }
         ]
       }
     ]
   }
 }
+
+

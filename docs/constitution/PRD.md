@@ -1,42 +1,76 @@
 ---
-created: '2026-07-10'
+title: Product requirements
+type: reference
 status: active
-tags:
-- prd
-- ssot
-- sharepoint
-- chatui
-title: PRD
-type: prd
+version: v0.1.1
+tags: [prd, product]
+description: "Defines the product, its users, purpose, core stories, and acceptance criteria. Ships as a fill-in template: instantiation replaces every placeholder."
+applies_when:
+  - When deciding whether work serves the product.
+  - When evaluating product acceptance.
+related_adrs:
+  - adr-00-adr-doctrine
 ---
+# PRD — {{project name}}
 
-# PRD — astro-drf-aws
+> [!important] Always in memory (template)
+> Until every `{{PLACEHOLDER}}` is filled by a human product owner, this PRD is
+> **hollow**: agents must **define the user** with the owner before inventing
+> domains, roles, or acceptance criteria. The ABC gate in [[AGENTS]] still
+> applies — follows PRD? constitution? ADRs? API? — but an unfilled slot is a
+> question, not a green light to invent product.
 
-> [!important] Always in memory
-> This file and [[API]] are the two documents every agent holds in memory at all times. The ABC gate lives in [[AGENTS]]: follows PRD? complies with the rest of the constitution? complies with ADRs? modifies API?
 
-## The objective
+This is the product constitution template. Every double-curly slot is filled at
+instantiation ([[ONBOARDING]], [[CLONE]]); the section skeleton below is the
+shape every project's constitution keeps. Until it is filled, the harness
+treats this file as undecided product ground: agents read it first and find the
+questions, not the answers.
 
-- **Connect SharePoint securely through AWS.** Company information leaves the Microsoft 365 / SharePoint estate and reaches the web only through this authenticated tier, under its own RBAC — never directly, never anonymously.
-- **A solid ChatUI that keeps growing.** A chat surface whose router is very safe from the start: it offers "go to"-style actions — the most used — to move through a site that is itself growing, using **phrases** the LLM compares against the user's prompt to find the best route; the phrases grow because they are loaded in the database — new routes are new rows, not new code. Mechanism and its guardrails: [[CHATBOT]].
-- **New apps keep flourishing.** The harness stays solid at all times so that new apps can be built on it, each with the same objective: from SharePoint to the Web — today as dashboards, tomorrow as further tools.
+## What are we building
 
-## What it is
+{{product paragraph}}
 
-Two Docker services on Fargate — a Django backend and an Astro frontend — connected to state through PostgreSQL and connected to AI, and supported the whole way by the harness below.
+A {{product kind}} that:
 
-## The harness
+1. {{core capability 1}}
+2. {{core capability 2}}
+3. {{core capability 3}}
+4. Carries a concise, living project harness so every change retains product context.
 
-The harness is the support of the objective, not the objective. It rests, in this order, on:
+## Who it's for
 
-1. **This PRD** — the objective every change is measured against.
-2. **The rest of the constitution** (`docs/constitution/`) — [[REQUIREMENTS]], [[HARNESS]], [[INFRASTRUCTURE]], [[LOCALISATION]], [[CONVENTION]].
-3. **The ADRs** (`docs/adrs/`) — the standing rules; each states what is in force and links the doc that owns the detail.
-4. **The docs** (`docs/`) — one SSOT per topic; every fact is stated once, where it lives, and linked from everywhere else. [[API]] lives in this tier as the only source of valid endpoints; nothing enters the backend except through a row here — it is also the third check of the ABC gate above.
+- {{user role 1}} who need {{need 1}}.
+- {{user role 2}} who need {{need 2}}.
+- {{user role 3}} who {{need 3}}.
 
-The workflow for agents is highly typified and prepared: [[DEVELOPMENT-LOOP]] carries the exact sequence — and the tool or skill at each step — for adding any new element, from idea to merged PR. Other documents are linked from these four surfaces as the need appears; they do not need to be indexed here.
+## What purpose it will have
 
-## The horizon
+{{purpose paragraph}}
 
-- It **grows by addition**: a new capability is a new domain app and its routes; the harness stays as it is.
-- It stays **agnostic to company and to account** — every such value arrives through [[VARIABLES]] (the only inventory of environment variables; secrets live in Secrets Manager) and never in code or docs.
+## User stories
+
+```gherkin
+Scenario: {{primary read story}}
+  Given {{precondition}}
+  When {{user action}}
+  Then {{observable outcome}}
+
+Scenario: {{primary exception story}}
+  Given {{a condition that needs attention}}
+  When {{the product evaluates it}}
+  Then {{the responsible user sees an actionable result}}
+
+Scenario: {{primary action story}}
+  Given {{an authorized user identifies a required action}}
+  When {{they perform it in the product}}
+  Then {{the action is validated, recorded, and attributable}}
+```
+
+## Acceptance criteria
+
+- {{observable acceptance criterion 1}}
+- {{observable acceptance criterion 2}}
+- {{observable acceptance criterion 3}}
+- The interface is fast, clear, and usable in {{interface language}}.
+- The living harness remains concise and preserves product intent across changes.

@@ -2,107 +2,50 @@
 title: AGENTS
 type: index
 status: active
-created: 2026-07-10
-tags: [harness, index]
+created: 2026-09-14
+version: v0.1.0
+tags: [harness, index, multi-runtime, team-party]
 ---
 
-# AGENTS.md — entry point
+# AGENTS.md — harness entry point (Team Party)
 
-Template: [[FRONTEND|Astro 7 SSR + Svelte]] frontend and [[BACKEND|Django 6 + DRF]] backend, two Fargate services on AWS us-east-1 ([[INFRASTRUCTURE]]). This file is an index you can trust: reach content through its links instead of re-scanning the repo.
+**Template:** Astro 7 + Django 6 + two Fargate services. Product/PRD is hollow until a human fills `{{PLACEHOLDER}}` in [[PRD]] (`docs/constitution/PRD.md`) — **define the user** before inventing domains.
 
-> [!important] Read docs through the vault MCP first
-> `docs/` content is reached through the **`markdown-vault-docs` MCP** — the first source of truth for any `docs/` prose or wikilink question, **before** Grep/Read ([[adr-20-markdown-vault-mcp]], [[markdown-vault-mcp]]): `search` to find, `read` to open, `get_backlinks`/`get_outlinks`/`get_similar` to traverse. Grep/Read stay correct for code, configs, and non-`docs/` files; code structure still goes to `codebase-memory-mcp` first. To go the other way — from a doc or ADR to the code it governs — consult `docs/CODEMAP.md`, the generated doc→code inverse index ([[adr-19-live-doc-backlinks]]); it is the return direction the vault graph does not draw ([[adr-19-live-doc-backlinks]] rule 6).
+> [!info] Harness
+> Team Party layout (mold `harness-team-party` + Fleet wiring). One real copy at repo root: `skills/`, `hooks/`, `agents/`, `adrs/`. Runtimes link: `.claude/{skills,hooks,agents,rules}`, `.agents/agents`, `.grok/skills`.
 
-> [!warning] The ABC — verify before adding ANYTHING
-> 1. **Does it follow [[PRD]]?**
-> 2. **Does it comply with the rest of the constitution?** (`docs/constitution/` — [[REQUIREMENTS]], [[HARNESS]], [[INFRASTRUCTURE]], [[LOCALISATION]], [[CONVENTION]])
-> 3. **Does it comply with the ADRs?** (`docs/adrs/`)
-> 4. **Does it modify [[API]]?**
->
-> Authority runs in that order: [[PRD]] first, the rest of the constitution second, the ADRs third, every other `docs/` file last. This is the ABC of every request, no matter how small. To make it possible, **[[PRD]] and [[API]] MUST be held in memory at all times**: the main session preloads both at session start, and a dispatched subagent — which `SessionStart` does not reach ([[HARNESS]]) — reads both as its first act; either way they are re-read whenever they change. No other file carries this standing requirement.
+## ABC
 
-## Where the project stands
+1. Does it follow [[PRD]]? (`docs/constitution/PRD.md` — hollow slots are questions, not invented product)
+2. Does it comply with active ADRs in `adrs/`?
+3. Constitution / stack docs (`docs/constitution/`, [[INFRASTRUCTURE]], [[API]])
+4. If backend surface: is it declared in [[API]]?
 
-All three stages — documents, harness, project construction — are **done**. Provisioned reference-run resources are tracked in `docs/INVENTORY.md` (Phase E teardown executes from it). The objective this all serves is [[PRD]].
+Hold PRD and API in memory. SessionStart `hooks/khook-load-ssot.py` preloads them when configured.
 
-## The development loop
+## Layout
 
-Defined in [[DEVELOPMENT-LOOP]] and given force by [[adr-11-development-flow]]; that file also carries the operational rendering — the exact sequence and the tool or skill at each step, per use case — and is opened at the start of any code. Follow it for every feature:
+| Path | Role |
+|---|---|
+| `adrs/` | All ADRs (stack + harness). `docs/adrs` → symlink |
+| `agents/` | `kbot-*` guardians/workers + `kwf-*` cast + `souls/` |
+| `hooks/` | `khook-*` (+ short-name compat symlinks for legacy tests) |
+| `skills/` | `k-*` (Astro/Django/AWS + party skills) |
+| `docs/constitution/` | Hollow PRD + INFRASTRUCTURE / REQUIREMENTS / … |
+| `backend/`, `frontend/`, `compose.yaml` | Stack code |
 
-`idea → user-facing? → [[BDD]] → … → needs backend? → enter through [[API]]`
+## Party
 
-Inside the backend zone: confirm the existing [[API]] endpoints cannot serve the need → add the row to [[API]] → [[TDD]] flow (skills-driven) → **checkpoint: does [[API]] solve the need?** Yes returns to the frontend track; no loops back. The backend zone is entered and exited only through [[API]].
+Forest → tavern → camp (N slices) → stalking → plaza. Skill: `skills/k-triage-and-fix/`. Cast: `agents/kwf-*.md`. Guardians: `kbot-prd` / `kbot-adr` / `kbot-bdd` / `kbot-api`.
 
-**Modifying [[PRD]], the ADRs, [[API]], or their watched surfaces means engaging the matching guardian** — `astro-drf-aws-prd` / `-adr` / `-api` — for the change, before the batch closes. Seek them when you intend to touch those files; the dispatch hook's nudge is the safety net, not the trigger. They are proactive experts, not mere gates: they triage fast, dismiss false positives in one line, and know the exact files to touch through their precise links. Verdicts and `notify` lists are binding ([[adr-03-guardians]]).
+## Deploy doctrine
 
-## Testing & verification
+`main` → AWS prod ([[adr-29-permanent-deployment]]). Fill GitHub Actions vars after bootstrap — **never invent ARNs**. Shared Cognito org-pool + dedicated app client. No CDN. ECS circuit breaker with rollback. Detail: [[INFRASTRUCTURE]], [[GH]].
 
-- **Smoke / end-to-end UI tests are driven through the `chrome-devtools` MCP** (chromium on the DevTools protocol at `127.0.0.1:9222`) — the DEFAULT tool for browser-level verification of the [[CHATBOT]]/chatui surface and any user-facing feature ([[BDD]], [[FRONTEND]]). Bash stands up the local stack ([[DOCKER]]) underneath it.
-- **Smoke tests are ONLY allowed for the Unix user `kodex`.** They MUST NOT run under the sudo-less `pykodex` agent sandbox, nor in any headless/cron/non-interactive agent context — browser smoke is an interactive, human-`kodex`-session-only action. An agent routine that reaches a smoke-test step stops and defers to kodex.
+## Runtimes
 
-## Index
+- **Claude:** `.claude/{skills,hooks,agents,rules}` → root SSOTs. New session after harness swap.
+- **Grok:** `.grok/skills` → `skills/`. Prefer `grok --cwd <clone>`.
+- **Kimi:** point `extra_agent_dirs` at **this clone’s** `agents/`, never a sibling product.
 
-**Product & doctrine**
-- [[PRD]] — the objective and the horizon: the railguard, and growth by addition. *Always in memory.*
-- [[DEVELOPMENT-LOOP]] — the canonical workflows and the tool/skill at each step; opened at the start of any code ([[adr-11-development-flow]]).
-- [[GLOSSARY]] — naming authority; a term is decided here before its first use.
-- [[LOCALISATION]] — code is English, always; other languages exist only in rendered frontend output.
-
-**Contracts (SSOTs)**
-- [[API]] — the only source of valid endpoints. *Always in memory.*
-- [[VARIABLES]] — the only source of environment variables; secrets live in AWS Secrets Manager, always.
-- [[REQUIREMENTS]] — exact version pins; policy: latest, beta acceptable.
-- [[GH]] — GitHub/git: `main` vs `prod`, issues/PRs, labels, tags, `kodexArg` only on protected lines.
-
-**Stack**
-- [[BACKEND]] — Django 6 + DRF rules; code born through TDD once the template is finished.
-- [[AUTH]] — Cognito authenticates, Django authorizes; RBAC is Django Groups + DRF permissions, never Cognito ([[adr-14-auth]]).
-- [[FRONTEND]] — Astro SSR + Svelte rules; bun mandatory, npm prohibited, no Node.
-- [[DESIGN-SYSTEM]] — every visual and component decision; its standing decision is variable-driven theming — every visual value is a CSS custom property token, light/dark always, user-tunable on `/profile`.
-- [[MELT-UI]] — the headless builder layer (Melt→Bits→shadcn); how to build a Melt component and when to choose it.
-- [[HTMX]] — in the stack; Django generates fragments; Astro loads the client; sits before Svelte in the interactivity ladder.
-- [[CHATBOT]] — the chat-like surface that is a **router**, not a chatbot: a closed enum, zero generation, and the permanent two-tier split that keeps choosing and generating disjoint ([[adr-17-chatbot-two-tier]]).
-- [[CACHE]] — the Redis-free cache strategy; Redis is prohibited.
-- [[BD]] — databases: prod, dev (cloud), local.
-- [[INFRASTRUCTURE]] — the two-Fargate AWS layout, mirrored from the ALVS precedent.
-- [[DOCKER]] — local Compose: root `compose.yaml`, paths `backend/` + `frontend/`, profiles. Local dev bind-mounts source and runs hot-reload dev servers — rebuild only on dependency/`Dockerfile` changes.
-- M365 / Graph (capability layer) — required env only: [[VARIABLES]].
-
-**Harness**
-- [[HARNESS]] — the skills this template requires, vendored under `docs/skills/` (SSOT) and reached through the `.claude/skills/` / root `skills/` links; ruled by [[adr-02-harness]]. Stack/AWS work goes through these skills, vault `.md` through `obsidian-markdown`, fan-out through `kdx-orchestrator`.
-
-**Methodology** (the manuals ship with the template; a project creates its own entries)
-- [[TDD]] — manual for `docs/tdds/`; every new backend piece is born there. The template ships no entries.
-- [[BDD]] — manual for `docs/bdds/`; every user-facing feature enters there. The template ships no entries.
-
-## Structure
-
-- `backend/` / `frontend/` — **reserved** app paths (stage 3 project construction; not scaffolded by the harness).
-- `compose.yaml` — local Docker orchestrator only ([[DOCKER]], [[adr-13-docker-compose]]); today may run `db` only.
-- `docs/` — all documentation (the vault's content).
-- `docs/constitution/` — the constitution: [[PRD]], [[REQUIREMENTS]], [[HARNESS]], [[INFRASTRUCTURE]], [[LOCALISATION]], [[CONVENTION]]; second in ABC authority, right after [[PRD]].
-- `state/` — tracked runtime/reference state root; not documentation, not ADRs.
-- `.claude/rules/` → `docs/adrs/` — ADRs live in the vault and load as rules through the link ([[adr-00-adr-doctrine]]).
-- `docs/CODEMAP.md` — generated doc→code inverse index, regenerated by the `kdx-live-doc` linker from its manifest; never hand-kept ([[adr-19-live-doc-backlinks]]).
-- `docs/skills/` — SSOT of the required skills (git-tracked), reached through the `.claude/skills/` and root `skills/` links; inventoried in [[HARNESS]] and ruled by [[adr-02-harness]].
-- `docs/agents/` — SSOT of the guardian subagents (`astro-drf-aws-prd`/`-adr`/`-api`), the `orch-*` fan-out workers, and the `wf-*` Workflow cast, reached as `.claude/agents/` and `.agents/agents/`; the hook `dispatch_guardians.py` routes watched-file changes to the guardians.
-- `docs/hooks/` — reserved for a genuinely host-agnostic hook; empty today. The nine hooks this template runs are Claude-lifecycle-bound and stay under `.claude/hooks/`, with no `docs/hooks/` counterpart ([[adr-02-harness]]).
-- `CLAUDE.md` → `AGENTS.md`.
-- `tests/` — harness/structure tests (e.g. Compose layout).
-
-## Meta-rules
-
-- ADRs state rules, never information; content lives in the referenced doc ([[adr-00-adr-doctrine]]).
-- Obsidian conventions everywhere: frontmatter, `[[wikilinks]]`, callouts. One SSOT per topic — link, don't repeat.
-- Git: `main` = integration, `prod` = production; only `kodexArg` pushes those lines ([[GH]], [[adr-12-github-and-git]]). Everything in code and docs is English ([[LOCALISATION]]).
-
-## Entra app registration (Microsoft Graph / SharePoint)
-
-Standing choices when registering the confidential Web app that brokers app-only Graph access via `client_credentials` — not a second login IdP; Cognito still authenticates (see [[AUTH]]):
-
-| Setting | Value | Forbidden for this use case |
-|---|---|---|
-| **Supported account types** | **Single tenant only** (this organizational directory only) | Multi-tenant; “any Entra + personal MSA”; personal accounts only |
-| **Platform** | **Web** | SPA/public client as the token holder for the client secret |
-
-- Env/secret names: only the three in [[VARIABLES]] (`MSGRAPH_TENANT_ID`, `MSGRAPH_CLIENT_ID`, `MSGRAPH_CLIENT_SECRET`) — app-only mode reads no others ([[adr-16-m365-graph]] rule 6). Values live in `.env` (local, gitignored) or Secrets Manager `alvs/<env>/<project>/msgraph` (cloud) — never in this file, never committed.
+Old `orch-*` / `astro-drf-aws-*` / `kdx-*` trees live under `docs/obsolete/harness-pre-team-party/` for archaeology only.

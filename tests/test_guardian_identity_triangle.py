@@ -14,7 +14,7 @@ AGNOSTIC_SCRIPT = ROOT / "docs" / "hooks" / "guardian-dispatch"
 # (issue #130): its frontmatter `description:` names it a guardian.
 GUARDIAN_MARKER = re.compile(r"\bguardian\b", re.IGNORECASE)
 FRONTMATTER_KEY = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*):\s?(.*)$")
-# Sibling notify prose, e.g. "- **→ astro-drf-aws-adr** when ...".
+# Sibling notify prose, e.g. "- **→ kbot-adr** when ...".
 NOTIFY_LINE = re.compile(r"^-\s+\*\*→\s*([A-Za-z0-9_-]+)\*\*", re.MULTILINE)
 
 
