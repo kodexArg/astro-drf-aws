@@ -14,7 +14,7 @@ plus skills, hooks, and guardian agents; application code follows it, never the 
 around. It runs as an Astro 7 SSR frontend and a Django 6 + DRF backend, two Fargate services
 on AWS us-east-1.
 
-Owner: **kodexArg**. Region: **us-east-1**. Account: ALVS `789650504128`.
+Owner: **kodexArg**. Region: **us-east-1**. Account: `{{AWS_ACCOUNT_ID}}`.
 
 ## Read these two first — and keep them open
 

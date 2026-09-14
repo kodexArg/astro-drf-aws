@@ -7,7 +7,7 @@ version: v0.1.0
 > [!info] In force on this repo
 > Citations use this checkout's harness map: [[adr-24-constitution]], [[adr-25-harness-layout]],
 > [[adr-27-guardians-and-delivery]]. Linker path: `skills/k-live-doc/link.py`. Project stamp
-> comes from `PROJECT_SLUG` (seed `alvs-fleet-management`). Canonical host: `fm.grupoalvs.com`.
+> comes from `PROJECT_SLUG` (seed `astro-drf-aws`). Canonical host: `{{PUBLIC_HOST}}`.
 
 
 # k-live-doc — code ↔ live-doc linker

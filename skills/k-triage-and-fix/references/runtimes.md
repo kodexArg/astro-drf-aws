@@ -21,7 +21,7 @@ change. Read this file before the first dispatch on a host.
 
 **Native.** Cast files in `agents/kwf-*.md` resolve when that directory is
 on `extra_agent_dirs` in `~/.kimi-code/config.toml` (**this** project clone:
-`…/alvs-fleet-management/agents`, not `~/Dev/harness-triage-party` and not a
+`…/{{PROJECT_SLUG}}/agents` (this clone), not `~/Dev/harness-triage-party` and not a
 sibling repo). Skill on the Kimi skill path (optional symlink
 `skills/k-triage-and-fix` → `~/.kimi-code/skills/triage-and-fix`). Do not rewrite
 a user’s global Kimi config from a product PR; document the path and let the

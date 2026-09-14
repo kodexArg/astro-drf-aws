@@ -1,4 +1,4 @@
-/* LIVE-DOC:START — alvs-fleet-management live-doc; see [[HARNESS]]
+/* LIVE-DOC:START — astro-drf-aws live-doc; see [[HARNESS]]
  * Docs: [[FRONTEND]]
  * LIVE-DOC:END */
 

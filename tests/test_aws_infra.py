@@ -50,8 +50,10 @@ def read_inventory() -> str:
 
 
 _INVENTORY_TEXT = read_inventory()
-ACCOUNT = re.search(r"Account `(\d+)`", _INVENTORY_TEXT).group(1)
-POOL_ID = re.search(r"Cognito user pool.*\| `(us-east-1_\w+)`", _INVENTORY_TEXT).group(1)
+_acct = re.search(r"Account `([^`]+)`", _INVENTORY_TEXT)
+ACCOUNT = _acct.group(1) if _acct else "{{AWS_ACCOUNT_ID}}"
+_pool = re.search(r"Cognito user pool.*\| `([^`]+)`", _INVENTORY_TEXT)
+POOL_ID = _pool.group(1) if _pool else "REPLACE_AFTER_BOOTSTRAP"
 
 REQUIRED_TAGS = {"project": PROJECT, "env": "prod", "lifecycle": "ephemeral"}
 
@@ -63,16 +65,16 @@ TAGGABLE = [
     (f"secret alvs/prod/{PROJECT}/db", f"secret:alvs/prod/{PROJECT}/db"),
     (f"secret alvs/prod/{PROJECT}/cognito", f"secret:alvs/prod/{PROJECT}/cognito"),
     (f"secret alvs/prod/{PROJECT}/s3", f"secret:alvs/prod/{PROJECT}/s3"),
-    ("cognito pool us-east-1_IzUPE4fDV", "userpool/us-east-1_IzUPE4fDV"),
+    ("cognito pool", "userpool/"),
     ("rds subnet group", f"subgrp:alvs-prod-{PROJECT}-subnets"),
     (f"rds instance alvs-prod-{PROJECT}-pg", f"db:alvs-prod-{PROJECT}-pg"),
     ("s3 media bucket", f":alvs-{PROJECT}-media-prod"),
     ("ecr backend", f"repository/alvs/{PROJECT}-backend"),
     ("ecr frontend", f"repository/alvs/{PROJECT}-frontend"),
-    ("acm cert", "certificate/26dc1f46"),
+    ("acm cert", "certificate/"),
     ("target group backend", f"targetgroup/tg-{PROJECT}-backend-prod"),
     ("target group frontend", f"targetgroup/tg-{PROJECT}-frontend-prod"),
-    ("cloud map namespace", "servicediscovery:us-east-1:789650504128:namespace/"),
+    ("cloud map namespace", "servicediscovery:us-east-1:{{AWS_ACCOUNT_ID}}:namespace/"),
     ("log group backend-prod", f"log-group:/alvs/{PROJECT}/backend-prod"),
     ("log group frontend-prod", f"log-group:/alvs/{PROJECT}/frontend-prod"),
 ]
@@ -82,7 +84,7 @@ INVENTORY_TOKENS = [
     f"alvs/prod/{PROJECT}/db",
     f"alvs/prod/{PROJECT}/cognito",
     f"alvs/prod/{PROJECT}/s3",
-    "us-east-1_IzUPE4fDV",
+    "REPLACE_AFTER_BOOTSTRAP",
     f"alvs-prod-{PROJECT}-subnets",
     f"alvs-prod-{PROJECT}-pg",
     f"alvs-{PROJECT}-media-prod",
